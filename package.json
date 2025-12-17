@@ -1,16 +1,16 @@
 {
-  "name": "PharmaSpot",
-  "productName": "PharmaSpot",
+  "name": "justpharmacy",
+  "productName": "justpharmacy",
   "version": "1.5.1",
-  "description": "Easy Point of Sale for Pharmacies",
-  "author": "Patterns Digital Limited",
-  "website": "https://patternsdigital.com/pharmaspot",
+  "description": "Full Featured Pharamcy POS",
+  "author": "Akash Badole",
+  "website": "https://bitman.com/justpharmacy",
   "credits": "electronjs.org",
   "license": "MIT",
   "private": true,
   "main": "start.js",
   "build": {
-    "appId": "com.patternsdigital.pharmaspot",
+    "appId": "com.bitman.justpharmacy",
     "directories": {
       "buildResources": "assets"
     }
@@ -56,7 +56,7 @@
   "scripts": {
     "electron": "cross-env NODE_ENV=dev nodemon --exec \"\"electron .\"\"",
     "electron-build": "electron-builder",
-    "package-win": "electron-packager . PharmaSpot --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/images/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"PharmaSpot\"",
+    "package-win": "electron-packager . justpharmacy --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/images/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"justpharmacy\"",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

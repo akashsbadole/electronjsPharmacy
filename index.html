@@ -33,6 +33,11 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="button-list pull-left m-t-15 m-l-10">
+                        <div class="btn-group p_store">
+                            <button id="storeSelectorBtn" data-toggle="modal" data-target="#storeSelectorModal" type="button" class="btn btn-info waves-effect waves-light">
+                                <span class="btn-label"><i class="glyphicon glyphicon-home"></i> </span> <span id="currentStoreDisplay">Main Store</span>
+                            </button>
+                        </div>
                         <div class="btn-group p_one">
                             <button id="productModal" data-toggle="modal" data-target="#Products" type="button" class="btn btn-success waves-effect waves-light">
                                 <span class="btn-label"><i class="  glyphicon glyphicon-barcode"></i> </span> Products
@@ -78,6 +83,15 @@
                                 <i class="fa fa-plus"></i>
                             </button>
                         </div>
+                        <button id="suppliersModal" data-toggle="modal" data-target="#Suppliers" type="button" class="btn btn-info waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-truck"></i></span> Suppliers
+                        </button>
+                        <button id="agingReportsBtn" data-toggle="modal" data-target="#agingReportsModal" type="button" class="btn btn-warning waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-time"></i></span> Aging Reports
+                        </button>
+                        <button id="analyticsReportsBtn" data-toggle="modal" data-target="#analyticsReportsModal" type="button" class="btn btn-primary waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-stats"></i></span> Analytics & Reports
+                        </button>
                         <button type="button" title="My Profile" class="btn btn-default waves-effect waves-light" id="cashier">
                             <span class="btn-label"><i class="glyphicon glyphicon-user"></i> </span> <span id="loggedin-user"></span>
                         </button>
@@ -582,6 +596,16 @@
                         </h4>
                     </div>
                     <div class="modal-body p-20 p-r-40" id="all_products">
+                        <div class="row m-b-15">
+                            <div class="col-md-6">
+                                <h5>Current Store: <span id="currentStoreInProducts" class="label label-info">Main Store</span></h5>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#transferStockModal">
+                                    <i class="glyphicon glyphicon-transfer"></i> Transfer Stock
+                                </button>
+                            </div>
+                        </div>
                         <table class="table table-bordered" id="productList">
                             <thead>
                                 <tr>
@@ -590,6 +614,7 @@
                                     <th>Name</th>
                                     <th>Price</th>
                                     <th>Stock</th>
+                                    <th>Store Stock</th>
                                     <th>Expiry Date</th>
                                     <th>Category</th>
                                     <th>Action</th>
@@ -867,8 +892,776 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Store Selector Modal -->
+        <div id="storeSelectorModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="storeSelectorModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="storeSelectorModalLabel">Select Store</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="list-group" id="storeList">
+                            <!-- Stores will be populated here -->
+                        </div>
+                        <hr>
+                        <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#storeManagementModal" data-dismiss="modal">
+                            <i class="glyphicon glyphicon-plus"></i> Add New Store
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Store Management Modal -->
+        <div id="storeManagementModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="storeManagementModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="storeManagementModalLabel">Store Management</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="saveStore" data-parsley-validate>
+                            <input type="hidden" name="id" id="store_id">
+                            <div class="form-group">
+                                <label for="storeName">Store Name*</label>
+                                <input type="text" required="required" name="name" placeholder="Enter store name" class="form-control" id="storeName">
+                            </div>
+                            <div class="form-group">
+                                <label for="storeAddress">Address</label>
+                                <input type="text" name="address" placeholder="Enter store address" class="form-control" id="storeAddress">
+                            </div>
+                            <div class="form-group">
+                                <label for="storePhone">Phone</label>
+                                <input type="text" name="phone" placeholder="Enter phone number" class="form-control" id="storePhone">
+                            </div>
+                            <div class="form-group">
+                                <label for="storeEmail">Email</label>
+                                <input type="email" name="email" placeholder="Enter email address" class="form-control" id="storeEmail">
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="isMainStore" id="isMainStore"> Set as Main Store</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="isActive" id="isActive" checked> Active</label>
+                            </div>
+                            <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        </form>
+                        
+                        <hr>
+                        
+                        <h5>Existing Stores</h5>
+                        <table class="table table-bordered" id="storeTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="store_table_body">
+                                <!-- Store list will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stock Transfer Modal -->
+        <div id="transferStockModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="transferStockModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="transferStockModalLabel">Transfer Stock</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createTransfer" data-parsley-validate>
+                            <div class="form-group">
+                                <label for="transferProduct">Product*</label>
+                                <select name="productId" class="form-control" id="transferProduct" required>
+                                    <option value="">Select Product</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fromStore">From Store*</label>
+                                <select name="fromStore" class="form-control" id="fromStore" required>
+                                    <option value="">Select Source Store</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="toStore">To Store*</label>
+                                <select name="toStore" class="form-control" id="toStore" required>
+                                    <option value="">Select Destination Store</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transferQuantity">Quantity*</label>
+                                <input type="number" name="quantity" class="form-control" id="transferQuantity" min="1" required placeholder="Enter quantity">
+                            </div>
+                            <div class="form-group">
+                                <label for="transferReason">Reason</label>
+                                <textarea name="reason" class="form-control" id="transferReason" placeholder="Enter reason for transfer"></textarea>
+                            </div>
+                            <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        </form>
+                        
+                        <hr>
+                        
+                        <h5>Recent Transfers</h5>
+                        <table class="table table-bordered" id="transferTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Product</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfer_table_body">
+                                <!-- Transfer list will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Suppliers Modal -->
+        <div id="Suppliers" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="SuppliersModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="SuppliersModalLabel">Supplier Management</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newSupplierModal" data-dismiss="modal">
+                                    <i class="glyphicon glyphicon-plus"></i> Add New Supplier
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" id="supplierSearchInput" placeholder="Search suppliers..." class="form-control">
+                            </div>
+                        </div>
+                        <hr>
+                        <table class="table table-bordered" id="supplierTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Contact Person</th>
+                                    <th>Phone</th>
+                                    <th>Balance</th>
+                                    <th>Credit Limit</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplier_table_body">
+                                <!-- Supplier list will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- New Supplier Modal -->
+        <div id="newSupplierModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="newSupplierModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="newSupplierModalLabel">Add New Supplier</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="saveSupplier" data-parsley-validate>
+                            <div class="form-group">
+                                <label for="supplierName">Supplier Name*</label>
+                                <input type="text" required="required" name="name" placeholder="Enter supplier name" class="form-control" id="supplierName">
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierContactPerson">Contact Person</label>
+                                <input type="text" name="contactPerson" placeholder="Enter contact person name" class="form-control" id="supplierContactPerson">
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierPhone">Phone</label>
+                                <input type="text" name="phone" placeholder="Enter phone number" class="form-control" id="supplierPhone">
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierEmail">Email</label>
+                                <input type="email" name="email" placeholder="Enter email address" class="form-control" id="supplierEmail">
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierAddress">Address</label>
+                                <textarea name="address" placeholder="Enter address" class="form-control" id="supplierAddress"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierCreditLimit">Credit Limit</label>
+                                <input type="number" name="creditLimit" placeholder="Enter credit limit" class="form-control" id="supplierCreditLimit" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="supplierPaymentTerms">Payment Terms</label>
+                                <select name="paymentTerms" class="form-control" id="supplierPaymentTerms">
+                                    <option value="">Select Payment Terms</option>
+                                </select>
+                            </div>
+                            <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Supplier Payment Modal -->
+        <div id="supplierPaymentModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="supplierPaymentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="supplierPaymentModalLabel">Make Payment to Supplier</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <strong>Supplier:</strong> <span id="paymentSupplierName"></span><br>
+                                    <strong>Current Balance:</strong> <span id="paymentSupplierBalance"></span><br>
+                                    <strong>Credit Limit:</strong> <span id="paymentSupplierCreditLimit"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <form id="processSupplierPayment" data-parsley-validate>
+                            <input type="hidden" id="paymentSupplierId">
+                            <div class="form-group">
+                                <label for="paymentAmount">Payment Amount*</label>
+                                <input type="number" required="required" name="amount" placeholder="Enter payment amount" class="form-control" id="paymentAmount" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentDate">Payment Date*</label>
+                                <input type="date" required="required" name="paymentDate" class="form-control" id="paymentDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentMethod">Payment Method*</label>
+                                <select name="paymentMethod" required class="form-control" id="paymentMethod">
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Online Payment">Online Payment</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentReference">Reference Number</label>
+                                <input type="text" name="reference" placeholder="Enter reference number" class="form-control" id="paymentReference">
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentNotes">Notes</label>
+                                <textarea name="notes" placeholder="Enter payment notes" class="form-control" id="paymentNotes"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="allocateToInvoices" id="allocateToInvoices" checked> Allocate to Outstanding Invoices</label>
+                            </div>
+                            <div id="invoiceAllocationSection" style="display:none;">
+                                <h5>Allocate to Invoices</h5>
+                                <div id="invoiceAllocationList">
+                                    <!-- Invoices will be populated here -->
+                                </div>
+                            </div>
+                            <input type="submit" class="btn btn-success btn-block waves-effect waves-light">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Payment Modal -->
+        <div id="customerPaymentModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="customerPaymentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="customerPaymentModalLabel">Collect Payment from Customer</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <strong>Customer:</strong> <span id="paymentCustomerName"></span><br>
+                                    <strong>Current Balance:</strong> <span id="paymentCustomerBalance"></span><br>
+                                    <strong>Credit Limit:</strong> <span id="paymentCustomerCreditLimit"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <form id="processCustomerPayment" data-parsley-validate>
+                            <input type="hidden" id="paymentCustomerId">
+                            <div class="form-group">
+                                <label for="customerPaymentAmount">Payment Amount*</label>
+                                <input type="number" required="required" name="amount" placeholder="Enter payment amount" class="form-control" id="customerPaymentAmount" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPaymentDate">Payment Date*</label>
+                                <input type="date" required="required" name="paymentDate" class="form-control" id="customerPaymentDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPaymentMethod">Payment Method*</label>
+                                <select name="paymentMethod" required class="form-control" id="customerPaymentMethod">
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Online Payment">Online Payment</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPaymentReference">Reference Number</label>
+                                <input type="text" name="reference" placeholder="Enter reference number" class="form-control" id="customerPaymentReference">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPaymentNotes">Notes</label>
+                                <textarea name="notes" placeholder="Enter payment notes" class="form-control" id="customerPaymentNotes"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="allocateToInvoices" id="customerAllocateToInvoices" checked> Allocate to Outstanding Invoices</label>
+                            </div>
+                            <div id="customerInvoiceAllocationSection" style="display:none;">
+                                <h5>Allocate to Invoices</h5>
+                                <div id="customerInvoiceAllocationList">
+                                    <!-- Invoices will be populated here -->
+                                </div>
+                            </div>
+                            <input type="submit" class="btn btn-success btn-block waves-effect waves-light">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aging Reports Modal -->
+        <div id="agingReportsModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="agingReportsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="agingReportsModalLabel">Aging Reports</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#payablesAging" data-toggle="tab">Accounts Payable</a></li>
+                            <li><a href="#receivablesAging" data-toggle="tab">Accounts Receivable</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="payablesAging">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-info" onclick="loadPayablesAging()">Refresh Report</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <table class="table table-bordered" id="payablesAgingTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Supplier</th>
+                                            <th>Current</th>
+                                            <th>1-30 Days</th>
+                                            <th>31-60 Days</th>
+                                            <th>61-90 Days</th>
+                                            <th>> 90 Days</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payablesAgingBody">
+                                        <!-- Aging data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="receivablesAging">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-info" onclick="loadReceivablesAging()">Refresh Report</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <table class="table table-bordered" id="receivablesAgingTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Customer</th>
+                                            <th>Current</th>
+                                            <th>1-30 Days</th>
+                                            <th>31-60 Days</th>
+                                            <th>61-90 Days</th>
+                                            <th>> 90 Days</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="receivablesAgingBody">
+                                        <!-- Aging data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics & Reports Modal -->
+        <div id="analyticsReportsModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="analyticsReportsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="analyticsReportsModalLabel">Analytics & Reports</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#dashboardTab" data-toggle="tab">Executive Dashboard</a></li>
+                            <li><a href="#salesAnalyticsTab" data-toggle="tab">Sales Analytics</a></li>
+                            <li><a href="#inventoryAnalyticsTab" data-toggle="tab">Inventory Analytics</a></li>
+                            <li><a href="#customerAnalyticsTab" data-toggle="tab">Customer Analytics</a></li>
+                            <li><a href="#reportsTab" data-toggle="tab">Reports</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <!-- Executive Dashboard Tab -->
+                            <div class="tab-pane active" id="dashboardTab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="dashboardPeriod">Period</label>
+                                            <select id="dashboardPeriod" class="form-control">
+                                                <option value="today">Today</option>
+                                                <option value="week">This Week</option>
+                                                <option value="month" selected>This Month</option>
+                                                <option value="year">This Year</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="dashboardKPIs">
+                                    <!-- KPIs will be loaded here -->
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Sales Trend</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="salesChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Top Products</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="topProductsChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Recent Transactions</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped" id="recentTransactionsTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Invoice</th>
+                                                                <th>Customer</th>
+                                                                <th>Total</th>
+                                                                <th>Payment</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="recentTransactionsBody">
+                                                            <!-- Recent transactions will be loaded here -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sales Analytics Tab -->
+                            <div class="tab-pane" id="salesAnalyticsTab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="salesPeriod">Period</label>
+                                            <select id="salesPeriod" class="form-control">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly" selected>Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-info" onclick="loadSalesAnalytics()">Refresh</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Sales Trends</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="salesAnalyticsChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Top Selling Products</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped" id="topProductsTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Product</th>
+                                                                <th>Quantity Sold</th>
+                                                                <th>Revenue</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="topProductsBody">
+                                                            <!-- Top products will be loaded here -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Inventory Analytics Tab -->
+                            <div class="tab-pane" id="inventoryAnalyticsTab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-info" onclick="loadInventoryAnalytics()">Refresh</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Stock Summary</h4>
+                                            </div>
+                                            <div class="card-body" id="stockSummary">
+                                                <!-- Stock summary will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Expiry Analysis</h4>
+                                            </div>
+                                            <div class="card-body" id="expiryAnalysis">
+                                                <!-- Expiry analysis will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Low Stock Items</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped" id="lowStockTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Product</th>
+                                                                <th>Current Stock</th>
+                                                                <th>Min Stock</th>
+                                                                <th>Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="lowStockBody">
+                                                            <!-- Low stock items will be loaded here -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Customer Analytics Tab -->
+                            <div class="tab-pane" id="customerAnalyticsTab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="customerPeriod">Period</label>
+                                            <select id="customerPeriod" class="form-control">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly" selected>Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-info" onclick="loadCustomerAnalytics()">Refresh</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Customer Summary</h4>
+                                            </div>
+                                            <div class="card-body" id="customerSummary">
+                                                <!-- Customer summary will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Top Customers</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped" id="topCustomersTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Customer</th>
+                                                                <th>Transactions</th>
+                                                                <th>Total Spent</th>
+                                                                <th>Avg Transaction</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="topCustomersBody">
+                                                            <!-- Top customers will be loaded here -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Reports Tab -->
+                            <div class="tab-pane" id="reportsTab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Generate Reports</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="reportForm">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="reportType">Report Type</label>
+                                                                <select id="reportType" class="form-control">
+                                                                    <option value="sales">Sales Report</option>
+                                                                    <option value="inventory">Inventory Report</option>
+                                                                    <option value="customers">Customer Report</option>
+                                                                    <option value="financial">Financial Report</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="reportStore">Store</label>
+                                                                <select id="reportStore" class="form-control">
+                                                                    <option value="">All Stores</option>
+                                                                    <!-- Store options will be populated here -->
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="reportStartDate">Start Date</label>
+                                                                <input type="date" id="reportStartDate" class="form-control">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="reportEndDate">End Date</label>
+                                                                <input type="date" id="reportEndDate" class="form-control">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <button type="button" class="btn btn-success" onclick="generateReport()">Generate Report</button>
+                                                            <button type="button" class="btn btn-primary" onclick="downloadReport()" style="display:none;" id="downloadReportBtn">Download Report</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <div class="row" id="reportResults" style="display:none;">
+                                                    <div class="col-md-12">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Report Results</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div id="reportContent">
+                                                                    <!-- Report content will be displayed here -->
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="assets/dist/js/bundle.min.js"></script>
+    <script src="assets/plugins/chart.js/Chart.min.js"></script>
+    <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/js/store-management.js"></script>
+    <script src="assets/js/transfer-management.js"></script>
+    <script src="assets/js/supplier-management.js"></script>
+    <script src="assets/js/customer-management.js"></script>
+    <script src="assets/js/accounts-management.js"></script>
+    <script src="assets/js/analytics-reports.js"></script>
 </body>
 
 </html>

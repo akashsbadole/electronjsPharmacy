@@ -43,6 +43,33 @@ express.use("/api/categories", require("./api/categories"));
 express.use("/api/settings", require("./api/settings"));
 express.use("/api/users", require("./api/users"));
 express.use("/api", require("./api/transactions"));
+express.use("/api/gst-config", require("./api/gst-config"));
+express.use("/api/e-invoice", require("./api/e-invoice"));
+express.use("/api/eway-bill", require("./api/eway-bill"));
+express.use("/api/transporters", require("./api/transporters"));
+// New inventory management APIs
+express.use("/api/batches", require("./api/batches"));
+express.use("/api/suppliers", require("./api/suppliers"));
+express.use("/api/purchase-orders", require("./api/purchase-orders"));
+express.use("/api/purchase-order-items", require("./api/purchase-order-items"));
+express.use("/api/stock-adjustments", require("./api/stock-adjustments"));
+express.use("/api/reorder-suggestions", require("./api/reorder-suggestions"));
+// Multi-store management APIs
+express.use("/api/stores", require("./api/stores"));
+express.use("/api/store-inventory", require("./api/store-inventory"));
+express.use("/api/transfers", require("./api/transfers"));
+express.use("/api/store-permissions", require("./api/store-permissions"));
+// Accounts payable/receivable APIs
+express.use("/api/supplier-accounts", require("./api/supplier-accounts"));
+express.use("/api/customer-accounts", require("./api/customer-accounts"));
+express.use("/api/payments", require("./api/payments"));
+express.use("/api/payment-terms", require("./api/payment-terms"));
+express.use("/api/supplier-invoices", require("./api/supplier-invoices"));
+express.use("/api/customer-invoices", require("./api/customer-invoices"));
+// Analytics and Reports APIs
+express.use("/api/analytics", require("./api/analytics"));
+express.use("/api/reports", require("./api/reports"));
+express.use("/api/dashboard", require("./api/dashboard"));
 
 server.listen(PORT, () => {
     process.env.PORT = server.address().port;
