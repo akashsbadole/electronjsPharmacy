@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication Analytics - PharmaSoft</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Top Navigation -->
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-light">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="assets/images/logo.svg" alt="PharmaSoft" class="logo">
+                    </a>
+                </div>
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav mr-auto mt-md-0">
+                        <!-- Search -->
+                        <li class="nav-item d-none d-md-block search-box">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                                <i class="ti-search"></i>
+                            </a>
+                            <form class="app-search d-none d-md-block">
+                                <input type="text" class="form-control" placeholder="Search analytics...">
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav my-lg-0">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-bell"></i>
+                                <span class="badge badge-xs badge-danger">3</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right mailbox scale-up">
+                                <ul>
+                                    <li>
+                                        <div class="drop-title">Notifications</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-email"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">New analytics report available</span>
+                                                <span class="message-time">5 mins ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-stats-up"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">Communication performance improved</span>
+                                                <span class="message-time">1 hour ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-center" href="#">See all notifications</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <!-- User Profile -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="assets/images/default.jpg" alt="user" class="profile-pic">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right user-dd animated">
+                                <a class="dropdown-item" href="#"><i class="ti-user m-r-5 m-l-5"></i> My Profile</a>
+                                <a class="dropdown-item" href="#"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="ti-power-off m-r-5 m-l-5"></i> Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar">
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="nav-small-cap">PERSONAL</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-view-dashboard"></i>
+                                <span class="hide-menu">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-message-text"></i>
+                                <span class="hide-menu">Customer Communication</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="customer-communication.html">Send Communication</a></li>
+                                <li><a href="communication-campaigns.html">Campaigns</a></li>
+                                <li class="active"><a href="communication-analytics.html">Analytics</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document"></i>
+                                <span class="hide-menu">Templates</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="communication-templates.html">Manage Templates</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-account-multiple"></i>
+                                <span class="hide-menu">Customers</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="customer-communication-preferences.html">Communication Preferences</a></li>
+                                <li><a href="#">Customer List</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-small-cap">PHARMACY</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-pill"></i>
+                                <span class="hide-menu">Inventory</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document-box"></i>
+                                <span class="hide-menu">Prescriptions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-cash-register"></i>
+                                <span class="hide-menu">Sales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-truck-delivery"></i>
+                                <span class="hide-menu">Delivery</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Page Content -->
+        <div class="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row page-titles">
+                    <div class="col-md-5 align-self-center">
+                        <h4 class="text-themecolor">Communication Analytics</h4>
+                    </div>
+                    <div class="col-md-7 align-self-center text-right">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                                <li class="breadcrumb-item active">Analytics</li>
+                            </ol>
+                            <div class="btn-group m-l-15">
+                                <button type="button" class="btn btn-info dropdown-toggle text-white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-calendar"></i> Date Range
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('today')">Today</a>
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('week')">This Week</a>
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('month')">This Month</a>
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('quarter')">This Quarter</a>
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('year')">This Year</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#" onclick="showCustomDateRange()">Custom Range</a>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-success d-none d-lg-block m-l-15 text-white" onclick="exportAnalytics()">
+                                <i class="fa fa-download"></i> Export Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-info" id="total-sent">0</h4>
+                                        <h6 class="text-muted m-b-0">Total Sent</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-send font-20 text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-success" id="total-delivered">0</h4>
+                                        <h6 class="text-muted m-b-0">Delivered</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-check-circle font-20 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-primary" id="total-read">0</h4>
+                                        <h6 class="text-muted m-b-0">Read/Opened</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-email-open font-20 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-danger" id="total-failed">0</h4>
+                                        <h6 class="text-muted m-b-0">Failed</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-alert-circle font-20 text-danger"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Communication by Channel</h4>
+                                <div class="d-flex no-block align-items-center">
+                                    <div class="ml-auto">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('pie')">Pie</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('doughnut')">Doughnut</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('bar')">Bar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="m-t-30">
+                                    <canvas id="channel-chart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Communication by Type</h4>
+                                <div class="d-flex no-block align-items-center">
+                                    <div class="ml-auto">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('pie')">Pie</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('doughnut')">Doughnut</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('bar')">Bar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="m-t-30">
+                                    <canvas id="type-chart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Chart -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Communication Timeline</h4>
+                                <div class="d-flex no-block align-items-center">
+                                    <div class="ml-auto">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('hour')">Hourly</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('day')">Daily</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('week')">Weekly</button>
+                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('month')">Monthly</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="m-t-30">
+                                    <canvas id="timeline-chart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Performance Metrics</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>Value</th>
+                                                <th>Change</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="performance-metrics">
+                                            <tr>
+                                                <td>Delivery Rate</td>
+                                                <td id="delivery-rate">0%</td>
+                                                <td><span class="badge badge-success">+0%</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Open/Read Rate</td>
+                                                <td id="open-rate">0%</td>
+                                                <td><span class="badge badge-success">+0%</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Click-Through Rate</td>
+                                                <td id="click-rate">0%</td>
+                                                <td><span class="badge badge-warning">-0%</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Opt-Out Rate</td>
+                                                <td id="optout-rate">0%</td>
+                                                <td><span class="badge badge-success">-0%</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Average Response Time</td>
+                                                <td id="response-time">0 min</td>
+                                                <td><span class="badge badge-success">-0%</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Top Performing Templates</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Template</th>
+                                                <th>Type</th>
+                                                <th>Performance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top-templates">
+                                            <tr>
+                                                <td colspan="3" class="text-center">Loading data...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Communications -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Recent Communications</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Customer</th>
+                                                <th>Type</th>
+                                                <th>Channel</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recent-communications">
+                                            <tr>
+                                                <td colspan="6" class="text-center">Loading data...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div class="modal fade" id="custom-date-modal" tabindex="-1" role="dialog" aria-labelledby="custom-date-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="custom-date-modal-label">Select Date Range</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="start-date">Start Date</label>
+                                <input type="date" class="form-control" id="start-date">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="end-date">End Date</label>
+                                <input type="date" class="form-control" id="end-date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyCustomDateRange()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app-style-switcher.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/sidebarmenu.js"></script>
+    <script src="assets/js/custom.min.js"></script>
+    <script src="assets/js/customer-communication.js"></script>
+    <script src="assets/js/communication-analytics.js"></script>
+    <script>
+        // Global variables
+        let channelChart, typeChart, timelineChart;
+        let currentDateRange = 'month';
+
+        // Initialize page
+        $(document).ready(function() {
+            loadAnalytics();
+            loadTopTemplates();
+            loadRecentCommunications();
+        });
+
+        // Load analytics data
+        function loadAnalytics() {
+            $.ajax({
+                url: '/api/customer-communication/analytics',
+                method: 'GET',
+                data: {
+                    dateRange: currentDateRange
+                },
+                success: function(data) {
+                    updateSummaryCards(data.summary);
+                    updateChannelChart('pie', data.byChannel);
+                    updateTypeChart('doughnut', data.byType);
+                    updateTimelineChart('day', data.timeline);
+                    updatePerformanceMetrics(data.performance);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading analytics:', error);
+                    showNotification('Error loading analytics data', 'error');
+                }
+            });
+        }
+
+        // Update summary cards
+        function updateSummaryCards(summary) {
+            $('#total-sent').text(summary.total || 0);
+            $('#total-delivered').text(summary.delivered || 0);
+            $('#total-read').text(summary.read || 0);
+            $('#total-failed').text(summary.failed || 0);
+        }
+
+        // Update channel chart
+        function updateChannelChart(type, data) {
+            const ctx = document.getElementById('channel-chart').getContext('2d');
+            
+            if (channelChart) {
+                channelChart.destroy();
+            }
+            
+            if (!data) {
+                // Use sample data if no data provided
+                data = {
+                    sms: 150,
+                    email: 200,
+                    whatsapp: 80,
+                    in_app: 120,
+                    push: 50
+                };
+            }
+            
+            channelChart = new Chart(ctx, {
+                type: type || 'pie',
+                data: {
+                    labels: ['SMS', 'Email', 'WhatsApp', 'In-App', 'Push'],
+                    datasets: [{
+                        data: [
+                            data.sms || 0,
+                            data.email || 0,
+                            data.whatsapp || 0,
+                            data.in_app || 0,
+                            data.push || 0
+                        ],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#25D366',
+                            '#FFCE56',
+                            '#4BC0C0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update type chart
+        function updateTypeChart(type, data) {
+            const ctx = document.getElementById('type-chart').getContext('2d');
+            
+            if (typeChart) {
+                typeChart.destroy();
+            }
+            
+            if (!data) {
+                // Use sample data if no data provided
+                data = {
+                    marketing: 180,
+                    transactional: 250,
+                    reminder: 100,
+                    alert: 50,
+                    promotional: 120
+                };
+            }
+            
+            typeChart = new Chart(ctx, {
+                type: type || 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#E74C3C'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update timeline chart
+        function updateTimelineChart(granularity, data) {
+            const ctx = document.getElementById('timeline-chart').getContext('2d');
+            
+            if (timelineChart) {
+                timelineChart.destroy();
+            }
+            
+            if (!data) {
+                // Use sample data if no data provided
+                data = {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Sent',
+                            data: [65, 59, 80, 81, 56, 55, 40],
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Delivered',
+                            data: [55, 49, 70, 71, 46, 45, 30],
+                            borderColor: '#4BC0C0',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Read',
+                            data: [35, 29, 50, 51, 26, 25, 20],
+                            borderColor: '#FFCE56',
+                            backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                };
+            }
+            
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update performance metrics
+        function updatePerformanceMetrics(performance) {
+            if (!performance) {
+                // Use sample data if no data provided
+                performance = {
+                    deliveryRate: 92,
+                    openRate: 68,
+                    clickRate: 15,
+                    optoutRate: 2,
+                    avgResponseTime: 45
+                };
+            }
+            
+            $('#delivery-rate').text(performance.deliveryRate + '%');
+            $('#open-rate').text(performance.openRate + '%');
+            $('#click-rate').text(performance.clickRate + '%');
+            $('#optout-rate').text(performance.optoutRate + '%');
+            $('#response-time').text(performance.avgResponseTime + ' min');
+        }
+
+        // Load top templates
+        function loadTopTemplates() {
+            $.ajax({
+                url: '/api/communication-templates/top-performing',
+                method: 'GET',
+                success: function(data) {
+                    const templates = data.templates || [];
+                    const tbody = $('#top-templates');
+                    
+                    tbody.empty();
+                    
+                    if (templates.length === 0) {
+                        // Use sample data if no data provided
+                        templates.push(
+                            { name: 'Refill Reminder', type: 'SMS', performance: 95 },
+                            { name: 'Welcome Email', type: 'Email', performance: 88 },
+                            { name: 'Promotional Offer', type: 'WhatsApp', performance: 82 },
+                            { name: 'Order Confirmation', type: 'Email', performance: 78 },
+                            { name: 'Health Tip', type: 'SMS', performance: 72 }
+                        );
+                    }
+                    
+                    templates.forEach(function(template) {
+                        const performanceClass = template.performance >= 80 ? 'success' : 
+                                              template.performance >= 60 ? 'warning' : 'danger';
+                        
+                        tbody.append(`
+                            <tr>
+                                <td>${template.name}</td>
+                                <td><span class="badge badge-info">${template.type}</span></td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-${performanceClass}" style="width: ${template.performance}%">
+                                            ${template.performance}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading top templates:', error);
+                }
+            });
+        }
+
+        // Load recent communications
+        function loadRecentCommunications() {
+            $.ajax({
+                url: '/api/customer-communication/recent',
+                method: 'GET',
+                data: {
+                    limit: 20
+                },
+                success: function(data) {
+                    const communications = data.communications || [];
+                    const tbody = $('#recent-communications');
+                    
+                    tbody.empty();
+                    
+                    if (communications.length === 0) {
+                        // Use sample data if no data provided
+                        communications.push(
+                            { date: new Date(), customer: 'John Doe', type: 'Refill Reminder', channel: 'SMS', status: 'DELIVERED' },
+                            { date: new Date(Date.now() - 3600000), customer: 'Jane Smith', type: 'Promotional Offer', channel: 'Email', status: 'READ' },
+                            { date: new Date(Date.now() - 7200000), customer: 'Bob Johnson', type: 'Order Confirmation', channel: 'WhatsApp', status: 'SENT' },
+                            { date: new Date(Date.now() - 10800000), customer: 'Alice Brown', type: 'Health Tip', channel: 'In-App', status: 'READ' },
+                            { date: new Date(Date.now() - 14400000), customer: 'Charlie Wilson', type: 'Appointment Reminder', channel: 'SMS', status: 'FAILED' }
+                        );
+                    }
+                    
+                    communications.forEach(function(comm) {
+                        const statusClass = getStatusClass(comm.status);
+                        const channelIcon = getChannelIcon(comm.channel);
+                        
+                        tbody.append(`
+                            <tr>
+                                <td>${new Date(comm.date).toLocaleString()}</td>
+                                <td>${comm.customer}</td>
+                                <td>${comm.type}</td>
+                                <td><i class="${channelIcon}"></i> ${comm.channel}</td>
+                                <td><span class="badge ${statusClass}">${comm.status}</span></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info" onclick="viewCommunication('${comm.id}')">View</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading recent communications:', error);
+                }
+            });
+        }
+
+        // Change date range
+        function changeDateRange(range) {
+            currentDateRange = range;
+            loadAnalytics();
+            showNotification(`Date range changed to: ${range}`, 'info');
+        }
+
+        // Show custom date range modal
+        function showCustomDateRange() {
+            $('#custom-date-modal').modal('show');
+        }
+
+        // Apply custom date range
+        function applyCustomDateRange() {
+            const startDate = $('#start-date').val();
+            const endDate = $('#end-date').val();
+            
+            if (!startDate || !endDate) {
+                showNotification('Please select both start and end dates', 'warning');
+                return;
+            }
+            
+            currentDateRange = 'custom';
+            
+            $.ajax({
+                url: '/api/customer-communication/analytics',
+                method: 'GET',
+                data: {
+                    dateRange: 'custom',
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function(data) {
+                    updateSummaryCards(data.summary);
+                    updateChannelChart('pie', data.byChannel);
+                    updateTypeChart('doughnut', data.byType);
+                    updateTimelineChart('day', data.timeline);
+                    updatePerformanceMetrics(data.performance);
+                    
+                    $('#custom-date-modal').modal('hide');
+                    showNotification('Custom date range applied', 'success');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error applying custom date range:', error);
+                    showNotification('Error applying custom date range', 'error');
+                }
+            });
+        }
+
+        // Export analytics
+        function exportAnalytics() {
+            $.ajax({
+                url: '/api/customer-communication/analytics/export',
+                method: 'GET',
+                data: {
+                    dateRange: currentDateRange
+                },
+                success: function(data) {
+                    // Create a download link for the CSV
+                    const csvContent = data.csv;
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('hidden', '');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', `communication-analytics-${currentDateRange}.csv`);
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    showNotification('Analytics exported successfully', 'success');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error exporting analytics:', error);
+                    showNotification('Error exporting analytics', 'error');
+                }
+            });
+        }
+
+        // View communication details
+        function viewCommunication(communicationId) {
+            // In a real implementation, this would open a modal with communication details
+            showNotification(`Viewing communication ${communicationId}`, 'info');
+        }
+    </script>
+</body>
+</html>

@@ -1,22 +1,24 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const saltRounds = 10;
 const validator = require("validator");
 const path = require("path");
+const appName = process.env.APPNAME || 'PharmaSoft';
+const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
 const dbPath = path.join(
-    process.env.APPDATA,
-    process.env.APPNAME,
+    appData,
+    appName,
     "server",
     "databases",
     "users.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let usersDB = new Datastore({
     filename: dbPath,
@@ -32,7 +34,7 @@ usersDB.ensureIndex({ fieldName: "username", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Users API");
 });
 
@@ -43,7 +45,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/user/:userId", function (req, res) {
+router.get("/user/:userId", function (req, res) {
     if (!req.params.userId) {
         res.status(500).send("ID field is required.");
     } else {
@@ -65,7 +67,7 @@ app.get("/user/:userId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/logout/:userId", function (req, res) {
+router.get("/logout/:userId", function (req, res) {
     if (!req.params.userId) {
         res.status(500).send("ID field is required.");
     } else {
@@ -92,7 +94,7 @@ app.get("/logout/:userId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/login", function (req, res) {
+router.post("/login", function (req, res) {
     usersDB.findOne(
         {
             username: validator.escape(req.body.username),
@@ -137,7 +139,7 @@ app.post("/login", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/all", function (req, res) {
+router.get("/all", function (req, res) {
     usersDB.find({}, function (err, docs) {
         res.send(docs);
     });
@@ -150,7 +152,7 @@ app.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/user/:userId", function (req, res) {
+router.delete("/user/:userId", function (req, res) {
     usersDB.remove(
         {
             _id: parseInt(req.params.userId),
@@ -176,7 +178,7 @@ app.delete("/user/:userId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/post", function (req, res) {
+router.post("/post", function (req, res) {
     //encrypt password
     bcrypt
         .hash(req.body.password, saltRounds)
@@ -265,7 +267,7 @@ app.post("/post", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/check", function (req, res) {
+router.get("/check", function (req, res) {
     usersDB.findOne(
         {
             _id: 1,

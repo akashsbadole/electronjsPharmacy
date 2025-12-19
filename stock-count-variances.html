@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Count Variances - PharmaSoft</title>
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/icons.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
+    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="assets/css/responsive.css" rel="stylesheet" type="text/css" />
+    <script src="assets/js/modernizr.min.js"></script>
+</head>
+<body class="fixed-left">
+    <!-- Begin page -->
+    <div id="wrapper">
+        <!-- Top Bar Start -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="text-center">
+                    <a href="index.html" class="logo"><i class="md md-local-pharmacy"></i> <span>PharmaSoft</span></a>
+                </div>
+            </div>
+            <div class="navbar navbar-default" role="navigation">
+                <div class="container">
+                    <div class="navbar-collapse2">
+                        <ul class="nav navbar-nav hidden-xs">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                    <i class="md md-menu"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="stock-count-management.html">Stock Count Management</a></li>
+                                    <li><a href="stock-count-sheet.html">Count Sheet</a></li>
+                                    <li><a href="stock-count-reports.html">Reports</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right pull-right">
+                            <li class="hidden-xs">
+                                <a href="#" id="btn-fullscreen" class="waves-effect">
+                                    <i class="md md-fullscreen"></i>
+                                </a>
+                            </li>
+                            <li class="hidden-xs">
+                                <a href="#" class="right-bar-toggle waves-effect">
+                                    <i class="md md-settings-remote"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Top Bar End -->
+
+        <!-- ========== Left Sidebar Start ========== -->
+        <div class="left side-menu">
+            <div class="sidebar-inner slimscrollleft">
+                <div id="sidebar-menu">
+                    <ul>
+                        <li>
+                            <a href="stock-count-management.html" class="waves-effect">
+                                <i class="md md-assignment"></i>
+                                <span> Stock Counts </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-sheet.html" class="waves-effect">
+                                <i class="md md-clipboard"></i>
+                                <span> Count Sheet </span>
+                            </a>
+                        </li>
+                        <li class="active">
+                            <a href="#" class="waves-effect">
+                                <i class="md md-warning"></i>
+                                <span> Variances </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-reports.html" class="waves-effect">
+                                <i class="md md-assessment"></i>
+                                <span> Reports </span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- Left Sidebar End -->
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="content-page">
+            <!-- Start content -->
+            <div class="content">
+                <div class="container">
+                    <!-- Page title -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="page-header-title">
+                                <h4 class="page-title">Stock Count Variances</h4>
+                                <ol class="breadcrumb">
+                                    <li><a href="index.html">PharmaSoft</a></li>
+                                    <li><a href="stock-count-management.html">Stock Counts</a></li>
+                                    <li class="active">Variances</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variance Summary Cards -->
+                    <div class="row" id="varianceSummary">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-warning text-warning"></i> Total Variances</h4>
+                                <h2 class="m-b-20" id="totalVariances">0</h2>
+                                <p class="text-muted">
+                                    <span class="text-success">+<span id="surplusItems">0</span></span> surplus, 
+                                    <span class="text-danger">-<span id="shortageItems">0</span></span> shortage
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-attach-money text-info"></i> Variance Value</h4>
+                                <h2 class="m-b-20">₹<span id="totalVarianceValue">0</span></h2>
+                                <p class="text-muted">
+                                    Total value of all variances
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-assignment-late text-danger"></i> Pending Approval</h4>
+                                <h2 class="m-b-20" id="pendingApprovals">0</h2>
+                                <p class="text-muted">
+                                    <span id="highValueVariances">0</span> high-value variances
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-check-circle text-success"></i> Approved Today</h4>
+                                <h2 class="m-b-20" id="approvedToday">0</h2>
+                                <p class="text-muted">
+                                    <span id="adjustmentsCreated">0</span> adjustments created
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Count Information (if specific count is selected) -->
+                    <div class="row" id="stockCountInfo" style="display: none;">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h4 class="m-t-0 header-title"><b id="countName">-</b></h4>
+                                        <p class="text-muted m-b-20">
+                                            <span id="countType" class="label label-info"></span>
+                                            <span id="countStatus" class="label label-success"></span>
+                                        </p>
+                                        <p class="text-muted">
+                                            <i class="md md-store"></i> <span id="storeName">-</span><br>
+                                            <i class="md md-person"></i> <span id="supervisorName">-</span><br>
+                                            <i class="md md-event"></i> <span id="completedDate">-</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="pull-right">
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-primary" id="initializeApprovalBtn">
+                                                    <i class="md md-play-arrow"></i> Initialize Approval
+                                                </button>
+                                                <button type="button" class="btn btn-success" id="bulkApproveBtn">
+                                                    <i class="md md-done-all"></i> Bulk Approve
+                                                </button>
+                                                <button type="button" class="btn btn-warning" id="exportVariancesBtn">
+                                                    <i class="md md-file-download"></i> Export
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="stockCountFilter">Stock Count</label>
+                                            <select class="form-control" id="stockCountFilter">
+                                                <option value="">All Counts</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="varianceTypeFilter">Variance Type</label>
+                                            <select class="form-control" id="varianceTypeFilter">
+                                                <option value="">All Types</option>
+                                                <option value="SURPLUS">Surplus</option>
+                                                <option value="SHORTAGE">Shortage</option>
+                                                <option value="EXPIRED">Expired</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="approvalStatusFilter">Approval Status</label>
+                                            <select class="form-control" id="approvalStatusFilter">
+                                                <option value="">All Status</option>
+                                                <option value="PENDING">Pending</option>
+                                                <option value="APPROVED">Approved</option>
+                                                <option value="REJECTED">Rejected</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="valueRangeFilter">Value Range</label>
+                                            <select class="form-control" id="valueRangeFilter">
+                                                <option value="">All Values</option>
+                                                <option value="low">Low (< ₹100)</option>
+                                                <option value="medium">Medium (₹100-500)</option>
+                                                <option value="high">High (> ₹500)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="categoryFilter">Category</label>
+                                            <select class="form-control" id="categoryFilter">
+                                                <option value="">All Categories</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label><br>
+                                            <button type="button" class="btn btn-primary" id="applyFiltersBtn">
+                                                <i class="md md-search"></i> Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variances Table -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="variancesTable">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input type="checkbox" id="selectAllCheckbox">
+                                                </th>
+                                                <th>Item Details</th>
+                                                <th>Stock Count</th>
+                                                <th>Variance</th>
+                                                <th>Value</th>
+                                                <th>Type</th>
+                                                <th>Approval Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="variancesList">
+                                            <tr>
+                                                <td colspan="8" class="text-center">
+                                                    <div class="spinner">
+                                                        <i class="fa fa-spinner fa-spin"></i> Loading variances...
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="dataTables_info" id="variancesInfo">
+                                            Showing <span id="startVariance">0</span> to <span id="endVariance">0</span> of <span id="totalVariancesCount">0</span> variances
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="dataTables_paginate paging_simple_numbers" id="variancesPagination">
+                                            <!-- Pagination will be inserted here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="text-center m-b-30">
+                                <button type="button" class="btn btn-success" id="bulkApproveSelectedBtn" disabled>
+                                    <i class="md md-done-all"></i> Approve Selected
+                                </button>
+                                <button type="button" class="btn btn-danger" id="bulkRejectSelectedBtn" disabled>
+                                    <i class="md md-close"></i> Reject Selected
+                                </button>
+                                <button type="button" class="btn btn-primary" id="createAdjustmentsBtn">
+                                    <i class="md md-add-circle"></i> Create Adjustments
+                                </button>
+                                <button type="button" class="btn btn-default" id="backToListBtn">
+                                    <i class="md md-arrow-back"></i> Back to List
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- End Right content here -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- END wrapper -->
+
+    <!-- Variance Details Modal -->
+    <div id="varianceDetailsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Variance Details</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Item Information</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td><strong>Product Name</strong></td>
+                                    <td id="detailProductName">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Product Code</strong></td>
+                                    <td id="detailProductCode">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Barcode</strong></td>
+                                    <td id="detailBarcode">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Category</strong></td>
+                                    <td id="detailCategory">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Location</strong></td>
+                                    <td id="detailLocation">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Batch Number</strong></td>
+                                    <td id="detailBatchNumber">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Variance Information</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td><strong>Expected Quantity</strong></td>
+                                    <td id="detailExpectedQty">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Counted Quantity</strong></td>
+                                    <td id="detailCountedQty">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Variance</strong></td>
+                                    <td id="detailVariance">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Unit Price</strong></td>
+                                    <td id="detailUnitPrice">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Variance Value</strong></td>
+                                    <td id="detailVarianceValue">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Variance Type</strong></td>
+                                    <td id="detailVarianceType">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5>Count Information</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td><strong>Stock Count</strong></td>
+                                    <td id="detailStockCount">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Counted By</strong></td>
+                                    <td id="detailCountedBy">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Count Date</strong></td>
+                                    <td id="detailCountDate">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Notes</strong></td>
+                                    <td id="detailNotes">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5>Approval History</h5>
+                            <div id="approvalHistory">
+                                <p class="text-muted">No approval history available</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success waves-effect waves-light" id="approveVarianceBtn">Approve</button>
+                    <button type="button" class="btn btn-danger waves-effect waves-light" id="rejectVarianceBtn">Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="approvalModalTitle">Approve Variance</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="approvalReason">Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="approvalReason" rows="3" placeholder="Enter approval reason..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="adjustmentAction">Adjustment Action</label>
+                        <select class="form-control" id="adjustmentAction">
+                            <option value="auto">Create Adjustment Automatically</option>
+                            <option value="manual">Manual Review Required</option>
+                            <option value="none">No Adjustment Needed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success waves-effect waves-light" id="confirmApprovalBtn">Confirm Approval</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejectionModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Reject Variance</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rejectionReason">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="Enter rejection reason..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="recountRequired">Recount Required</label>
+                        <select class="form-control" id="recountRequired">
+                            <option value="yes">Yes, recount this item</option>
+                            <option value="no">No, variance is confirmed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger waves-effect waves-light" id="confirmRejectionBtn">Confirm Rejection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/detect.js"></script>
+    <script src="assets/js/fastclick.js"></script>
+    <script src="assets/js/jquery.slimscroll.js"></script>
+    <script src="assets/js/jquery.blockUI.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+    <script src="assets/js/jquery.nicescroll.js"></script>
+    <script src="assets/js/jquery.scrollTo.min.js"></script>
+    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
+    <script src="assets/js/stock-count-variances.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
@@ -14,9 +14,9 @@ const dbPath = path.join(
     "supplier-accounts.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let supplierAccountsDB = new Datastore({
     filename: dbPath,
@@ -33,7 +33,7 @@ supplierAccountsDB.ensureIndex({ fieldName: "supplierId", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Supplier Accounts API");
 });
 
@@ -44,7 +44,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -107,7 +107,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.supplierId) {
         return res.status(400).json({
@@ -223,7 +223,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/supplier/:supplierId", function (req, res) {
+router.get("/supplier/:supplierId", function (req, res) {
     if (!req.params.supplierId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -260,7 +260,7 @@ app.get("/supplier/:supplierId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/supplier/:supplierId", function (req, res) {
+router.put("/supplier/:supplierId", function (req, res) {
     if (!req.params.supplierId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -324,7 +324,7 @@ app.put("/supplier/:supplierId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/supplier/:supplierId/update-balance", function (req, res) {
+router.post("/supplier/:supplierId/update-balance", function (req, res) {
     if (!req.params.supplierId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -399,7 +399,7 @@ app.post("/supplier/:supplierId/update-balance", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/supplier/:supplierId/with-details", function (req, res) {
+router.get("/supplier/:supplierId/with-details", function (req, res) {
     if (!req.params.supplierId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -501,7 +501,7 @@ app.get("/supplier/:supplierId/with-details", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/aging-report", function (req, res) {
+router.get("/aging-report", function (req, res) {
     // Get all supplier accounts with balance > 0
     supplierAccountsDB.find({ balance: { $gt: 0 } }, function (err, accounts) {
         if (err) {
@@ -592,7 +592,7 @@ app.get("/aging-report", function (req, res) {
  * @param {Object} req request object with supplier ID as a parameter.
  * @param {Object} res response object.
  */
-app.get("/supplier/:supplierId/statement", function (req, res) {
+router.get("/supplier/:supplierId/statement", function (req, res) {
     if (!req.params.supplierId) {
         return res.status(400).json({
             error: "Bad Request",

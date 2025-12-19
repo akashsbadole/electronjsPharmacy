@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "restricted-drugs.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let restrictedDrugsDB = new Datastore({
     filename: dbPath,
@@ -34,7 +34,7 @@ restrictedDrugsDB.ensureIndex({ fieldName: "product_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Restricted Drugs API");
 });
 
@@ -45,7 +45,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -122,7 +122,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.product_id || !req.body.schedule_category) {
         return res.status(400).json({
@@ -213,7 +213,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
@@ -252,7 +252,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
@@ -324,7 +324,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
@@ -392,7 +392,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/schedule/:schedule", function (req, res) {
+router.get("/schedule/:schedule", function (req, res) {
     if (!req.params.schedule) {
         return res.status(400).send("Schedule category is required.");
     }
@@ -484,7 +484,7 @@ app.get("/schedule/:schedule", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/check/:productId", function (req, res) {
+router.get("/check/:productId", function (req, res) {
     if (!req.params.productId) {
         return res.status(400).send("Product ID is required.");
     }

@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
@@ -15,9 +16,9 @@ const dbPath = path.join(
     "transfers.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let transfersDB = new Datastore({
     filename: dbPath,
@@ -33,7 +34,7 @@ transfersDB.ensureIndex({ fieldName: "_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Transfers API");
 });
 
@@ -44,7 +45,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/all", function (req, res) {
+router.get("/all", function (req, res) {
     transfersDB.find({}, function (err, docs) {
         if (err) {
             console.error(err);
@@ -64,7 +65,7 @@ app.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/status/:status", function (req, res) {
+router.get("/status/:status", function (req, res) {
     if (!req.params.status) {
         return res.status(400).send("Status is required.");
     }
@@ -98,7 +99,7 @@ app.get("/status/:status", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/store/:storeId", function (req, res) {
+router.get("/store/:storeId", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }
@@ -129,7 +130,7 @@ app.get("/store/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:transferId", function (req, res) {
+router.get("/:transferId", function (req, res) {
     if (!req.params.transferId) {
         return res.status(400).send("Transfer ID is required.");
     }
@@ -166,7 +167,7 @@ app.get("/:transferId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/create", function (req, res) {
+router.post("/create", function (req, res) {
     // Validate required fields
     if (!req.body.fromStoreId || !req.body.toStoreId || !req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
         return res.status(400).json({
@@ -328,7 +329,7 @@ app.post("/create", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:transferId/status", function (req, res) {
+router.put("/:transferId/status", function (req, res) {
     if (!req.params.transferId) {
         return res.status(400).send("Transfer ID is required.");
     }
@@ -535,7 +536,7 @@ function updateInventoryForTransfer(transfer, callback) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/product/:productId/history", function (req, res) {
+router.get("/product/:productId/history", function (req, res) {
     if (!req.params.productId) {
         return res.status(400).send("Product ID is required.");
     }

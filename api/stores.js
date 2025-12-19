@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
@@ -14,9 +15,9 @@ const dbPath = path.join(
     "stores.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let storesDB = new Datastore({
     filename: dbPath,
@@ -32,7 +33,7 @@ storesDB.ensureIndex({ fieldName: "_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Stores API");
 });
 
@@ -43,7 +44,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/all", function (req, res) {
+router.get("/all", function (req, res) {
     storesDB.find({ isActive: true }, function (err, docs) {
         if (err) {
             console.error(err);
@@ -63,7 +64,7 @@ app.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:storeId", function (req, res) {
+router.get("/:storeId", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }
@@ -101,7 +102,7 @@ app.get("/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/create", function (req, res) {
+router.post("/create", function (req, res) {
     // Validate required fields
     if (!req.body.name || !req.body.code) {
         return res.status(400).json({
@@ -162,7 +163,7 @@ app.post("/create", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:storeId", function (req, res) {
+router.put("/:storeId", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }
@@ -251,7 +252,7 @@ app.put("/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:storeId", function (req, res) {
+router.delete("/:storeId", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }
@@ -310,7 +311,7 @@ app.delete("/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/main", function (req, res) {
+router.get("/main", function (req, res) {
     storesDB.findOne({ isMainStore: true, isActive: true }, function (err, store) {
         if (err) {
             console.error(err);
@@ -338,7 +339,7 @@ app.get("/main", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/set-main", function (req, res) {
+router.post("/set-main", function (req, res) {
     if (!req.body.storeId) {
         return res.status(400).json({
             error: "Bad Request",

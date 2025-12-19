@@ -1,5 +1,5 @@
 const express = require("express");
-const app = express();
+const router = express.Router();
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
 const validator = require("validator");
@@ -30,7 +30,7 @@ customerInvoicesDB.ensureIndex({ fieldName: "customerId" });
  * @param {Object} req request object with optional query parameters for pagination and filtering.
  * @param {Object} res response object.
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
@@ -84,7 +84,7 @@ app.get("/", function (req, res) {
  * @param {Object} req request object with invoice ID as a parameter.
  * @param {Object} res response object.
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -117,7 +117,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} req request object with customer ID as a parameter.
  * @param {Object} res response object.
  */
-app.get("/customer/:customerId", function (req, res) {
+router.get("/customer/:customerId", function (req, res) {
     if (!req.params.customerId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -148,7 +148,7 @@ app.get("/customer/:customerId", function (req, res) {
  * @param {Object} req request object with invoice data in the body.
  * @param {Object} res response object.
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.customerId || !req.body.totalAmount) {
         return res.status(400).json({
@@ -193,7 +193,7 @@ app.post("/", function (req, res) {
  * @param {Object} req request object with updated invoice data in the body.
  * @param {Object} res response object.
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -263,7 +263,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} req request object with invoice ID as a parameter.
  * @param {Object} res response object.
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -383,4 +383,4 @@ function calculateDueDate(invoiceDate, paymentTerms) {
     return date.toISOString().split('T')[0];
 }
 
-module.exports = app;
+module.exports = router;

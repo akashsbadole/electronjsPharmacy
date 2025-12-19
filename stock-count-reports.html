@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Count Reports - PharmaSoft</title>
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/icons.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
+    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="assets/css/responsive.css" rel="stylesheet" type="text/css" />
+    <script src="assets/js/modernizr.min.js"></script>
+</head>
+<body class="fixed-left">
+    <!-- Begin page -->
+    <div id="wrapper">
+        <!-- Top Bar Start -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="text-center">
+                    <a href="index.html" class="logo"><i class="md md-local-pharmacy"></i> <span>PharmaSoft</span></a>
+                </div>
+            </div>
+            <div class="navbar navbar-default" role="navigation">
+                <div class="container">
+                    <div class="navbar-collapse2">
+                        <ul class="nav navbar-nav hidden-xs">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                    <i class="md md-menu"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="stock-count-management.html">Stock Count Management</a></li>
+                                    <li><a href="stock-count-sheet.html">Count Sheet</a></li>
+                                    <li><a href="stock-count-variances.html">Variances</a></li>
+                                    <li><a href="stock-count-dashboard.html">Dashboard</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right pull-right">
+                            <li class="hidden-xs">
+                                <a href="#" id="btn-fullscreen" class="waves-effect">
+                                    <i class="md md-fullscreen"></i>
+                                </a>
+                            </li>
+                            <li class="hidden-xs">
+                                <a href="#" class="right-bar-toggle waves-effect">
+                                    <i class="md md-settings-remote"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Top Bar End -->
+
+        <!-- ========== Left Sidebar Start ========== -->
+        <div class="left side-menu">
+            <div class="sidebar-inner slimscrollleft">
+                <div id="sidebar-menu">
+                    <ul>
+                        <li>
+                            <a href="stock-count-management.html" class="waves-effect">
+                                <i class="md md-assignment"></i>
+                                <span> Stock Counts </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-sheet.html" class="waves-effect">
+                                <i class="md md-clipboard"></i>
+                                <span> Count Sheet </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-variances.html" class="waves-effect">
+                                <i class="md md-warning"></i>
+                                <span> Variances </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-dashboard.html" class="waves-effect">
+                                <i class="md md-dashboard"></i>
+                                <span> Dashboard </span>
+                            </a>
+                        </li>
+                        <li class="active">
+                            <a href="#" class="waves-effect">
+                                <i class="md md-assessment"></i>
+                                <span> Reports </span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- Left Sidebar End -->
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="content-page">
+            <!-- Start content -->
+            <div class="content">
+                <div class="container">
+                    <!-- Page title -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="page-header-title">
+                                <h4 class="page-title">Stock Count Reports</h4>
+                                <ol class="breadcrumb">
+                                    <li><a href="index.html">PharmaSoft</a></li>
+                                    <li><a href="stock-count-management.html">Stock Counts</a></li>
+                                    <li class="active">Reports</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Generation Section -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Generate Reports</b></h4>
+                                <p class="text-muted m-b-30">Select report type and configure parameters</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="reportType">Report Type</label>
+                                            <select class="form-control" id="reportType">
+                                                <option value="">Select Report Type</option>
+                                                <option value="count-summary">Count Summary</option>
+                                                <option value="variance-analysis">Variance Analysis</option>
+                                                <option value="accuracy-report">Accuracy Report</option>
+                                                <option value="counter-performance">Counter Performance</option>
+                                                <option value="inventory-valuation">Inventory Valuation</option>
+                                                <option value="expiry-analysis">Expiry Analysis</option>
+                                                <option value="trend-analysis">Trend Analysis</option>
+                                                <option value="custom">Custom Report</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="dateRange">Date Range</label>
+                                            <select class="form-control" id="dateRange">
+                                                <option value="">Select Date Range</option>
+                                                <option value="today">Today</option>
+                                                <option value="yesterday">Yesterday</option>
+                                                <option value="this-week">This Week</option>
+                                                <option value="last-week">Last Week</option>
+                                                <option value="this-month">This Month</option>
+                                                <option value="last-month">Last Month</option>
+                                                <option value="this-quarter">This Quarter</option>
+                                                <option value="last-quarter">Last Quarter</option>
+                                                <option value="this-year">This Year</option>
+                                                <option value="custom">Custom Range</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="storeFilter">Store</label>
+                                            <select class="form-control" id="storeFilter">
+                                                <option value="">All Stores</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="format">Output Format</label>
+                                            <select class="form-control" id="format">
+                                                <option value="pdf">PDF</option>
+                                                <option value="excel">Excel</option>
+                                                <option value="csv">CSV</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Date Range (shown when custom is selected) -->
+                                <div class="row" id="customDateRange" style="display: none;">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="startDate">Start Date</label>
+                                            <input type="text" class="form-control datepicker" id="startDate" placeholder="Start date">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="endDate">End Date</label>
+                                            <input type="text" class="form-control datepicker" id="endDate" placeholder="End date">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Additional Filters (shown based on report type) -->
+                                <div class="row" id="additionalFilters" style="display: none;">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Additional Filters</label>
+                                            <div id="filterOptions">
+                                                <!-- Dynamic filter options will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <button type="button" class="btn btn-primary" id="generateReportBtn">
+                                            <i class="md md-assessment"></i> Generate Report
+                                        </button>
+                                        <button type="button" class="btn btn-default" id="resetFiltersBtn">
+                                            <i class="md md-refresh"></i> Reset Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduled Reports -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Scheduled Reports</b></h4>
+                                <p class="text-muted m-b-30">Manage automated report generation</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Report Name</th>
+                                                        <th>Type</th>
+                                                        <th>Schedule</th>
+                                                        <th>Recipients</th>
+                                                        <th>Last Generated</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="scheduledReportsList">
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">
+                                                            <div class="spinner">
+                                                                <i class="fa fa-spinner fa-spin"></i> Loading scheduled reports...
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-success btn-block" id="scheduleReportBtn">
+                                            <i class="md md-schedule"></i> Schedule New Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Reports -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Recent Reports</b></h4>
+                                <p class="text-muted m-b-30">Recently generated reports</p>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Report Name</th>
+                                                <th>Type</th>
+                                                <th>Generated By</th>
+                                                <th>Generated At</th>
+                                                <th>Format</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentReportsList">
+                                            <tr>
+                                                <td colspan="7" class="text-center">
+                                                    <div class="spinner">
+                                                        <i class="fa fa-spinner fa-spin"></i> Loading recent reports...
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Count Accuracy Trends</b></h4>
+                                <p class="text-muted m-b-30">Stock count accuracy over time</p>
+                                <div class="text-center">
+                                    <canvas id="accuracyTrendChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Variance Distribution</b></h4>
+                                <p class="text-muted m-b-30">Distribution of variance types</p>
+                                <div class="text-center">
+                                    <canvas id="varianceDistributionChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- End Right content here -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- END wrapper -->
+
+    <!-- Schedule Report Modal -->
+    <div id="scheduleReportModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Schedule Report</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="scheduleReportName">Report Name</label>
+                                <input type="text" class="form-control" id="scheduleReportName" placeholder="Enter report name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="scheduleReportType">Report Type</label>
+                                <select class="form-control" id="scheduleReportType">
+                                    <option value="">Select Report Type</option>
+                                    <option value="count-summary">Count Summary</option>
+                                    <option value="variance-analysis">Variance Analysis</option>
+                                    <option value="accuracy-report">Accuracy Report</option>
+                                    <option value="counter-performance">Counter Performance</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="scheduleFrequency">Frequency</label>
+                                <select class="form-control" id="scheduleFrequency">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="scheduleFormat">Output Format</label>
+                                <select class="form-control" id="scheduleFormat">
+                                    <option value="pdf">PDF</option>
+                                    <option value="excel">Excel</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="scheduleRecipients">Email Recipients</label>
+                                <textarea class="form-control" id="scheduleRecipients" rows="3" placeholder="Enter email addresses (comma separated)"></textarea>
+                                <p class="help-block">Enter multiple email addresses separated by commas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="scheduleFilters">Report Filters</label>
+                                <textarea class="form-control" id="scheduleFilters" rows="2" placeholder="Optional filters in JSON format"></textarea>
+                                <p class="help-block">Optional: Enter filters in JSON format</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary waves-effect waves-light" id="saveScheduleBtn">Save Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/detect.js"></script>
+    <script src="assets/js/fastclick.js"></script>
+    <script src="assets/js/jquery.slimscroll.js"></script>
+    <script src="assets/js/jquery.blockUI.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+    <script src="assets/js/jquery.nicescroll.js"></script>
+    <script src="assets/js/jquery.scrollTo.min.js"></script>
+    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
+    <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/plugins/chartjs/Chart.min.js"></script>
+    <script src="assets/js/stock-count-reports.js"></script>
+</body>
+</html>

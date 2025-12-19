@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reorder Triggers - PharmaSpot</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <style>
+        .trigger-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .trigger-card.active {
+            border-left-color: #4caf50;
+        }
+        .trigger-card.inactive {
+            border-left-color: #f44336;
+        }
+        .trigger-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .trigger-type-badge {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        .trigger-frequency-badge {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active {
+            background-color: #4caf50;
+        }
+        .status-inactive {
+            background-color: #f44336;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .condition-row {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+        .action-row {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .trigger-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            flex: 1;
+            margin: 0 5px;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="topbar">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="index.html">
+                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                </a>
+            </div>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Reorder Triggers</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Reorder Triggers</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row" id="summaryCards">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" id="totalTriggers">0</h4>
+                            <p class="card-text">Total Triggers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" id="activeTriggers">0</h4>
+                            <p class="card-text">Active Triggers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" id="triggeredToday">0</h4>
+                            <p class="card-text">Triggered Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" id="successRate">0%</h4>
+                            <p class="card-text">Success Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="filter-section">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="storeFilter">Store</label>
+                                <select class="form-control" id="storeFilter">
+                                    <option value="">All Stores</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="triggerTypeFilter">Trigger Type</label>
+                                <select class="form-control" id="triggerTypeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="STOCK_LEVEL">Stock Level</option>
+                                    <option value="EXPIRY">Expiry</option>
+                                    <option value="DEMAND_FORECAST">Demand Forecast</option>
+                                    <option value="SEASONAL">Seasonal</option>
+                                    <option value="MANUAL">Manual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="statusFilter">Status</label>
+                                <select class="form-control" id="statusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchInput">Search</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search triggers...">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                                <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
+                                <button class="btn btn-success float-right" id="createNewTrigger">Create New Trigger</button>
+                                <button class="btn btn-warning float-right mr-2" id="checkAllTriggers">Check All Triggers</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triggers List -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Reorder Triggers</h4>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-info" id="refreshData">Refresh</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="triggersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Store</th>
+                                            <th>Product</th>
+                                            <th>Frequency</th>
+                                            <th>Last Triggered</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="triggersTableBody">
+                                        <!-- Triggers will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center" id="noDataMessage" style="display: none;">
+                                <p>No triggers found. Create your first trigger to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Create/Edit Trigger Modal -->
+    <div class="modal fade" id="triggerModal" tabindex="-1" role="dialog" aria-labelledby="triggerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="triggerModalLabel">Create New Trigger</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="triggerForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="triggerName">Trigger Name</label>
+                                    <input type="text" class="form-control" id="triggerName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="triggerType">Trigger Type</label>
+                                    <select class="form-control" id="triggerType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="STOCK_LEVEL">Stock Level</option>
+                                        <option value="EXPIRY">Expiry</option>
+                                        <option value="DEMAND_FORECAST">Demand Forecast</option>
+                                        <option value="SEASONAL">Seasonal</option>
+                                        <option value="MANUAL">Manual</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="storeId">Store</label>
+                                    <select class="form-control" id="storeId">
+                                        <option value="">All Stores</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productId">Product</label>
+                                    <select class="form-control" id="productId">
+                                        <option value="">All Products</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="frequency">Frequency</label>
+                                    <select class="form-control" id="frequency" required>
+                                        <option value="">Select Frequency</option>
+                                        <option value="REAL_TIME">Real Time</option>
+                                        <option value="DAILY">Daily</option>
+                                        <option value="WEEKLY">Weekly</option>
+                                        <option value="MONTHLY">Monthly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="isActive">Status</label>
+                                    <select class="form-control" id="isActive">
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5>Trigger Conditions</h5>
+                            <div id="conditionsContainer">
+                                <div class="condition-row">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="conditionField">Field</label>
+                                            <select class="form-control condition-field">
+                                                <option value="quantity">Quantity</option>
+                                                <option value="minStock">Min Stock</option>
+                                                <option value="expiryDate">Expiry Date</option>
+                                                <option value="demandRate">Demand Rate</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="conditionOperator">Operator</label>
+                                            <select class="form-control condition-operator">
+                                                <option value="less_than">Less Than</option>
+                                                <option value="less_than_or_equal">Less Than or Equal</option>
+                                                <option value="greater_than">Greater Than</option>
+                                                <option value="greater_than_or_equal">Greater Than or Equal</option>
+                                                <option value="equals">Equals</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="conditionValue">Value</label>
+                                            <input type="text" class="form-control condition-value" placeholder="Enter value">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" id="addCondition">Add Condition</button>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5>Actions</h5>
+                            <div id="actionsContainer">
+                                <div class="action-row">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="actionType">Action Type</label>
+                                            <select class="form-control action-type">
+                                                <option value="CREATE_SUGGESTION">Create Suggestion</option>
+                                                <option value="SEND_NOTIFICATION">Send Notification</option>
+                                                <option value="CREATE_PURCHASE_ORDER">Create Purchase Order</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="actionValue">Action Value</label>
+                                            <input type="text" class="form-control action-value" placeholder="Enter action value">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" id="addAction">Add Action</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTrigger">Save Trigger</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trigger Details Modal -->
+    <div class="modal fade" id="triggerDetailsModal" tabindex="-1" role="dialog" aria-labelledby="triggerDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="triggerDetailsModalLabel">Trigger Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="triggerDetailsContent">
+                    <!-- Trigger details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let allTriggers = [];
+            let filteredTriggers = [];
+            let currentTriggerId = null;
+            
+            // Initialize
+            loadStores();
+            loadProducts();
+            loadTriggers();
+            
+            // Event handlers
+            $('#applyFilters').click(function() {
+                applyFilters();
+            });
+            
+            $('#resetFilters').click(function() {
+                resetFilters();
+            });
+            
+            $('#createNewTrigger').click(function() {
+                openCreateTriggerModal();
+            });
+            
+            $('#checkAllTriggers').click(function() {
+                checkAllTriggers();
+            });
+            
+            $('#refreshData').click(function() {
+                loadTriggers();
+            });
+            
+            $('#saveTrigger').click(function() {
+                saveTrigger();
+            });
+            
+            $('#addCondition').click(function() {
+                addConditionRow();
+            });
+            
+            $('#addAction').click(function() {
+                addActionRow();
+            });
+            
+            $('#searchInput').on('input', function() {
+                applyFilters();
+            });
+            
+            // Functions
+            function loadStores() {
+                $.ajax({
+                    url: '/api/stores',
+                    type: 'GET',
+                    success: function(stores) {
+                        const storeSelect = $('#storeId');
+                        const storeFilter = $('#storeFilter');
+                        
+                        storeSelect.empty().append('<option value="">All Stores</option>');
+                        storeFilter.empty().append('<option value="">All Stores</option>');
+                        
+                        stores.forEach(function(store) {
+                            storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
+                            storeFilter.append(`<option value="${store._id}">${store.name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        console.error('Failed to load stores');
+                    }
+                });
+            }
+            
+            function loadProducts() {
+                $.ajax({
+                    url: '/api/inventory',
+                    type: 'GET',
+                    success: function(products) {
+                        const productSelect = $('#productId');
+                        
+                        productSelect.empty().append('<option value="">All Products</option>');
+                        
+                        products.forEach(function(product) {
+                            productSelect.append(`<option value="${product._id}">${product.name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        console.error('Failed to load products');
+                    }
+                });
+            }
+            
+            function loadTriggers() {
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/reorder-triggers',
+                    type: 'GET',
+                    success: function(data) {
+                        allTriggers = data.triggers || [];
+                        filteredTriggers = [...allTriggers];
+                        renderTriggers();
+                        updateSummaryCards();
+                        hideLoading();
+                    },
+                    error: function() {
+                        console.error('Failed to load triggers');
+                        hideLoading();
+                    }
+                });
+            }
+            
+            function applyFilters() {
+                const storeFilter = $('#storeFilter').val();
+                const triggerTypeFilter = $('#triggerTypeFilter').val();
+                const statusFilter = $('#statusFilter').val();
+                const searchTerm = $('#searchInput').val().toLowerCase();
+                
+                filteredTriggers = allTriggers.filter(function(trigger) {
+                    let matches = true;
+                    
+                    if (storeFilter && trigger.storeId != storeFilter) {
+                        matches = false;
+                    }
+                    
+                    if (triggerTypeFilter && trigger.triggerType !== triggerTypeFilter) {
+                        matches = false;
+                    }
+                    
+                    if (statusFilter && trigger.isActive !== (statusFilter === 'ACTIVE')) {
+                        matches = false;
+                    }
+                    
+                    if (searchTerm && trigger.name.toLowerCase().indexOf(searchTerm) === -1) {
+                        matches = false;
+                    }
+                    
+                    return matches;
+                });
+                
+                renderTriggers();
+            }
+            
+            function resetFilters() {
+                $('#storeFilter').val('');
+                $('#triggerTypeFilter').val('');
+                $('#statusFilter').val('');
+                $('#searchInput').val('');
+                
+                filteredTriggers = [...allTriggers];
+                renderTriggers();
+            }
+            
+            function renderTriggers() {
+                const tbody = $('#triggersTableBody');
+                tbody.empty();
+                
+                if (filteredTriggers.length === 0) {
+                    $('#noDataMessage').show();
+                    $('#triggersTable').hide();
+                    return;
+                }
+                
+                $('#noDataMessage').hide();
+                $('#triggersTable').show();
+                
+                filteredTriggers.forEach(function(trigger) {
+                    const statusClass = trigger.isActive ? 'status-active' : 'status-inactive';
+                    const statusText = trigger.isActive ? 'Active' : 'Inactive';
+                    const triggerTypeClass = getTriggerTypeClass(trigger.triggerType);
+                    
+                    const row = `
+                        <tr class="trigger-card ${trigger.isActive ? 'active' : 'inactive'}">
+                            <td>
+                                <span class="status-indicator ${statusClass}"></span>
+                                ${statusText}
+                            </td>
+                            <td>${trigger.name}</td>
+                            <td><span class="badge ${triggerTypeClass}">${trigger.triggerType}</span></td>
+                            <td>${getStoreName(trigger.storeId)}</td>
+                            <td>${getProductName(trigger.productId)}</td>
+                            <td><span class="badge badge-info">${trigger.frequency}</span></td>
+                            <td>${trigger.lastTriggered ? new Date(trigger.lastTriggered).toLocaleDateString() : 'Never'}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-info view-trigger" data-id="${trigger._id}">View</button>
+                                    <button class="btn btn-sm btn-warning edit-trigger" data-id="${trigger._id}">Edit</button>
+                                    <button class="btn btn-sm btn-${trigger.isActive ? 'secondary' : 'success'} toggle-trigger" data-id="${trigger._id}">
+                                        ${trigger.isActive ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-trigger" data-id="${trigger._id}">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    tbody.append(row);
+                });
+                
+                // Add event handlers to new buttons
+                $('.view-trigger').click(function() {
+                    const triggerId = $(this).data('id');
+                    viewTriggerDetails(triggerId);
+                });
+                
+                $('.edit-trigger').click(function() {
+                    const triggerId = $(this).data('id');
+                    editTrigger(triggerId);
+                });
+                
+                $('.toggle-trigger').click(function() {
+                    const triggerId = $(this).data('id');
+                    toggleTrigger(triggerId);
+                });
+                
+                $('.delete-trigger').click(function() {
+                    const triggerId = $(this).data('id');
+                    deleteTrigger(triggerId);
+                });
+            }
+            
+            function updateSummaryCards() {
+                const totalTriggers = filteredTriggers.length;
+                const activeTriggers = filteredTriggers.filter(t => t.isActive).length;
+                const triggeredToday = filteredTriggers.filter(t => {
+                    if (!t.lastTriggered) return false;
+                    const lastTriggered = new Date(t.lastTriggered);
+                    const today = new Date();
+                    return lastTriggered.toDateString() === today.toDateString();
+                }).length;
+                
+                // Calculate success rate (simplified)
+                const successRate = totalTriggers > 0 ? Math.round((activeTriggers / totalTriggers) * 100) : 0;
+                
+                $('#totalTriggers').text(totalTriggers);
+                $('#activeTriggers').text(activeTriggers);
+                $('#triggeredToday').text(triggeredToday);
+                $('#successRate').text(successRate + '%');
+            }
+            
+            function getTriggerTypeClass(triggerType) {
+                switch (triggerType) {
+                    case 'STOCK_LEVEL': return 'badge-primary';
+                    case 'EXPIRY': return 'badge-danger';
+                    case 'DEMAND_FORECAST': return 'badge-info';
+                    case 'SEASONAL': return 'badge-warning';
+                    case 'MANUAL': return 'badge-secondary';
+                    default: return 'badge-secondary';
+                }
+            }
+            
+            function getStoreName(storeId) {
+                // This would normally fetch from a stores cache
+                return storeId ? `Store ${storeId}` : 'All Stores';
+            }
+            
+            function getProductName(productId) {
+                // This would normally fetch from a products cache
+                return productId ? `Product ${productId}` : 'All Products';
+            }
+            
+            function openCreateTriggerModal() {
+                currentTriggerId = null;
+                $('#triggerModalLabel').text('Create New Trigger');
+                $('#triggerForm')[0].reset();
+                
+                // Reset conditions and actions to default
+                $('#conditionsContainer').html(getDefaultConditionRow());
+                $('#actionsContainer').html(getDefaultActionRow());
+                
+                $('#triggerModal').modal('show');
+            }
+            
+            function editTrigger(triggerId) {
+                currentTriggerId = triggerId;
+                const trigger = allTriggers.find(t => t._id == triggerId);
+                
+                if (!trigger) return;
+                
+                $('#triggerModalLabel').text('Edit Trigger');
+                
+                // Populate form fields
+                $('#triggerName').val(trigger.name);
+                $('#triggerType').val(trigger.triggerType);
+                $('#storeId').val(trigger.storeId || '');
+                $('#productId').val(trigger.productId || '');
+                $('#frequency').val(trigger.frequency);
+                $('#isActive').val(trigger.isActive.toString());
+                
+                // Populate conditions and actions
+                populateConditions(trigger.conditions);
+                populateActions(trigger.actions);
+                
+                $('#triggerModal').modal('show');
+            }
+            
+            function saveTrigger() {
+                const triggerData = {
+                    name: $('#triggerName').val(),
+                    triggerType: $('#triggerType').val(),
+                    storeId: $('#storeId').val() || null,
+                    productId: $('#productId').val() || null,
+                    frequency: $('#frequency').val(),
+                    isActive: $('#isActive').val() === 'true',
+                    conditions: collectConditions(),
+                    actions: collectActions()
+                };
+                
+                if (!triggerData.name || !triggerData.triggerType || !triggerData.frequency) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                showLoading();
+                
+                const url = currentTriggerId ? 
+                    `/api/reorder-triggers/${currentTriggerId}` : 
+                    '/api/reorder-triggers';
+                const method = currentTriggerId ? 'PUT' : 'POST';
+                
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: triggerData,
+                    success: function() {
+                        hideLoading();
+                        $('#triggerModal').modal('hide');
+                        loadTriggers(); // Refresh list
+                        
+                        const message = currentTriggerId ? 
+                            'Trigger updated successfully!' : 
+                            'Trigger created successfully!';
+                        alert(message);
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to save trigger. Please try again.');
+                    }
+                });
+            }
+            
+            function toggleTrigger(triggerId) {
+                showLoading();
+                
+                $.ajax({
+                    url: `/api/reorder-triggers/${triggerId}/toggle`,
+                    type: 'POST',
+                    success: function() {
+                        hideLoading();
+                        loadTriggers(); // Refresh list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to toggle trigger. Please try again.');
+                    }
+                });
+            }
+            
+            function deleteTrigger(triggerId) {
+                if (!confirm('Are you sure you want to delete this trigger?')) {
+                    return;
+                }
+                
+                showLoading();
+                
+                $.ajax({
+                    url: `/api/reorder-triggers/${triggerId}`,
+                    type: 'DELETE',
+                    success: function() {
+                        hideLoading();
+                        loadTriggers(); // Refresh list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to delete trigger. Please try again.');
+                    }
+                });
+            }
+            
+            function viewTriggerDetails(triggerId) {
+                const trigger = allTriggers.find(t => t._id == triggerId);
+                
+                if (!trigger) return;
+                
+                const detailsHtml = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <p><strong>Name:</strong> ${trigger.name}</p>
+                            <p><strong>Type:</strong> ${trigger.triggerType}</p>
+                            <p><strong>Frequency:</strong> ${trigger.frequency}</p>
+                            <p><strong>Status:</strong> ${trigger.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Store:</strong> ${getStoreName(trigger.storeId)}</p>
+                            <p><strong>Product:</strong> ${getProductName(trigger.productId)}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Execution Information</h6>
+                            <p><strong>Last Triggered:</strong> ${trigger.lastTriggered ? new Date(trigger.lastTriggered).toLocaleString() : 'Never'}</p>
+                            <p><strong>Trigger Count:</strong> ${trigger.triggerCount || 0}</p>
+                            <p><strong>Success Count:</strong> ${trigger.successCount || 0}</p>
+                            <p><strong>Failure Count:</strong> ${trigger.failureCount || 0}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Conditions</h6>
+                            <div class="trigger-stats">
+                                ${trigger.conditions ? trigger.conditions.map(c => 
+                                    `<div class="stat-item">
+                                        <div class="stat-value">${c.field} ${c.operator} ${c.value}</div>
+                                        <div class="stat-label">Condition</div>
+                                    </div>`
+                                ).join('') : 'No conditions defined'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Actions</h6>
+                            <div class="trigger-stats">
+                                ${trigger.actions ? trigger.actions.map(a => 
+                                    `<div class="stat-item">
+                                        <div class="stat-value">${a.type}</div>
+                                        <div class="stat-label">${a.value || 'Default'}</div>
+                                    </div>`
+                                ).join('') : 'No actions defined'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#triggerDetailsContent').html(detailsHtml);
+                $('#triggerDetailsModal').modal('show');
+            }
+            
+            function checkAllTriggers() {
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/reorder-triggers/check-triggers',
+                    type: 'POST',
+                    success: function(data) {
+                        hideLoading();
+                        alert(`Trigger check completed. ${data.triggeredCount || 0} triggers fired.`);
+                        loadTriggers(); // Refresh list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to check triggers. Please try again.');
+                    }
+                });
+            }
+            
+            function addConditionRow() {
+                const conditionRow = getDefaultConditionRow();
+                $('#conditionsContainer').append(conditionRow);
+            }
+            
+            function addActionRow() {
+                const actionRow = getDefaultActionRow();
+                $('#actionsContainer').append(actionRow);
+            }
+            
+            function getDefaultConditionRow() {
+                return `
+                    <div class="condition-row">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="conditionField">Field</label>
+                                <select class="form-control condition-field">
+                                    <option value="quantity">Quantity</option>
+                                    <option value="minStock">Min Stock</option>
+                                    <option value="expiryDate">Expiry Date</option>
+                                    <option value="demandRate">Demand Rate</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="conditionOperator">Operator</label>
+                                <select class="form-control condition-operator">
+                                    <option value="less_than">Less Than</option>
+                                    <option value="less_than_or_equal">Less Than or Equal</option>
+                                    <option value="greater_than">Greater Than</option>
+                                    <option value="greater_than_or_equal">Greater Than or Equal</option>
+                                    <option value="equals">Equals</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="conditionValue">Value</label>
+                                <input type="text" class="form-control condition-value" placeholder="Enter value">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function getDefaultActionRow() {
+                return `
+                    <div class="action-row">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="actionType">Action Type</label>
+                                <select class="form-control action-type">
+                                    <option value="CREATE_SUGGESTION">Create Suggestion</option>
+                                    <option value="SEND_NOTIFICATION">Send Notification</option>
+                                    <option value="CREATE_PURCHASE_ORDER">Create Purchase Order</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="actionValue">Action Value</label>
+                                <input type="text" class="form-control action-value" placeholder="Enter action value">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function collectConditions() {
+                const conditions = [];
+                
+                $('.condition-row').each(function() {
+                    const field = $(this).find('.condition-field').val();
+                    const operator = $(this).find('.condition-operator').val();
+                    const value = $(this).find('.condition-value').val();
+                    
+                    if (field && operator && value) {
+                        conditions.push({
+                            field: field,
+                            operator: operator,
+                            value: value
+                        });
+                    }
+                });
+                
+                return conditions;
+            }
+            
+            function collectActions() {
+                const actions = [];
+                
+                $('.action-row').each(function() {
+                    const type = $(this).find('.action-type').val();
+                    const value = $(this).find('.action-value').val();
+                    
+                    if (type) {
+                        actions.push({
+                            type: type,
+                            value: value
+                        });
+                    }
+                });
+                
+                return actions;
+            }
+            
+            function populateConditions(conditions) {
+                if (!conditions || conditions.length === 0) {
+                    $('#conditionsContainer').html(getDefaultConditionRow());
+                    return;
+                }
+                
+                $('#conditionsContainer').empty();
+                
+                conditions.forEach(function(condition) {
+                    const conditionRow = getDefaultConditionRow();
+                    const $row = $(conditionRow);
+                    
+                    $row.find('.condition-field').val(condition.field);
+                    $row.find('.condition-operator').val(condition.operator);
+                    $row.find('.condition-value').val(condition.value);
+                    
+                    $('#conditionsContainer').append($row);
+                });
+            }
+            
+            function populateActions(actions) {
+                if (!actions || actions.length === 0) {
+                    $('#actionsContainer').html(getDefaultActionRow());
+                    return;
+                }
+                
+                $('#actionsContainer').empty();
+                
+                actions.forEach(function(action) {
+                    const actionRow = getDefaultActionRow();
+                    const $row = $(actionRow);
+                    
+                    $row.find('.action-type').val(action.type);
+                    $row.find('.action-value').val(action.value || '');
+                    
+                    $('#actionsContainer').append($row);
+                });
+            }
+            
+            function showLoading() {
+                $('#loadingOverlay').show();
+            }
+            
+            function hideLoading() {
+                $('#loadingOverlay').hide();
+            }
+        });
+    </script>
+</body>
+</html>

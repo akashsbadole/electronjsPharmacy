@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "restricted-drug-sales.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let restrictedDrugSalesDB = new Datastore({
     filename: dbPath,
@@ -35,7 +35,7 @@ restrictedDrugSalesDB.ensureIndex({ fieldName: "product_id" });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Restricted Drug Sales API");
 });
 
@@ -46,7 +46,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -123,7 +123,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.transaction_id || !req.body.product_id || !req.body.quantity_sold || 
         !req.body.customer_name || !req.body.customer_address) {
@@ -253,7 +253,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Sale ID is required.");
     }
@@ -297,7 +297,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/drug/:drugId", function (req, res) {
+router.get("/drug/:drugId", function (req, res) {
     if (!req.params.drugId) {
         return res.status(400).send("Drug ID is required.");
     }
@@ -370,7 +370,7 @@ app.get("/drug/:drugId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/customer/:customerId", function (req, res) {
+router.get("/customer/:customerId", function (req, res) {
     if (!req.params.customerId) {
         return res.status(400).send("Customer ID is required.");
     }
@@ -474,7 +474,7 @@ app.get("/customer/:customerId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/by-date", function (req, res) {
+router.get("/by-date", function (req, res) {
     if (!req.query.start || !req.query.end) {
         return res.status(400).send("Start and end dates are required.");
     }

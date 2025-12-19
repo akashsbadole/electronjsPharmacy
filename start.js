@@ -4,8 +4,15 @@ const setupEvents = require("./installers/setupEvents");
 if (setupEvents.handleSquirrelEvent()) {
     return;
 }
-const server = require('./server');
 const { app, BrowserWindow, ipcMain, screen} = require("electron");
+
+// Set up environment variables before requiring server
+process.env.APPDATA = app.getPath('appData');
+const pkg = require("./package.json");
+process.env.APPNAME = pkg.name;
+
+// Now require server after environment is set up
+const server = require('./server');
 const path = require("path");
 const contextMenu = require("electron-context-menu");
 let { Menu, template } = require("./assets/js/native_menu/menu");

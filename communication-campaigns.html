@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication Campaigns - PharmaSoft</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Top Navigation -->
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-light">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="assets/images/logo.svg" alt="PharmaSoft" class="logo">
+                    </a>
+                </div>
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav mr-auto mt-md-0">
+                        <!-- Search -->
+                        <li class="nav-item d-none d-md-block search-box">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                                <i class="ti-search"></i>
+                            </a>
+                            <form class="app-search d-none d-md-block">
+                                <input type="text" class="form-control" placeholder="Search campaigns...">
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav my-lg-0">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-bell"></i>
+                                <span class="badge badge-xs badge-danger">3</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right mailbox scale-up">
+                                <ul>
+                                    <li>
+                                        <div class="drop-title">Notifications</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-email"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">Campaign completed</span>
+                                                <span class="message-time">5 mins ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-alert"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">Campaign needs attention</span>
+                                                <span class="message-time">1 hour ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-center" href="#">See all notifications</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <!-- User Profile -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="assets/images/default.jpg" alt="user" class="profile-pic">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right user-dd animated">
+                                <a class="dropdown-item" href="#"><i class="ti-user m-r-5 m-l-5"></i> My Profile</a>
+                                <a class="dropdown-item" href="#"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="ti-power-off m-r-5 m-l-5"></i> Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar">
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="nav-small-cap">PERSONAL</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-view-dashboard"></i>
+                                <span class="hide-menu">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-message-text"></i>
+                                <span class="hide-menu">Customer Communication</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="customer-communication.html">Send Communication</a></li>
+                                <li class="active"><a href="communication-campaigns.html">Campaigns</a></li>
+                                <li><a href="customer-communication.html#analytics">Analytics</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document"></i>
+                                <span class="hide-menu">Templates</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="communication-templates.html">Manage Templates</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-account-multiple"></i>
+                                <span class="hide-menu">Customers</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="#">Customer List</a></li>
+                                <li><a href="#">Customer Preferences</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-small-cap">PHARMACY</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-pill"></i>
+                                <span class="hide-menu">Inventory</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document-box"></i>
+                                <span class="hide-menu">Prescriptions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-cash-register"></i>
+                                <span class="hide-menu">Sales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-truck-delivery"></i>
+                                <span class="hide-menu">Delivery</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Page Content -->
+        <div class="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row page-titles">
+                    <div class="col-md-5 align-self-center">
+                        <h4 class="text-themecolor">Communication Campaigns</h4>
+                    </div>
+                    <div class="col-md-7 align-self-center text-right">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                                <li class="breadcrumb-item active">Campaigns</li>
+                            </ol>
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="showCampaignModal()">
+                                <i class="fa fa-plus-circle"></i> Create New Campaign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Statistics -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-info" id="total-campaigns">0</h4>
+                                        <h6 class="text-muted m-b-0">Total Campaigns</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-bullhorn font-20 text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-success" id="running-campaigns">0</h4>
+                                        <h6 class="text-muted m-b-0">Running</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-play-circle font-20 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-warning" id="paused-campaigns">0</h4>
+                                        <h6 class="text-muted m-b-0">Paused</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-pause-circle font-20 text-warning"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-primary" id="completed-campaigns">0</h4>
+                                        <h6 class="text-muted m-b-0">Completed</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-check-circle font-20 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Management Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Campaign Management</h4>
+                                <h6 class="card-subtitle">Manage and monitor communication campaigns</h6>
+                                
+                                <!-- Filters -->
+                                <div class="row margin-top-20">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-status">Filter by Status</label>
+                                            <select class="form-control" id="filter-status" onchange="filterCampaigns()">
+                                                <option value="">All Statuses</option>
+                                                <option value="DRAFT">Draft</option>
+                                                <option value="SCHEDULED">Scheduled</option>
+                                                <option value="RUNNING">Running</option>
+                                                <option value="PAUSED">Paused</option>
+                                                <option value="COMPLETED">Completed</option>
+                                                <option value="CANCELLED">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-type">Filter by Type</label>
+                                            <select class="form-control" id="filter-type" onchange="filterCampaigns()">
+                                                <option value="">All Types</option>
+                                                <option value="marketing">Marketing</option>
+                                                <option value="transactional">Transactional</option>
+                                                <option value="reminder">Reminder</option>
+                                                <option value="alert">Alert</option>
+                                                <option value="promotional">Promotional</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-date-range">Date Range</label>
+                                            <select class="form-control" id="filter-date-range" onchange="filterCampaigns()">
+                                                <option value="">All Time</option>
+                                                <option value="today">Today</option>
+                                                <option value="week">This Week</option>
+                                                <option value="month">This Month</option>
+                                                <option value="quarter">This Quarter</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="search-campaign">Search</label>
+                                            <input type="text" class="form-control" id="search-campaign" placeholder="Search campaigns..." onkeyup="filterCampaigns()">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Campaigns Table -->
+                                <div class="table-responsive margin-top-20">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Scheduled</th>
+                                                <th>Created</th>
+                                                <th>Progress</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="campaigns-table-body">
+                                            <tr>
+                                                <td colspan="7" class="text-center">Loading campaigns...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Details Section -->
+                <div class="row" id="campaign-details-section" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Campaign Details</h4>
+                                <div id="campaign-details-content">
+                                    <!-- Campaign details will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Modal -->
+    <div class="modal fade" id="campaign-modal" tabindex="-1" role="dialog" aria-labelledby="campaign-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="campaign-modal-label">Create/Edit Campaign</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="campaign-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="campaign-name">Campaign Name</label>
+                                    <input type="text" class="form-control" id="campaign-name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="campaign-type">Type</label>
+                                    <select class="form-control" id="campaign-type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="transactional">Transactional</option>
+                                        <option value="reminder">Reminder</option>
+                                        <option value="alert">Alert</option>
+                                        <option value="promotional">Promotional</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="campaign-description">Description</label>
+                            <textarea class="form-control" id="campaign-description" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="campaign-priority">Priority</label>
+                                    <select class="form-control" id="campaign-priority" required>
+                                        <option value="1">Low</option>
+                                        <option value="2">Normal</option>
+                                        <option value="3">High</option>
+                                        <option value="4">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="campaign-schedule">Schedule Type</label>
+                                    <select class="form-control" id="campaign-schedule" required>
+                                        <option value="immediate">Immediate</option>
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="recurring">Recurring</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="campaign-template">Template</label>
+                                    <select class="form-control" id="campaign-template">
+                                        <option value="">Select Template</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="campaign-start-date">Start Date</label>
+                                    <input type="datetime-local" class="form-control" id="campaign-start-date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="campaign-end-date">End Date</label>
+                                    <input type="datetime-local" class="form-control" id="campaign-end-date">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Target Audience Section -->
+                        <div class="border-top pt-3 mt-3">
+                            <h5>Target Audience</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="target-segment">Customer Segment</label>
+                                        <select class="form-control" id="target-segment">
+                                            <option value="all">All Customers</option>
+                                            <option value="loyalty">Loyalty Members</option>
+                                            <option value="recent">Recent Purchasers</option>
+                                            <option value="prescription">With Active Prescriptions</option>
+                                            <option value="custom">Custom Selection</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="target-channel">Channel</label>
+                                        <select class="form-control" id="target-channel">
+                                            <option value="all">All Available Channels</option>
+                                            <option value="sms">SMS Only</option>
+                                            <option value="email">Email Only</option>
+                                            <option value="whatsapp">WhatsApp Only</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="previewCampaign()">Preview</button>
+                    <button type="button" class="btn btn-success" onclick="saveCampaign()">Save Campaign</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app-style-switcher.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/sidebarmenu.js"></script>
+    <script src="assets/js/custom.min.js"></script>
+    <script src="assets/js/customer-communication.js"></script>
+    <script src="assets/js/communication-campaigns.js"></script>
+    <script>
+        // Initialize page
+        $(document).ready(function() {
+            loadCampaigns();
+            loadTemplates();
+            updateCampaignStats();
+        });
+
+        // Update campaign statistics
+        function updateCampaignStats() {
+            $.ajax({
+                url: '/api/communication-campaigns/all',
+                method: 'GET',
+                success: function(data) {
+                    const campaigns = data.campaigns || [];
+                    
+                    let total = campaigns.length;
+                    let running = 0;
+                    let paused = 0;
+                    let completed = 0;
+                    
+                    campaigns.forEach(campaign => {
+                        switch(campaign.status) {
+                            case 'RUNNING':
+                                running++;
+                                break;
+                            case 'PAUSED':
+                                paused++;
+                                break;
+                            case 'COMPLETED':
+                                completed++;
+                                break;
+                        }
+                    });
+                    
+                    $('#total-campaigns').text(total);
+                    $('#running-campaigns').text(running);
+                    $('#paused-campaigns').text(paused);
+                    $('#completed-campaigns').text(completed);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading campaign stats:', error);
+                }
+            });
+        }
+
+        // Filter campaigns
+        function filterCampaigns() {
+            const status = $('#filter-status').val();
+            const type = $('#filter-type').val();
+            const dateRange = $('#filter-date-range').val();
+            const searchTerm = $('#search-campaign').val();
+
+            $.ajax({
+                url: '/api/communication-campaigns/all',
+                method: 'GET',
+                data: {
+                    status: status,
+                    type: type
+                },
+                success: function(data) {
+                    let campaigns = data.campaigns || [];
+                    
+                    // Apply client-side filtering for date range and search term
+                    if (dateRange) {
+                        const now = new Date();
+                        let filterDate;
+                        
+                        switch(dateRange) {
+                            case 'today':
+                                filterDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                break;
+                            case 'week':
+                                filterDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+                                break;
+                            case 'month':
+                                filterDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                                break;
+                            case 'quarter':
+                                filterDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                                break;
+                        }
+                        
+                        if (filterDate) {
+                            campaigns = campaigns.filter(campaign => {
+                                const campaignDate = new Date(campaign.createdAt);
+                                return campaignDate >= filterDate;
+                            });
+                        }
+                    }
+                    
+                    if (searchTerm) {
+                        const term = searchTerm.toLowerCase();
+                        campaigns = campaigns.filter(campaign => {
+                            return campaign.name.toLowerCase().includes(term) ||
+                                   campaign.description.toLowerCase().includes(term);
+                        });
+                    }
+                    
+                    populateCampaignsTable(campaigns);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error filtering campaigns:', error);
+                    showNotification('Error filtering campaigns', 'error');
+                }
+            });
+        }
+
+        // Load templates for campaign modal
+        function loadTemplates() {
+            $.ajax({
+                url: '/api/communication-templates/all',
+                method: 'GET',
+                success: function(data) {
+                    const templates = data.templates || [];
+                    const templateSelect = $('#campaign-template');
+                    
+                    templateSelect.empty();
+                    templateSelect.append('<option value="">Select Template</option>');
+                    
+                    templates.forEach(function(template) {
+                        if (template.approvalStatus === 'APPROVED') {
+                            templateSelect.append(`<option value="${template._id}">${template.name}</option>`);
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading templates:', error);
+                }
+            });
+        }
+
+        // Preview campaign
+        function previewCampaign() {
+            const name = $('#campaign-name').val();
+            const type = $('#campaign-type').val();
+            const description = $('#campaign-description').val();
+            const priority = $('#campaign-priority').val();
+            const schedule = $('#campaign-schedule').val();
+            const startDate = $('#campaign-start-date').val();
+            const endDate = $('#campaign-end-date').val();
+            const targetSegment = $('#target-segment').val();
+            const targetChannel = $('#target-channel').val();
+
+            if (!name || !type || !startDate) {
+                showNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const previewHtml = `
+                <div class="campaign-preview">
+                    <h5>Campaign Preview</h5>
+                    <div class="border p-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> ${name}</p>
+                                <p><strong>Type:</strong> ${type}</p>
+                                <p><strong>Description:</strong> ${description || 'N/A'}</p>
+                                <p><strong>Priority:</strong> ${priority}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Schedule:</strong> ${schedule}</p>
+                                <p><strong>Start Date:</strong> ${new Date(startDate).toLocaleString()}</p>
+                                <p><strong>End Date:</strong> ${endDate ? new Date(endDate).toLocaleString() : 'N/A'}</p>
+                                <p><strong>Target Segment:</strong> ${targetSegment}</p>
+                                <p><strong>Target Channel:</strong> ${targetChannel}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#campaign-details-content').html(previewHtml);
+            $('#campaign-details-section').show();
+        }
+
+        // Enhanced view campaign function
+        function viewCampaign(campaignId) {
+            const campaign = campaigns.find(c => c._id === campaignId);
+            if (!campaign) return;
+            
+            const detailsHtml = `
+                <div class="campaign-details">
+                    <h5>${campaign.name}</h5>
+                    <div class="border p-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Type:</strong> ${campaign.type}</p>
+                                <p><strong>Description:</strong> ${campaign.description || 'N/A'}</p>
+                                <p><strong>Status:</strong> <span class="badge ${getStatusClass(campaign.status)}">${formatStatus(campaign.status)}</span></p>
+                                <p><strong>Priority:</strong> ${campaign.priority}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Schedule Type:</strong> ${campaign.schedule.type}</p>
+                                <p><strong>Start Date:</strong> ${new Date(campaign.schedule.startDate).toLocaleString()}</p>
+                                <p><strong>End Date:</strong> ${campaign.schedule.endDate ? new Date(campaign.schedule.endDate).toLocaleString() : 'N/A'}</p>
+                                <p><strong>Created:</strong> ${new Date(campaign.createdAt).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <p><strong>Targeting:</strong> ${JSON.stringify(campaign.targeting, null, 2)}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <p><strong>Performance:</strong></p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" style="width: ${campaign.performance ? campaign.performance.sentCount / campaign.performance.totalRecipients * 100 : 0}%">
+                                        ${campaign.performance ? campaign.performance.sentCount : 0} / ${campaign.performance ? campaign.performance.totalRecipients : 0}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#campaign-details-content').html(detailsHtml);
+            $('#campaign-details-section').show();
+        }
+    </script>
+</body>
+</html>

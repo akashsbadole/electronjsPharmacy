@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "batches.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let batchesDB = new Datastore({
     filename: dbPath,
@@ -36,7 +36,7 @@ batchesDB.ensureIndex({ fieldName: "batchNumber" });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Batches API");
 });
 
@@ -47,7 +47,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -104,7 +104,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.productId || !req.body.batchNumber || !req.body.expiryDate) {
         return res.status(400).json({
@@ -176,7 +176,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -205,13 +205,55 @@ app.get("/:id", function (req, res) {
 });
 
 /**
+ * Helper function to update batch
+ *
+ * @param {number} batchId - The ID of the batch to update
+ * @param {Object} existingBatch - The existing batch data
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {void}
+ */
+function updateBatch(batchId, existingBatch, req, res) {
+    const updatedBatch = {
+        productId: req.body.productId ? parseInt(req.body.productId) : existingBatch.productId,
+        batchNumber: req.body.batchNumber ? validator.escape(req.body.batchNumber) : existingBatch.batchNumber,
+        expiryDate: req.body.expiryDate ? validator.escape(req.body.expiryDate) : existingBatch.expiryDate,
+        manufacturingDate: req.body.manufacturingDate ? validator.escape(req.body.manufacturingDate) : existingBatch.manufacturingDate,
+        initialQuantity: req.body.initialQuantity ? parseInt(req.body.initialQuantity) : existingBatch.initialQuantity,
+        currentQuantity: req.body.currentQuantity !== undefined ? parseInt(req.body.currentQuantity) : existingBatch.currentQuantity,
+        costPrice: req.body.costPrice !== undefined ? parseFloat(req.body.costPrice) : existingBatch.costPrice,
+        sellingPrice: req.body.sellingPrice !== undefined ? parseFloat(req.body.sellingPrice) : existingBatch.sellingPrice,
+        supplierId: req.body.supplierId !== undefined ? (req.body.supplierId ? parseInt(req.body.supplierId) : null) : existingBatch.supplierId,
+        rackLocation: req.body.rackLocation !== undefined ? validator.escape(req.body.rackLocation) : existingBatch.rackLocation,
+        shelfLocation: req.body.shelfLocation !== undefined ? validator.escape(req.body.shelfLocation) : existingBatch.shelfLocation,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : existingBatch.isActive,
+        updatedAt: new Date()
+    };
+    
+    batchesDB.update({ _id: batchId }, { $set: updatedBatch }, {}, function (err, numReplaced) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "An unexpected error occurred.",
+            });
+        }
+        
+        // Update inventory with batch information
+        updateInventoryWithBatch(updatedBatch);
+        
+        res.json({ ...updatedBatch, _id: batchId });
+    });
+}
+
+/**
  * PUT endpoint: Update batch.
  *
  * @param {Object} req request object with updated batch data in the body.
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -260,43 +302,10 @@ app.put("/:id", function (req, res) {
                     });
                 }
                 
-                updateBatch();
+                updateBatch(batchId, existingBatch, req, res);
             });
         } else {
-            updateBatch();
-        }
-        
-        function updateBatch() {
-            const updatedBatch = {
-                productId: req.body.productId ? parseInt(req.body.productId) : existingBatch.productId,
-                batchNumber: req.body.batchNumber ? validator.escape(req.body.batchNumber) : existingBatch.batchNumber,
-                expiryDate: req.body.expiryDate ? validator.escape(req.body.expiryDate) : existingBatch.expiryDate,
-                manufacturingDate: req.body.manufacturingDate ? validator.escape(req.body.manufacturingDate) : existingBatch.manufacturingDate,
-                initialQuantity: req.body.initialQuantity ? parseInt(req.body.initialQuantity) : existingBatch.initialQuantity,
-                currentQuantity: req.body.currentQuantity !== undefined ? parseInt(req.body.currentQuantity) : existingBatch.currentQuantity,
-                costPrice: req.body.costPrice !== undefined ? parseFloat(req.body.costPrice) : existingBatch.costPrice,
-                sellingPrice: req.body.sellingPrice !== undefined ? parseFloat(req.body.sellingPrice) : existingBatch.sellingPrice,
-                supplierId: req.body.supplierId !== undefined ? (req.body.supplierId ? parseInt(req.body.supplierId) : null) : existingBatch.supplierId,
-                rackLocation: req.body.rackLocation !== undefined ? validator.escape(req.body.rackLocation) : existingBatch.rackLocation,
-                shelfLocation: req.body.shelfLocation !== undefined ? validator.escape(req.body.shelfLocation) : existingBatch.shelfLocation,
-                isActive: req.body.isActive !== undefined ? req.body.isActive : existingBatch.isActive,
-                updatedAt: new Date()
-            };
-            
-            batchesDB.update({ _id: batchId }, { $set: updatedBatch }, {}, function (err, numReplaced) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({
-                        error: "Internal Server Error",
-                        message: "An unexpected error occurred.",
-                    });
-                }
-                
-                // Update inventory with batch information
-                updateInventoryWithBatch(updatedBatch);
-                
-                res.json({ ...updatedBatch, _id: batchId });
-            });
+            updateBatch(batchId, existingBatch, req, res);
         }
     });
 });
@@ -308,7 +317,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -363,7 +372,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/expiring-soon", function (req, res) {
+router.get("/expiring-soon", function (req, res) {
     const today = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(today.getDate() + 30);
@@ -395,7 +404,7 @@ app.get("/expiring-soon", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/expired", function (req, res) {
+router.get("/expired", function (req, res) {
     const today = new Date();
     
     batchesDB.find({
@@ -422,7 +431,7 @@ app.get("/expired", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/product/:productId", function (req, res) {
+router.get("/product/:productId", function (req, res) {
     if (!req.params.productId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -488,4 +497,417 @@ function updateInventoryWithBatch(batch) {
     );
 }
 
+/**
+ * GET endpoint: Get batches for stock counting.
+ *
+ * @param {Object} req request object with stock count parameters.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.get("/stock-count/:sessionId", function (req, res) {
+    if (!req.params.sessionId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Session ID is required.",
+        });
+    }
+    
+    const sessionId = parseInt(req.params.sessionId);
+    
+    // Get stock count session details
+    const stockCountingDBPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "stock-counting.db",
+    );
+    
+    const stockCountingDB = new Datastore({
+        filename: stockCountingDBPath,
+        autoload: true,
+    });
+    
+    stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "An unexpected error occurred.",
+            });
+        }
+        
+        if (!stockCount) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Stock count session not found.",
+            });
+        }
+        
+        // Build query based on count scope
+        let query = { isActive: true, currentQuantity: { $gt: 0 } };
+        
+        // Apply scope filters if specified
+        if (stockCount.countScope && Object.keys(stockCount.countScope).length > 0) {
+            const scope = stockCount.countScope;
+            
+            if (scope.products && scope.products.length > 0) {
+                query.productId = { $in: scope.products };
+            }
+            
+            if (scope.suppliers && scope.suppliers.length > 0) {
+                query.supplierId = { $in: scope.suppliers };
+            }
+            
+            if (scope.expiryDate) {
+                if (scope.expiryDate.before) {
+                    query.expiryDate = { $lte: scope.expiryDate.before };
+                }
+                if (scope.expiryDate.after) {
+                    query.expiryDate = query.expiryDate || {};
+                    query.expiryDate.$gte = scope.expiryDate.after;
+                }
+            }
+        }
+        
+        batchesDB.find(query)
+            .sort({ expiryDate: 1 })
+            .exec(function (err, batches) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "An unexpected error occurred.",
+                    });
+                }
+                
+                // Get product details for each batch
+                const productIds = batches.map(batch => batch.productId);
+                
+                if (productIds.length === 0) {
+                    return res.json({
+                        batches: [],
+                        sessionId: sessionId,
+                        countType: stockCount.countType
+                    });
+                }
+                
+                const inventoryDbPath = path.join(
+                    process.env.APPDATA,
+                    process.env.APPNAME,
+                    "server",
+                    "databases",
+                    "inventory.db",
+                );
+                
+                const inventoryDB = new Datastore({
+                    filename: inventoryDbPath,
+                    autoload: true,
+                });
+                
+                inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "Failed to load product details.",
+                        });
+                    }
+                    
+                    // Get store inventory quantities
+                    const storeInventoryDBPath = path.join(
+                        process.env.APPDATA,
+                        process.env.APPNAME,
+                        "server",
+                        "databases",
+                        "store-inventory.db",
+                    );
+                    
+                    const storeInventoryDB = new Datastore({
+                        filename: storeInventoryDBPath,
+                        autoload: true,
+                    });
+                    
+                    storeInventoryDB.find({
+                        productId: { $in: productIds },
+                        storeId: stockCount.storeId
+                    }, function(err, storeInventories) {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "Failed to load store inventory.",
+                            });
+                        }
+                        
+                        // Enrich batches with product and store inventory details
+                        const enrichedBatches = batches.map(batch => {
+                            const product = products.find(p => p._id === batch.productId);
+                            const storeInventory = storeInventories.find(si => si.productId === batch.productId);
+                            
+                            const today = new Date();
+                            const expiryDate = new Date(batch.expiryDate);
+                            const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                            
+                            return {
+                                ...batch,
+                                productName: product ? product.name : 'Unknown Product',
+                                productBarcode: product ? product.barcode : null,
+                                productCategory: product ? product.category : null,
+                                storeQuantity: storeInventory ? storeInventory.quantity : 0,
+                                daysUntilExpiry: daysUntilExpiry,
+                                expiryStatus: daysUntilExpiry < 0 ? 'EXPIRED' :
+                                             daysUntilExpiry <= 30 ? 'EXPIRING_SOON' :
+                                             daysUntilExpiry <= 90 ? 'EXPIRING' : 'OK',
+                                totalValue: batch.currentQuantity * (product ? product.price || 0 : 0)
+                            };
+                        });
+                        
+                        res.json({
+                            batches: enrichedBatches,
+                            sessionId: sessionId,
+                            countType: stockCount.countType,
+                            storeId: stockCount.storeId
+                        });
+                    });
+                });
+            });
+    });
+});
+
+/**
+ * POST endpoint: Update batch quantities from stock count.
+ *
+ * @param {Object} req request object with batch update data.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/update-from-stock-count", function (req, res) {
+    if (!req.body.sessionId || !req.body.batches) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Session ID and batches array are required.",
+        });
+    }
+    
+    const sessionId = parseInt(req.body.sessionId);
+    const batchUpdates = req.body.batches;
+    
+    // Verify stock count session
+    const stockCountingDBPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "stock-counting.db",
+    );
+    
+    const stockCountingDB = new Datastore({
+        filename: stockCountingDBPath,
+        autoload: true,
+    });
+    
+    stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "An unexpected error occurred.",
+            });
+        }
+        
+        if (!stockCount) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Stock count session not found.",
+            });
+        }
+        
+        if (stockCount.countStatus !== 'COMPLETED') {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Batch quantities can only be updated from completed stock counts.",
+            });
+        }
+        
+        // Process each batch update
+        const updatePromises = batchUpdates.map(batchData => {
+            return new Promise((resolve, reject) => {
+                const batchId = parseInt(batchData.batchId);
+                const countedQuantity = parseInt(batchData.countedQuantity);
+                
+                // Find existing batch
+                batchesDB.findOne({ _id: batchId }, function (err, batch) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    
+                    if (!batch) {
+                        return reject(new Error(`Batch ${batchId} not found`));
+                    }
+                    
+                    const variance = countedQuantity - batch.currentQuantity;
+                    
+                    // Update batch quantity
+                    batchesDB.update(
+                        { _id: batchId },
+                        {
+                            $set: {
+                                currentQuantity: countedQuantity,
+                                lastCounted: new Date(),
+                                lastCountSession: sessionId
+                            }
+                        },
+                        {},
+                        function(err, numReplaced) {
+                            if (err) {
+                                return reject(err);
+                            }
+                            
+                            // Create batch movement record
+                            createBatchMovement({
+                                batchId: batchId,
+                                movementType: variance >= 0 ? 'STOCK_COUNT_INCREASE' : 'STOCK_COUNT_DECREASE',
+                                quantity: Math.abs(variance),
+                                referenceType: 'STOCK_COUNT',
+                                referenceId: sessionId,
+                                previousQuantity: batch.currentQuantity,
+                                newQuantity: countedQuantity,
+                                notes: batchData.notes || `Stock count adjustment for session ${sessionId}`
+                            });
+                            
+                            resolve({
+                                batchId: batchId,
+                                previousQuantity: batch.currentQuantity,
+                                newQuantity: countedQuantity,
+                                variance: variance
+                            });
+                        }
+                    );
+                });
+            });
+        });
+        
+        Promise.all(updatePromises)
+            .then(results => {
+                res.json({
+                    message: "Batch quantities updated successfully from stock count.",
+                    updatedBatches: results,
+                    sessionId: sessionId
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "Failed to update batch quantities from stock count.",
+                });
+            });
+    });
+});
+
+/**
+ * GET endpoint: Get batch movements for tracking.
+ *
+ * @param {Object} req request object with batch ID and filter parameters.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.get("/:batchId/movements", function (req, res) {
+    if (!req.params.batchId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Batch ID is required.",
+        });
+    }
+    
+    const batchId = parseInt(req.params.batchId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    // Get batch movements from batch movements database
+    const batchMovementsDBPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "batch-movements.db",
+    );
+    
+    const batchMovementsDB = new Datastore({
+        filename: batchMovementsDBPath,
+        autoload: true,
+    });
+    
+    batchMovementsDB.find({ batchId: batchId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(function (err, movements) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "An unexpected error occurred.",
+                });
+            }
+            
+            // Get total count for pagination
+            batchMovementsDB.count({ batchId: batchId }, function (err, count) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "An unexpected error occurred.",
+                    });
+                }
+                
+                res.json({
+                    movements: movements,
+                    pagination: {
+                        total: count,
+                        page: page,
+                        limit: limit,
+                        pages: Math.ceil(count / limit)
+                    }
+                });
+            });
+        });
+});
+
+/**
+ * Helper function to create batch movement record
+ *
+ * @param {Object} movementData movement data object
+ * @returns {void}
+ */
+function createBatchMovement(movementData) {
+    const batchMovementsDBPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "batch-movements.db",
+    );
+    
+    const batchMovementsDB = new Datastore({
+        filename: batchMovementsDBPath,
+        autoload: true,
+    });
+    
+    const movement = {
+        _id: Math.floor(Date.now() / 1000) + Math.random(),
+        ...movementData,
+        createdAt: new Date()
+    };
+    
+    batchMovementsDB.insert(movement, function (err, newMovement) {
+        if (err) {
+            console.error("Error creating batch movement:", err);
+        }
+    });
+}
+
 module.exports.updateBatch = updateBatch;
+module.exports.createBatchMovement = createBatchMovement;

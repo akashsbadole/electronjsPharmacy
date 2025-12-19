@@ -1,34 +1,26 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
 const moment = require("moment");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-
-// Database paths
-const transactionsDbPath = path.join(appData, appName, "server", "databases", "transactions.db");
-const inventoryDbPath = path.join(appData, appName, "server", "databases", "inventory.db");
-const customersDbPath = path.join(appData, appName, "server", "databases", "customers.db");
-const batchesDbPath = path.join(appData, appName, "server", "databases", "batches.db");
-const storeInventoryDbPath = path.join(appData, appName, "server", "databases", "store-inventory.db");
+const dbUtils = require("./db-utils");
 
 // Initialize databases
-const transactionsDB = new Datastore({ filename: transactionsDbPath, autoload: true });
-const inventoryDB = new Datastore({ filename: inventoryDbPath, autoload: true });
-const customersDB = new Datastore({ filename: customersDbPath, autoload: true });
-const batchesDB = new Datastore({ filename: batchesDbPath, autoload: true });
-const storeInventoryDB = new Datastore({ filename: storeInventoryDbPath, autoload: true });
+const transactionsDB = new Datastore({ filename: dbUtils.getDatabasePath("transactions.db"), autoload: true });
+const inventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("inventory.db"), autoload: true });
+const customersDB = new Datastore({ filename: dbUtils.getDatabasePath("customers.db"), autoload: true });
+const batchesDB = new Datastore({ filename: dbUtils.getDatabasePath("batches.db"), autoload: true });
+const storeInventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("store-inventory.db"), autoload: true });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 /**
  * GET endpoint: Get the welcome message for the Analytics API.
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Analytics API");
 });
 
@@ -73,7 +65,7 @@ function getDateRange(period) {
  * GET endpoint: Get sales analytics for different time periods
  * Query parameters: period (daily, weekly, monthly, yearly), storeId
  */
-app.get("/sales/trends", function (req, res) {
+router.get("/sales/trends", function (req, res) {
     const period = req.query.period || 'monthly';
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
     const { startDate, endDate, groupBy } = getDateRange(period);
@@ -147,7 +139,7 @@ app.get("/sales/trends", function (req, res) {
  * GET endpoint: Get top selling products
  * Query parameters: period (daily, weekly, monthly, yearly), limit, storeId
  */
-app.get("/sales/top-products", function (req, res) {
+router.get("/sales/top-products", function (req, res) {
     const period = req.query.period || 'monthly';
     const limit = parseInt(req.query.limit) || 10;
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
@@ -205,7 +197,7 @@ app.get("/sales/top-products", function (req, res) {
 /**
  * GET endpoint: Get inventory analytics including stock movement and expiry analysis
  */
-app.get("/inventory/analysis", function (req, res) {
+router.get("/inventory/analysis", function (req, res) {
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
 
     // Get current inventory
@@ -338,13 +330,13 @@ function analyzeInventory(products, storeInventories, res) {
             stockAnalysis: stockAnalysis,
             expiryAnalysis: expiryAnalysis
         });
-    }
+    })
 }
 
 /**
  * GET endpoint: Get customer analytics including purchase patterns and top customers
  */
-app.get("/customers/analysis", function (req, res) {
+router.get("/customers/analysis", function (req, res) {
     const period = req.query.period || 'monthly';
     const limit = parseInt(req.query.limit) || 10;
     const { startDate, endDate } = getDateRange(period);
@@ -469,7 +461,7 @@ app.get("/customers/analysis", function (req, res) {
 /**
  * GET endpoint: Get financial analytics including profit & loss trends
  */
-app.get("/financial/analysis", function (req, res) {
+router.get("/financial/analysis", function (req, res) {
     const period = req.query.period || 'monthly';
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
     const { startDate, endDate } = getDateRange(period);

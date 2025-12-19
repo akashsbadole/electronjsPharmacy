@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "purchase-orders.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let purchaseOrdersDB = new Datastore({
     filename: dbPath,
@@ -36,7 +36,7 @@ purchaseOrdersDB.ensureIndex({ fieldName: "status" });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Purchase Orders API");
 });
 
@@ -47,7 +47,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -110,7 +110,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.supplierId || !req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
         return res.status(400).json({
@@ -230,7 +230,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -281,7 +281,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -428,7 +428,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -496,7 +496,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:id/receive", function (req, res) {
+router.post("/:id/receive", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -589,7 +589,7 @@ app.post("/:id/receive", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:id/cancel", function (req, res) {
+router.post("/:id/cancel", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -662,7 +662,7 @@ app.post("/:id/cancel", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/status/:status", function (req, res) {
+router.get("/status/:status", function (req, res) {
     if (!req.params.status) {
         return res.status(400).json({
             error: "Bad Request",
@@ -1278,6 +1278,573 @@ function generateInvoiceNumber(type) {
     
     const prefix = type === 'SUPPLIER' ? 'SINV' : 'CINV';
     return `${prefix}${year}${month}${day}${time.toString().slice(-6)}`;
+}
+
+/**
+ * POST endpoint: Create automated purchase order from reorder suggestions.
+ *
+ * @param {Object} req request object with reorder suggestion data in the body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/automated", function (req, res) {
+    // Validate required fields
+    if (!req.body.suggestionId || !req.body.supplierId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Suggestion ID and supplier ID are required fields.",
+        });
+    }
+    
+    const Datastore = require("@seald-io/nedb");
+    const path = require("path");
+    
+    // Get reorder suggestion
+    const reorderSuggestionsDbPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "reorder-suggestions.db",
+    );
+    
+    const reorderSuggestionsDB = new Datastore({
+        filename: reorderSuggestionsDbPath,
+        autoload: true,
+    });
+    
+    reorderSuggestionsDB.findOne({ _id: parseInt(req.body.suggestionId) }, function (err, suggestion) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "Failed to retrieve reorder suggestion.",
+            });
+        }
+        
+        if (!suggestion) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Reorder suggestion not found.",
+            });
+        }
+        
+        if (suggestion.status === 'PROCESSED') {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "This suggestion has already been processed.",
+            });
+        }
+        
+        // Check if supplier exists
+        const suppliersDbPath = path.join(
+            process.env.APPDATA,
+            process.env.APPNAME,
+            "server",
+            "databases",
+            "suppliers.db",
+        );
+        
+        const suppliersDB = new Datastore({
+            filename: suppliersDbPath,
+            autoload: true,
+        });
+        
+        suppliersDB.findOne({ _id: parseInt(req.body.supplierId) }, function (err, supplier) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "Failed to retrieve supplier information.",
+                });
+            }
+            
+            if (!supplier) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Supplier not found.",
+                });
+            }
+            
+            // Get product information
+            const inventoryDbPath = path.join(
+                process.env.APPDATA,
+                process.env.APPNAME,
+                "server",
+                "databases",
+                "inventory.db",
+            );
+            
+            const inventoryDB = new Datastore({
+                filename: inventoryDbPath,
+                autoload: true,
+            });
+            
+            inventoryDB.findOne({ _id: suggestion.productId }, function (err, product) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "Failed to retrieve product information.",
+                    });
+                }
+                
+                if (!product) {
+                    return res.status(404).json({
+                        error: "Not Found",
+                        message: "Product not found.",
+                    });
+                }
+                
+                // Create purchase order items array
+                const items = [{
+                    productId: suggestion.productId,
+                    quantity: suggestion.suggestedQuantity,
+                    unitPrice: suggestion.estimatedUnitPrice || product.price || 0,
+                    gstRate: product.gstRate || 0,
+                    discountAmount: 0
+                }];
+                
+                // Create automated purchase order
+                createAutomatedPurchaseOrder(
+                    parseInt(req.body.supplierId),
+                    items,
+                    suggestion,
+                    function(err, purchaseOrder) {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "Failed to create automated purchase order.",
+                            });
+                        }
+                        
+                        // Update suggestion status
+                        reorderSuggestionsDB.update(
+                            { _id: suggestion._id },
+                            {
+                                $set: {
+                                    status: 'PROCESSED',
+                                    processedAt: new Date(),
+                                    processedBy: 'AUTOMATION',
+                                    purchaseOrderId: purchaseOrder._id
+                                }
+                            },
+                            {},
+                            function(err, numReplaced) {
+                                if (err) {
+                                    console.error("Failed to update suggestion status:", err);
+                                }
+                                
+                                res.status(201).json({
+                                    message: "Automated purchase order created successfully.",
+                                    purchaseOrder: purchaseOrder,
+                                    suggestion: {
+                                        id: suggestion._id,
+                                        status: 'PROCESSED'
+                                    }
+                                });
+                            }
+                        );
+                    }
+                );
+            });
+        });
+    });
+});
+
+/**
+ * POST endpoint: Create multiple automated purchase orders from suggestions.
+ *
+ * @param {Object} req request object with array of suggestion IDs in the body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/automated-bulk", function (req, res) {
+    if (!req.body.suggestions || !Array.isArray(req.body.suggestions) || req.body.suggestions.length === 0) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Suggestions array is required.",
+        });
+    }
+    
+    const Datastore = require("@seald-io/nedb");
+    const path = require("path");
+    
+    // Get reorder suggestions
+    const reorderSuggestionsDbPath = path.join(
+        process.env.APPDATA,
+        process.env.APPNAME,
+        "server",
+        "databases",
+        "reorder-suggestions.db",
+    );
+    
+    const reorderSuggestionsDB = new Datastore({
+        filename: reorderSuggestionsDbPath,
+        autoload: true,
+    });
+    
+    const suggestionIds = req.body.suggestions.map(s => s.suggestionId || s);
+    const results = {
+        success: 0,
+        failed: 0,
+        errors: [],
+        purchaseOrders: []
+    };
+    
+    // Group suggestions by supplier to create consolidated POs
+    reorderSuggestionsDB.find({ _id: { $in: suggestionIds } }, function (err, suggestions) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "Failed to retrieve reorder suggestions.",
+            });
+        }
+        
+        // Filter out already processed suggestions
+        const validSuggestions = suggestions.filter(s => s.status !== 'PROCESSED');
+        
+        if (validSuggestions.length === 0) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "No valid suggestions found to process.",
+            });
+        }
+        
+        // Group by supplier
+        const suggestionsBySupplier = {};
+        validSuggestions.forEach(suggestion => {
+            const supplierId = suggestion.preferredSupplierId || req.body.defaultSupplierId;
+            if (supplierId) {
+                if (!suggestionsBySupplier[supplierId]) {
+                    suggestionsBySupplier[supplierId] = [];
+                }
+                suggestionsBySupplier[supplierId].push(suggestion);
+            }
+        });
+        
+        // Process each supplier group
+        const supplierIds = Object.keys(suggestionsBySupplier);
+        
+        async.eachSeries(supplierIds, function(supplierId, callback) {
+            const supplierSuggestions = suggestionsBySupplier[supplierId];
+            
+            // Get product information for all suggestions
+            const inventoryDbPath = path.join(
+                process.env.APPDATA,
+                process.env.APPNAME,
+                "server",
+                "databases",
+                "inventory.db",
+            );
+            
+            const inventoryDB = new Datastore({
+                filename: inventoryDbPath,
+                autoload: true,
+            });
+            
+            const productIds = supplierSuggestions.map(s => s.productId);
+            
+            inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
+                if (err) {
+                    results.failed++;
+                    results.errors.push({
+                        supplierId: supplierId,
+                        error: "Failed to retrieve product information"
+                    });
+                    return callback();
+                }
+                
+                // Create items array for PO
+                const items = [];
+                supplierSuggestions.forEach(suggestion => {
+                    const product = products.find(p => p._id === suggestion.productId);
+                    if (product) {
+                        items.push({
+                            productId: suggestion.productId,
+                            quantity: suggestion.suggestedQuantity,
+                            unitPrice: suggestion.estimatedUnitPrice || product.price || 0,
+                            gstRate: product.gstRate || 0,
+                            discountAmount: 0
+                        });
+                    }
+                });
+                
+                if (items.length === 0) {
+                    results.failed++;
+                    results.errors.push({
+                        supplierId: supplierId,
+                        error: "No valid products found for supplier"
+                    });
+                    return callback();
+                }
+                
+                // Create automated purchase order
+                createAutomatedPurchaseOrder(
+                    parseInt(supplierId),
+                    items,
+                    null, // No single suggestion for bulk
+                    function(err, purchaseOrder) {
+                        if (err) {
+                            results.failed++;
+                            results.errors.push({
+                                supplierId: supplierId,
+                                error: err.message
+                            });
+                            return callback();
+                        }
+                        
+                        // Update all suggestions for this supplier
+                        const suggestionIdsToUpdate = supplierSuggestions.map(s => s._id);
+                        
+                        reorderSuggestionsDB.update(
+                            { _id: { $in: suggestionIdsToUpdate } },
+                            {
+                                $set: {
+                                    status: 'PROCESSED',
+                                    processedAt: new Date(),
+                                    processedBy: 'BULK_AUTOMATION',
+                                    purchaseOrderId: purchaseOrder._id
+                                }
+                            },
+                            { multi: true },
+                            function(err, numReplaced) {
+                                if (err) {
+                                    console.error("Failed to update suggestion status:", err);
+                                }
+                                
+                                results.success++;
+                                results.purchaseOrders.push(purchaseOrder);
+                                callback();
+                            }
+                        );
+                    }
+                );
+            });
+        }, function(err) {
+            if (err) {
+                console.error(err);
+            }
+            
+            res.status(201).json(results);
+        });
+    });
+});
+
+/**
+ * GET endpoint: Get automated purchase orders.
+ *
+ * @param {Object} req request object.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.get("/automated", function (req, res) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Build query based on filters
+    let query = {
+        notes: { $regex: /AUTOMATED/i }
+    };
+    
+    if (req.query.supplierId) {
+        query.supplierId = parseInt(req.query.supplierId);
+    }
+    if (req.query.status) {
+        query.status = validator.escape(req.query.status);
+    }
+    if (req.query.startDate && req.query.endDate) {
+        query.orderDate = {
+            $gte: validator.escape(req.query.startDate),
+            $lte: validator.escape(req.query.endDate)
+        };
+    }
+    
+    purchaseOrdersDB.find(query)
+        .sort({ orderDate: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(function (err, docs) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "An unexpected error occurred.",
+                });
+            }
+            
+            // Get total count for pagination
+            purchaseOrdersDB.count(query, function (err, count) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "An unexpected error occurred.",
+                    });
+                }
+                
+                res.json({
+                    purchaseOrders: docs,
+                    pagination: {
+                        total: count,
+                        page: page,
+                        limit: limit,
+                        pages: Math.ceil(count / limit)
+                    }
+                });
+            });
+        });
+});
+
+/**
+ * POST endpoint: Approve automated purchase order.
+ *
+ * @param {Object} req request object with purchase order ID as a parameter.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/:id/approve", function (req, res) {
+    if (!req.params.id) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Purchase order ID is required.",
+        });
+    }
+    
+    const orderId = parseInt(req.params.id);
+    
+    // Check if purchase order exists
+    purchaseOrdersDB.findOne({ _id: orderId }, function (err, purchaseOrder) {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: "An unexpected error occurred.",
+            });
+        }
+        
+        if (!purchaseOrder) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Purchase order not found.",
+            });
+        }
+        
+        // Check if it's an automated PO
+        if (!purchaseOrder.notes || !purchaseOrder.notes.includes('AUTOMATED')) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Only automated purchase orders can be approved through this endpoint.",
+            });
+        }
+        
+        // Update status to approved
+        purchaseOrdersDB.update(
+            { _id: orderId },
+            {
+                $set: {
+                    status: 'APPROVED',
+                    approvedBy: req.body.approvedBy || 'MANUAL',
+                    approvedAt: new Date(),
+                    updatedAt: new Date()
+                }
+            },
+            {},
+            function (err, numReplaced) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "An unexpected error occurred.",
+                    });
+                }
+                
+                res.json({
+                    message: "Automated purchase order approved successfully.",
+                    purchaseOrder: {
+                        _id: orderId,
+                        status: 'APPROVED',
+                        approvedBy: req.body.approvedBy || 'MANUAL',
+                        approvedAt: new Date()
+                    }
+                });
+            }
+        );
+    });
+});
+
+/**
+ * Helper function to create automated purchase order
+ *
+ * @param {number} supplierId supplier ID
+ * @param {Array} items array of items
+ * @param {Object} suggestion reorder suggestion (optional)
+ * @param {function} callback callback function
+ * @returns {void}
+ */
+function createAutomatedPurchaseOrder(supplierId, items, suggestion, callback) {
+    // Generate unique order number
+    const orderNumber = generateOrderNumber();
+    
+    // Calculate totals
+    let subtotal = 0;
+    let totalGst = 0;
+    
+    items.forEach(function(item) {
+        const itemTotal = parseFloat(item.unitPrice) * parseInt(item.quantity);
+        const itemGst = itemTotal * (parseFloat(item.gstRate || 0) / 100);
+        subtotal += itemTotal;
+        totalGst += itemGst;
+    });
+    
+    const totalAmount = subtotal + totalGst;
+    
+    // Create notes for automated PO
+    let notes = "AUTOMATED PURCHASE ORDER";
+    if (suggestion) {
+        notes += ` - Generated from reorder suggestion #${suggestion._id}`;
+        if (suggestion.suggestionType) {
+            notes += ` (${suggestion.suggestionType})`;
+        }
+    }
+    
+    const newPurchaseOrder = {
+        _id: Math.floor(Date.now() / 1000),
+        orderNumber: orderNumber,
+        supplierId: supplierId,
+        orderDate: new Date().toISOString().split('T')[0],
+        expectedDeliveryDate: suggestion ? suggestion.suggestedDeliveryDate : null,
+        status: 'PENDING',
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        gstAmount: parseFloat(totalGst.toFixed(2)),
+        totalAmount: parseFloat(totalAmount.toFixed(2)),
+        discountAmount: 0,
+        notes: notes,
+        createdBy: 'AUTOMATION',
+        createdAt: new Date(),
+        updatedAt: new Date()
+    };
+    
+    purchaseOrdersDB.insert(newPurchaseOrder, function (err, purchaseOrder) {
+        if (err) {
+            return callback(err);
+        }
+        
+        // Create purchase order items
+        createPurchaseOrderItems(purchaseOrder._id, items, function(err, items) {
+            if (err) {
+                return callback(err);
+            }
+            
+            callback(null, {
+                ...purchaseOrder,
+                items: items
+            });
+        });
+    });
 }
 
 module.exports.generateOrderNumber = generateOrderNumber;

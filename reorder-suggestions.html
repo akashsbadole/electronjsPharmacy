@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reorder Suggestions - PharmaSpot</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <style>
+        .priority-high {
+            background-color: #f44336;
+            color: white;
+        }
+        .priority-medium {
+            background-color: #ff9800;
+            color: white;
+        }
+        .priority-low {
+            background-color: #4caf50;
+            color: white;
+        }
+        .suggestion-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #ddd;
+        }
+        .suggestion-card.priority-high {
+            border-left-color: #f44336;
+        }
+        .suggestion-card.priority-medium {
+            border-left-color: #ff9800;
+        }
+        .suggestion-card.priority-low {
+            border-left-color: #4caf50;
+        }
+        .suggestion-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .stock-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .stock-low {
+            background-color: #f44336;
+        }
+        .stock-medium {
+            background-color: #ff9800;
+        }
+        .stock-high {
+            background-color: #4caf50;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .summary-card p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .action-buttons button {
+            flex: 1;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="topbar">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="index.html">
+                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                </a>
+            </div>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Reorder Suggestions</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Reorder Suggestions</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row" id="summaryCards">
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <h3 id="totalSuggestions">0</h3>
+                        <p>Total Suggestions</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <h3 id="highPriorityCount">0</h3>
+                        <p>High Priority</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <h3 id="totalValue">$0</h3>
+                        <p>Total Value</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <h3 id="affectedStores">0</h3>
+                        <p>Affected Stores</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="filter-section">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="storeFilter">Store</label>
+                                <select class="form-control" id="storeFilter">
+                                    <option value="">All Stores</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="priorityFilter">Priority</label>
+                                <select class="form-control" id="priorityFilter">
+                                    <option value="">All Priorities</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="suggestionTypeFilter">Suggestion Type</label>
+                                <select class="form-control" id="suggestionTypeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="STOCK_LEVEL">Stock Level</option>
+                                    <option value="EXPIRY">Expiry</option>
+                                    <option value="DEMAND_FORECAST">Demand Forecast</option>
+                                    <option value="SEASONAL">Seasonal</option>
+                                    <option value="EOQ_OPTIMIZED">EOQ Optimized</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchInput">Search</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search products...">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                                <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
+                                <button class="btn btn-success float-right" id="generateSuggestions">Generate New Suggestions</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions List -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Reorder Suggestions</h4>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-success" id="selectAll">Select All</button>
+                                <button class="btn btn-sm btn-warning" id="createBulkPO">Create Bulk PO</button>
+                                <button class="btn btn-sm btn-info" id="refreshData">Refresh</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="suggestionsTable">
+                                    <thead>
+                                        <tr>
+                                            <th><input type="checkbox" id="selectAllCheckbox"></th>
+                                            <th>Product</th>
+                                            <th>Store</th>
+                                            <th>Current Stock</th>
+                                            <th>Min Stock</th>
+                                            <th>Suggested Qty</th>
+                                            <th>Est. Price</th>
+                                            <th>Total Value</th>
+                                            <th>Priority</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suggestionsTableBody">
+                                        <!-- Suggestions will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center" id="noDataMessage" style="display: none;">
+                                <p>No reorder suggestions found. Try generating new suggestions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let allSuggestions = [];
+            let filteredSuggestions = [];
+            let selectedSuggestions = [];
+            
+            // Initialize
+            loadStores();
+            loadSuggestions();
+            
+            // Event handlers
+            $('#applyFilters').click(function() {
+                applyFilters();
+            });
+            
+            $('#resetFilters').click(function() {
+                resetFilters();
+            });
+            
+            $('#generateSuggestions').click(function() {
+                generateNewSuggestions();
+            });
+            
+            $('#selectAll').click(function() {
+                selectAllSuggestions();
+            });
+            
+            $('#createBulkPO').click(function() {
+                createBulkPurchaseOrder();
+            });
+            
+            $('#refreshData').click(function() {
+                loadSuggestions();
+            });
+            
+            $('#selectAllCheckbox').change(function() {
+                const isChecked = $(this).is(':checked');
+                $('.suggestion-checkbox').prop('checked', isChecked);
+                updateSelectedSuggestions();
+            });
+            
+            $('#searchInput').on('input', function() {
+                applyFilters();
+            });
+            
+            // Functions
+            function loadStores() {
+                $.ajax({
+                    url: '/api/stores',
+                    type: 'GET',
+                    success: function(stores) {
+                        const storeSelect = $('#storeFilter');
+                        storeSelect.empty().append('<option value="">All Stores</option>');
+                        
+                        stores.forEach(function(store) {
+                            storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        console.error('Failed to load stores');
+                    }
+                });
+            }
+            
+            function loadSuggestions() {
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/reorder-suggestions',
+                    type: 'GET',
+                    success: function(data) {
+                        allSuggestions = data.suggestions || [];
+                        filteredSuggestions = [...allSuggestions];
+                        renderSuggestions();
+                        updateSummaryCards();
+                        hideLoading();
+                    },
+                    error: function() {
+                        console.error('Failed to load suggestions');
+                        hideLoading();
+                    }
+                });
+            }
+            
+            function generateNewSuggestions() {
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/reorder-suggestions/generate',
+                    type: 'POST',
+                    data: {
+                        suggestionType: $('#suggestionTypeFilter').val() || 'STOCK_LEVEL',
+                        storeId: $('#storeFilter').val() || null
+                    },
+                    success: function(data) {
+                        allSuggestions = data.suggestions || [];
+                        filteredSuggestions = [...allSuggestions];
+                        renderSuggestions();
+                        updateSummaryCards();
+                        hideLoading();
+                        
+                        // Show success message
+                        alert('New suggestions generated successfully!');
+                    },
+                    error: function() {
+                        console.error('Failed to generate suggestions');
+                        hideLoading();
+                        alert('Failed to generate suggestions. Please try again.');
+                    }
+                });
+            }
+            
+            function applyFilters() {
+                const storeFilter = $('#storeFilter').val();
+                const priorityFilter = $('#priorityFilter').val();
+                const suggestionTypeFilter = $('#suggestionTypeFilter').val();
+                const searchTerm = $('#searchInput').val().toLowerCase();
+                
+                filteredSuggestions = allSuggestions.filter(function(suggestion) {
+                    let matches = true;
+                    
+                    if (storeFilter && suggestion.storeId != storeFilter) {
+                        matches = false;
+                    }
+                    
+                    if (priorityFilter) {
+                        const priority = getPriorityLevel(suggestion.priority);
+                        if (priority !== priorityFilter) {
+                            matches = false;
+                        }
+                    }
+                    
+                    if (suggestionTypeFilter && suggestion.suggestionType !== suggestionTypeFilter) {
+                        matches = false;
+                    }
+                    
+                    if (searchTerm && suggestion.productName.toLowerCase().indexOf(searchTerm) === -1) {
+                        matches = false;
+                    }
+                    
+                    return matches;
+                });
+                
+                renderSuggestions();
+            }
+            
+            function resetFilters() {
+                $('#storeFilter').val('');
+                $('#priorityFilter').val('');
+                $('#suggestionTypeFilter').val('');
+                $('#searchInput').val('');
+                
+                filteredSuggestions = [...allSuggestions];
+                renderSuggestions();
+            }
+            
+            function renderSuggestions() {
+                const tbody = $('#suggestionsTableBody');
+                tbody.empty();
+                
+                if (filteredSuggestions.length === 0) {
+                    $('#noDataMessage').show();
+                    $('#suggestionsTable').hide();
+                    return;
+                }
+                
+                $('#noDataMessage').hide();
+                $('#suggestionsTable').show();
+                
+                filteredSuggestions.forEach(function(suggestion) {
+                    const priority = getPriorityLevel(suggestion.priority);
+                    const priorityClass = `priority-${priority}`;
+                    
+                    const row = `
+                        <tr class="suggestion-card priority-${priority}">
+                            <td><input type="checkbox" class="suggestion-checkbox" data-id="${suggestion._id}"></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="stock-indicator stock-${getStockLevel(suggestion.currentStock, suggestion.minStock)}"></span>
+                                    ${suggestion.productName}
+                                </div>
+                            </td>
+                            <td>${getStoreName(suggestion.storeId)}</td>
+                            <td>${suggestion.currentStock}</td>
+                            <td>${suggestion.minStock}</td>
+                            <td>${suggestion.suggestedQuantity}</td>
+                            <td>$${suggestion.estimatedUnitPrice.toFixed(2)}</td>
+                            <td>$${suggestion.estimatedTotalValue.toFixed(2)}</td>
+                            <td><span class="badge ${priorityClass}">${priority.toUpperCase()}</span></td>
+                            <td>${suggestion.suggestionType}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-primary create-po-btn" data-id="${suggestion._id}">Create PO</button>
+                                    <button class="btn btn-sm btn-secondary dismiss-btn" data-id="${suggestion._id}">Dismiss</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    tbody.append(row);
+                });
+                
+                // Add event handlers to new buttons
+                $('.create-po-btn').click(function() {
+                    const suggestionId = $(this).data('id');
+                    createPurchaseOrder(suggestionId);
+                });
+                
+                $('.dismiss-btn').click(function() {
+                    const suggestionId = $(this).data('id');
+                    dismissSuggestion(suggestionId);
+                });
+                
+                $('.suggestion-checkbox').change(function() {
+                    updateSelectedSuggestions();
+                });
+            }
+            
+            function updateSummaryCards() {
+                const totalSuggestions = filteredSuggestions.length;
+                const highPriorityCount = filteredSuggestions.filter(s => s.priority >= 8).length;
+                const totalValue = filteredSuggestions.reduce((sum, s) => sum + s.estimatedTotalValue, 0);
+                const affectedStores = [...new Set(filteredSuggestions.map(s => s.storeId))].length;
+                
+                $('#totalSuggestions').text(totalSuggestions);
+                $('#highPriorityCount').text(highPriorityCount);
+                $('#totalValue').text(`$${totalValue.toFixed(2)}`);
+                $('#affectedStores').text(affectedStores);
+            }
+            
+            function getPriorityLevel(priority) {
+                if (priority >= 8) return 'high';
+                if (priority >= 5) return 'medium';
+                return 'low';
+            }
+            
+            function getStockLevel(currentStock, minStock) {
+                if (currentStock <= minStock) return 'low';
+                if (currentStock <= minStock * 1.5) return 'medium';
+                return 'high';
+            }
+            
+            function getStoreName(storeId) {
+                // This would normally fetch from a stores cache
+                return `Store ${storeId}`;
+            }
+            
+            function selectAllSuggestions() {
+                $('.suggestion-checkbox').prop('checked', true);
+                updateSelectedSuggestions();
+            }
+            
+            function updateSelectedSuggestions() {
+                selectedSuggestions = [];
+                $('.suggestion-checkbox:checked').each(function() {
+                    const id = $(this).data('id');
+                    const suggestion = filteredSuggestions.find(s => s._id == id);
+                    if (suggestion) {
+                        selectedSuggestions.push(suggestion);
+                    }
+                });
+            }
+            
+            function createPurchaseOrder(suggestionId) {
+                const suggestion = filteredSuggestions.find(s => s._id == suggestionId);
+                if (!suggestion) return;
+                
+                if (!confirm(`Create purchase order for ${suggestion.productName} (Qty: ${suggestion.suggestedQuantity})?`)) {
+                    return;
+                }
+                
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/purchase-orders/automated',
+                    type: 'POST',
+                    data: {
+                        suggestionId: suggestionId,
+                        supplierId: suggestion.preferredSupplierId || 1 // Default supplier
+                    },
+                    success: function(data) {
+                        hideLoading();
+                        alert('Purchase order created successfully!');
+                        loadSuggestions(); // Refresh the list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to create purchase order. Please try again.');
+                    }
+                });
+            }
+            
+            function createBulkPurchaseOrder() {
+                if (selectedSuggestions.length === 0) {
+                    alert('Please select at least one suggestion.');
+                    return;
+                }
+                
+                if (!confirm(`Create bulk purchase order for ${selectedSuggestions.length} items?`)) {
+                    return;
+                }
+                
+                showLoading();
+                
+                $.ajax({
+                    url: '/api/purchase-orders/automated-bulk',
+                    type: 'POST',
+                    data: {
+                        suggestions: selectedSuggestions.map(s => ({
+                            suggestionId: s._id,
+                            supplierId: s.preferredSupplierId || 1
+                        })),
+                        defaultSupplierId: 1 // Default supplier
+                    },
+                    success: function(data) {
+                        hideLoading();
+                        alert(`Bulk purchase order created successfully! ${data.success} orders processed.`);
+                        loadSuggestions(); // Refresh the list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to create bulk purchase order. Please try again.');
+                    }
+                });
+            }
+            
+            function dismissSuggestion(suggestionId) {
+                if (!confirm('Are you sure you want to dismiss this suggestion?')) {
+                    return;
+                }
+                
+                showLoading();
+                
+                $.ajax({
+                    url: `/api/reorder-suggestions/${suggestionId}`,
+                    type: 'PUT',
+                    data: {
+                        status: 'DISMISSED'
+                    },
+                    success: function() {
+                        hideLoading();
+                        loadSuggestions(); // Refresh the list
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to dismiss suggestion. Please try again.');
+                    }
+                });
+            }
+            
+            function showLoading() {
+                $('#loadingOverlay').show();
+            }
+            
+            function hideLoading() {
+                $('#loadingOverlay').hide();
+            }
+        });
+    </script>
+</body>
+</html>

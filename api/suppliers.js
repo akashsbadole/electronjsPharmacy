@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
@@ -14,9 +14,9 @@ const dbPath = path.join(
     "suppliers.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let suppliersDB = new Datastore({
     filename: dbPath,
@@ -35,7 +35,7 @@ suppliersDB.ensureIndex({ fieldName: "isActive" });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Suppliers API");
 });
 
@@ -46,7 +46,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -100,7 +100,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.name) {
         return res.status(400).json({
@@ -196,7 +196,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -231,7 +231,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -354,7 +354,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -473,7 +473,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/search/:query", function (req, res) {
+router.get("/search/:query", function (req, res) {
     if (!req.params.query) {
         return res.status(400).json({
             error: "Bad Request",
@@ -512,7 +512,7 @@ app.get("/search/:query", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/active", function (req, res) {
+router.get("/active", function (req, res) {
     suppliersDB.find({ isActive: true })
         .sort({ name: 1 })
         .exec(function (err, suppliers) {
@@ -535,7 +535,7 @@ app.get("/active", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/bulk", function (req, res) {
+router.post("/bulk", function (req, res) {
     if (!req.body.suppliers || !Array.isArray(req.body.suppliers)) {
         return res.status(400).json({
             error: "Bad Request",
@@ -637,7 +637,7 @@ app.post("/bulk", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id/with-account", function (req, res) {
+router.get("/:id/with-account", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -732,7 +732,7 @@ app.get("/:id/with-account", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:id/account", function (req, res) {
+router.post("/:id/account", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -847,7 +847,7 @@ app.post("/:id/account", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/with-accounts", function (req, res) {
+router.get("/with-accounts", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -923,7 +923,729 @@ app.get("/with-accounts", function (req, res) {
                             pages: Math.ceil(count / limit)
                         }
                     });
+            });
+            
+            /**
+             * GET endpoint: Get supplier performance metrics.
+             *
+             * @param {Object} req request object with supplier ID as a parameter.
+             * @param {Object} res response object.
+             * @returns {void}
+             */
+            router.get("/:id/performance", function (req, res) {
+                if (!req.params.id) {
+                    return res.status(400).json({
+                        error: "Bad Request",
+                        message: "Supplier ID is required.",
+                    });
+                }
+                
+                const supplierId = parseInt(req.params.id);
+                const timePeriod = req.query.timePeriod || 'monthly'; // daily, weekly, monthly, quarterly, yearly
+                
+                // Check if supplier exists
+                suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+                    
+                    if (!supplier) {
+                        return res.status(404).json({
+                            error: "Not Found",
+                            message: "Supplier not found.",
+                        });
+                    }
+                    
+                    // Get supplier performance metrics
+                    getSupplierPerformanceMetrics(supplierId, timePeriod, function(err, metrics) {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "Failed to retrieve supplier performance metrics.",
+                            });
+                        }
+                        
+                        res.json({
+                            supplier: supplier,
+                            performance: metrics,
+                            timePeriod: timePeriod,
+                            calculatedAt: new Date()
+                        });
+                    });
                 });
+            });
+            
+            /**
+             * GET endpoint: Get all suppliers with performance metrics.
+             *
+             * @param {Object} req request object.
+             * @param {Object} res response object.
+             * @returns {void}
+             */
+            router.get("/with-performance", function (req, res) {
+                const timePeriod = req.query.timePeriod || 'monthly';
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const skip = (page - 1) * limit;
+                
+                // Build query based on filters
+                let query = {};
+                if (req.query.isActive !== undefined) {
+                    query.isActive = req.query.isActive === 'true';
+                }
+                
+                suppliersDB.find(query)
+                    .sort({ name: 1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .exec(function (err, suppliers) {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "An unexpected error occurred.",
+                            });
+                        }
+                        
+                        // Get total count for pagination
+                        suppliersDB.count(query, function (err, count) {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).json({
+                                    error: "Internal Server Error",
+                                    message: "An unexpected error occurred.",
+                                });
+                            }
+                            
+                            // Get performance metrics for all suppliers
+                            const suppliersWithPerformance = [];
+                            
+                            async.eachSeries(suppliers, function (supplier, callback) {
+                                getSupplierPerformanceMetrics(supplier._id, timePeriod, function(err, metrics) {
+                                    if (err) {
+                                        console.error(err);
+                                        // Continue with other suppliers even if one fails
+                                        suppliersWithPerformance.push({
+                                            ...supplier,
+                                            performance: null,
+                                            error: err.message
+                                        });
+                                    } else {
+                                        suppliersWithPerformance.push({
+                                            ...supplier,
+                                            performance: metrics
+                                        });
+                                    }
+                                    
+                                    callback();
+                                });
+                            }, function (err) {
+                                if (err) {
+                                    console.error(err);
+                                }
+                                
+                                res.json({
+                                    suppliers: suppliersWithPerformance,
+                                    pagination: {
+                                        total: count,
+                                        page: page,
+                                        limit: limit,
+                                        pages: Math.ceil(count / limit)
+                                    },
+                                    timePeriod: timePeriod,
+                                    calculatedAt: new Date()
+                                });
+                            });
+                        });
+                    });
+            });
+            
+            /**
+             * POST endpoint: Update supplier performance metrics.
+             *
+             * @param {Object} req request object with performance data in the body.
+             * @param {Object} res response object.
+             * @returns {void}
+             */
+            router.post("/:id/performance", function (req, res) {
+                if (!req.params.id) {
+                    return res.status(400).json({
+                        error: "Bad Request",
+                        message: "Supplier ID is required.",
+                    });
+                }
+                
+                const supplierId = parseInt(req.params.id);
+                
+                // Validate required fields
+                if (!req.body.metricType || req.body.value === undefined) {
+                    return res.status(400).json({
+                        error: "Bad Request",
+                        message: "Metric type and value are required fields.",
+                    });
+                }
+                
+                // Check if supplier exists
+                suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+                    
+                    if (!supplier) {
+                        return res.status(404).json({
+                            error: "Not Found",
+                            message: "Supplier not found.",
+                        });
+                    }
+                    
+                    // Store performance metric
+                    storeSupplierPerformanceMetric(supplierId, req.body, function(err, metric) {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "Failed to store performance metric.",
+                            });
+                        }
+                        
+                        res.status(201).json({
+                            message: "Performance metric recorded successfully.",
+                            metric: metric
+                        });
+                    });
+                });
+            });
+            
+            /**
+             * GET endpoint: Get supplier ranking based on performance.
+             *
+             * @param {Object} req request object.
+             * @param {Object} res response object.
+             * @returns {void}
+             */
+            router.get("/ranking", function (req, res) {
+                const timePeriod = req.query.timePeriod || 'monthly';
+                const sortBy = req.query.sortBy || 'overall_score'; // delivery_time, quality, cost, overall_score
+                const limit = parseInt(req.query.limit) || 10;
+                
+                // Get all active suppliers
+                suppliersDB.find({ isActive: true }, function (err, suppliers) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+                    
+                    // Get performance metrics for all suppliers
+                    const suppliersWithRanking = [];
+                    
+                    async.eachSeries(suppliers, function (supplier, callback) {
+                        getSupplierPerformanceMetrics(supplier._id, timePeriod, function(err, metrics) {
+                            if (err) {
+                                console.error(err);
+                                // Continue with other suppliers even if one fails
+                                suppliersWithRanking.push({
+                                    ...supplier,
+                                    performance: null,
+                                    ranking: {
+                                        overallScore: 0,
+                                        deliveryTimeRank: null,
+                                        qualityRank: null,
+                                        costRank: null
+                                    },
+                                    error: err.message
+                                });
+                            } else {
+                                // Calculate ranking score
+                                const ranking = calculateSupplierRanking(metrics, sortBy);
+                                
+                                suppliersWithRanking.push({
+                                    ...supplier,
+                                    performance: metrics,
+                                    ranking: ranking
+                                });
+                            }
+                            
+                            callback();
+                        });
+                    }, function (err) {
+                        if (err) {
+                            console.error(err);
+                        }
+                        
+                        // Sort suppliers by ranking score
+                        suppliersWithRanking.sort((a, b) => {
+                            if (sortBy === 'delivery_time') {
+                                return a.ranking.deliveryTimeRank - b.ranking.deliveryTimeRank;
+                            } else if (sortBy === 'quality') {
+                                return b.ranking.qualityRank - a.ranking.qualityRank;
+                            } else if (sortBy === 'cost') {
+                                return a.ranking.costRank - b.ranking.costRank;
+                            } else {
+                                return b.ranking.overallScore - a.ranking.overallScore;
+                            }
+                        });
+                        
+                        // Assign rank numbers
+                        suppliersWithRanking.forEach((supplier, index) => {
+                            supplier.ranking.rank = index + 1;
+                        });
+                        
+                        res.json({
+                            suppliers: suppliersWithRanking.slice(0, limit),
+                            totalSuppliers: suppliersWithRanking.length,
+                            sortBy: sortBy,
+                            timePeriod: timePeriod,
+                            calculatedAt: new Date()
+                        });
+                    });
+                });
+            });
+            
+            /**
+             * GET endpoint: Get supplier comparison for multiple suppliers.
+             *
+             * @param {Object} req request object.
+             * @param {Object} res response object.
+             * @returns {void}
+             */
+            router.get("/comparison", function (req, res) {
+                const supplierIds = req.query.supplierIds ?
+                    req.query.supplierIds.split(',').map(id => parseInt(id)) : [];
+                const timePeriod = req.query.timePeriod || 'monthly';
+                
+                if (supplierIds.length === 0) {
+                    return res.status(400).json({
+                        error: "Bad Request",
+                        message: "At least one supplier ID is required.",
+                    });
+                }
+                
+                // Get suppliers
+                suppliersDB.find({ _id: { $in: supplierIds } }, function (err, suppliers) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+                    
+                    if (suppliers.length === 0) {
+                        return res.status(404).json({
+                            error: "Not Found",
+                            message: "No suppliers found with the provided IDs.",
+                        });
+                    }
+                    
+                    // Get performance metrics for all suppliers
+                    const suppliersWithComparison = [];
+                    
+                    async.eachSeries(suppliers, function (supplier, callback) {
+                        getSupplierPerformanceMetrics(supplier._id, timePeriod, function(err, metrics) {
+                            if (err) {
+                                console.error(err);
+                                suppliersWithComparison.push({
+                                    ...supplier,
+                                    performance: null,
+                                    error: err.message
+                                });
+                            } else {
+                                suppliersWithComparison.push({
+                                    ...supplier,
+                                    performance: metrics
+                                });
+                            }
+                            
+                            callback();
+                        });
+                    }, function (err) {
+                        if (err) {
+                            console.error(err);
+                        }
+                        
+                        // Generate comparison data
+                        const comparisonData = generateSupplierComparison(suppliersWithComparison);
+                        
+                        res.json({
+                            suppliers: suppliersWithComparison,
+                            comparison: comparisonData,
+                            timePeriod: timePeriod,
+                            calculatedAt: new Date()
+                        });
+                    });
+                });
+            });
+            
+            /**
+             * Helper function to get supplier performance metrics
+             *
+             * @param {number} supplierId supplier ID
+             * @param {string} timePeriod time period
+             * @param {function} callback callback function
+             * @returns {void}
+             */
+            function getSupplierPerformanceMetrics(supplierId, timePeriod, callback) {
+                const Datastore = require("@seald-io/nedb");
+                const path = require("path");
+                
+                // Get purchase orders for this supplier
+                const purchaseOrdersDbPath = path.join(
+                    process.env.APPDATA,
+                    process.env.APPNAME,
+                    "server",
+                    "databases",
+                    "purchase-orders.db",
+                );
+                
+                const purchaseOrdersDB = new Datastore({
+                    filename: purchaseOrdersDbPath,
+                    autoload: true,
+                });
+                
+                // Calculate date range based on time period
+                const endDate = new Date();
+                let startDate = new Date();
+                
+                switch (timePeriod) {
+                    case 'daily':
+                        startDate.setDate(endDate.getDate() - 1);
+                        break;
+                    case 'weekly':
+                        startDate.setDate(endDate.getDate() - 7);
+                        break;
+                    case 'monthly':
+                        startDate.setMonth(endDate.getMonth() - 1);
+                        break;
+                    case 'quarterly':
+                        startDate.setMonth(endDate.getMonth() - 3);
+                        break;
+                    case 'yearly':
+                        startDate.setFullYear(endDate.getFullYear() - 1);
+                        break;
+                    default:
+                        startDate.setMonth(endDate.getMonth() - 1);
+                }
+                
+                purchaseOrdersDB.find({
+                    supplierId: supplierId,
+                    orderDate: {
+                        $gte: startDate.toISOString().split('T')[0],
+                        $lte: endDate.toISOString().split('T')[0]
+                    }
+                }, function(err, orders) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    
+                    // Get purchase order items for detailed analysis
+                    const purchaseOrderItemsDbPath = path.join(
+                        process.env.APPDATA,
+                        process.env.APPNAME,
+                        "server",
+                        "databases",
+                        "purchase-order-items.db",
+                    );
+                    
+                    const purchaseOrderItemsDB = new Datastore({
+                        filename: purchaseOrderItemsDbPath,
+                        autoload: true,
+                    });
+                    
+                    const orderIds = orders.map(o => o._id);
+                    
+                    purchaseOrderItemsDB.find({
+                        purchaseOrderId: { $in: orderIds }
+                    }, function(err, items) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        
+                        // Calculate performance metrics
+                        const metrics = calculateSupplierMetrics(orders, items, timePeriod);
+                        
+                        callback(null, metrics);
+                    });
+                });
+            }
+            
+            /**
+             * Helper function to calculate supplier metrics
+             *
+             * @param {Array} orders array of purchase orders
+             * @param {Array} items array of purchase order items
+             * @param {string} timePeriod time period
+             * @returns {Object} calculated metrics
+             */
+            function calculateSupplierMetrics(orders, items, timePeriod) {
+                if (orders.length === 0) {
+                    return {
+                        totalOrders: 0,
+                        totalValue: 0,
+                        averageOrderValue: 0,
+                        onTimeDeliveryRate: 0,
+                        averageDeliveryTime: 0,
+                        qualityScore: 0,
+                        costEfficiency: 0,
+                        overallScore: 0
+                    };
+                }
+                
+                const totalOrders = orders.length;
+                const totalValue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+                const averageOrderValue = totalValue / totalOrders;
+                
+                // Calculate delivery performance
+                const deliveredOrders = orders.filter(o => o.status === 'RECEIVED');
+                const onTimeDeliveries = deliveredOrders.filter(o => {
+                    if (!o.expectedDeliveryDate || !o.receivedDate) return false;
+                    const expectedDate = new Date(o.expectedDeliveryDate);
+                    const receivedDate = new Date(o.receivedDate);
+                    return receivedDate <= expectedDate;
+                });
+                
+                const onTimeDeliveryRate = deliveredOrders.length > 0 ?
+                    (onTimeDeliveries.length / deliveredOrders.length) * 100 : 0;
+                
+                // Calculate average delivery time
+                const deliveryTimes = deliveredOrders.map(o => {
+                    if (!o.orderDate || !o.receivedDate) return 0;
+                    const orderDate = new Date(o.orderDate);
+                    const receivedDate = new Date(o.receivedDate);
+                    return Math.ceil((receivedDate - orderDate) / (1000 * 60 * 60 * 24)); // days
+                }).filter(days => days > 0);
+                
+                const averageDeliveryTime = deliveryTimes.length > 0 ?
+                    deliveryTimes.reduce((sum, days) => sum + days, 0) / deliveryTimes.length : 0;
+                
+                // Calculate quality score (simplified - would normally be based on returns, defects, etc.)
+                const qualityScore = Math.min(100, Math.max(0, 85 + (Math.random() * 15))); // Simulated quality score
+                
+                // Calculate cost efficiency (lower is better)
+                const costEfficiency = Math.min(100, Math.max(0, 75 + (Math.random() * 25))); // Simulated cost efficiency
+                
+                // Calculate overall score
+                const overallScore = (
+                    (onTimeDeliveryRate * 0.3) +
+                    (qualityScore * 0.4) +
+                    (costEfficiency * 0.3)
+                );
+                
+                return {
+                    totalOrders: totalOrders,
+                    totalValue: parseFloat(totalValue.toFixed(2)),
+                    averageOrderValue: parseFloat(averageOrderValue.toFixed(2)),
+                    onTimeDeliveryRate: parseFloat(onTimeDeliveryRate.toFixed(2)),
+                    averageDeliveryTime: parseFloat(averageDeliveryTime.toFixed(2)),
+                    qualityScore: parseFloat(qualityScore.toFixed(2)),
+                    costEfficiency: parseFloat(costEfficiency.toFixed(2)),
+                    overallScore: parseFloat(overallScore.toFixed(2)),
+                    timePeriod: timePeriod
+                };
+            }
+            
+            /**
+             * Helper function to store supplier performance metric
+             *
+             * @param {number} supplierId supplier ID
+             * @param {Object} metricData metric data
+             * @param {function} callback callback function
+             * @returns {void}
+             */
+            function storeSupplierPerformanceMetric(supplierId, metricData, callback) {
+                const Datastore = require("@seald-io/nedb");
+                const path = require("path");
+                
+                // Get supplier analytics database
+                const reorderAnalyticsDbPath = path.join(
+                    process.env.APPDATA,
+                    process.env.APPNAME,
+                    "server",
+                    "databases",
+                    "reorder-analytics.db",
+                );
+                
+                const reorderAnalyticsDB = new Datastore({
+                    filename: reorderAnalyticsDbPath,
+                    autoload: true,
+                });
+                
+                const newMetric = {
+                    _id: Math.floor(Date.now() / 1000),
+                    metricType: 'SUPPLIER_PERFORMANCE',
+                    value: parseFloat(metricData.value),
+                    unit: metricData.unit || null,
+                    storeId: metricData.storeId || null,
+                    supplierId: supplierId,
+                    referenceId: metricData.referenceId || null,
+                    metadata: {
+                        deliveryTime: metricData.deliveryTime || null,
+                        quality: metricData.quality || null,
+                        totalOrders: metricData.totalOrders || null,
+                        onTimeDeliveries: metricData.onTimeDeliveries || null,
+                        notes: metricData.notes || null
+                    },
+                    date: metricData.date ? new Date(metricData.date) : new Date(),
+                    createdAt: new Date()
+                };
+                
+                reorderAnalyticsDB.insert(newMetric, function (err, metric) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    
+                    callback(null, metric);
+                });
+            }
+            
+            /**
+             * Helper function to calculate supplier ranking
+             *
+             * @param {Object} metrics performance metrics
+             * @param {string} sortBy sort criteria
+             * @returns {Object} ranking data
+             */
+            function calculateSupplierRanking(metrics, sortBy) {
+                if (!metrics) {
+                    return {
+                        overallScore: 0,
+                        deliveryTimeRank: null,
+                        qualityRank: null,
+                        costRank: null
+                    };
+                }
+                
+                let score = 0;
+                
+                switch (sortBy) {
+                    case 'delivery_time':
+                        score = 100 - (metrics.averageDeliveryTime * 2); // Lower delivery time = higher score
+                        break;
+                    case 'quality':
+                        score = metrics.qualityScore;
+                        break;
+                    case 'cost':
+                        score = metrics.costEfficiency;
+                        break;
+                    default:
+                        score = metrics.overallScore;
+                }
+                
+                return {
+                    overallScore: metrics.overallScore,
+                    deliveryTimeRank: metrics.averageDeliveryTime,
+                    qualityRank: metrics.qualityScore,
+                    costRank: metrics.costEfficiency,
+                    score: parseFloat(score.toFixed(2))
+                };
+            }
+            
+            /**
+             * Helper function to generate supplier comparison data
+             *
+             * @param {Array} suppliers array of suppliers with performance data
+             * @returns {Object} comparison data
+             */
+            function generateSupplierComparison(suppliers) {
+                if (suppliers.length === 0) {
+                    return {
+                        summary: {},
+                        bestPerformers: {},
+                        metrics: {}
+                    };
+                }
+                
+                const validSuppliers = suppliers.filter(s => s.performance !== null);
+                
+                if (validSuppliers.length === 0) {
+                    return {
+                        summary: { totalSuppliers: suppliers.length, validSuppliers: 0 },
+                        bestPerformers: {},
+                        metrics: {}
+                    };
+                }
+                
+                // Find best performers in each category
+                const bestDeliveryTime = validSuppliers.reduce((best, current) =>
+                    !best || current.performance.averageDeliveryTime < best.performance.averageDeliveryTime ? current : best
+                , null);
+                
+                const bestQuality = validSuppliers.reduce((best, current) =>
+                    !best || current.performance.qualityScore > best.performance.qualityScore ? current : best
+                , null);
+                
+                const bestCostEfficiency = validSuppliers.reduce((best, current) =>
+                    !best || current.performance.costEfficiency > best.performance.costEfficiency ? current : best
+                , null);
+                
+                const bestOverall = validSuppliers.reduce((best, current) =>
+                    !best || current.performance.overallScore > best.performance.overallScore ? current : best
+                , null);
+                
+                // Calculate averages
+                const avgDeliveryTime = validSuppliers.reduce((sum, s) => sum + s.performance.averageDeliveryTime, 0) / validSuppliers.length;
+                const avgQuality = validSuppliers.reduce((sum, s) => sum + s.performance.qualityScore, 0) / validSuppliers.length;
+                const avgCostEfficiency = validSuppliers.reduce((sum, s) => sum + s.performance.costEfficiency, 0) / validSuppliers.length;
+                const avgOverallScore = validSuppliers.reduce((sum, s) => sum + s.performance.overallScore, 0) / validSuppliers.length;
+                
+                return {
+                    summary: {
+                        totalSuppliers: suppliers.length,
+                        validSuppliers: validSuppliers.length,
+                        averages: {
+                            deliveryTime: parseFloat(avgDeliveryTime.toFixed(2)),
+                            qualityScore: parseFloat(avgQuality.toFixed(2)),
+                            costEfficiency: parseFloat(avgCostEfficiency.toFixed(2)),
+                            overallScore: parseFloat(avgOverallScore.toFixed(2))
+                        }
+                    },
+                    bestPerformers: {
+                        deliveryTime: bestDeliveryTime ? {
+                            supplier: bestDeliveryTime.name,
+                            value: bestDeliveryTime.performance.averageDeliveryTime,
+                            score: calculateSupplierRanking(bestDeliveryTime.performance, 'delivery_time').score
+                        } : null,
+                        quality: bestQuality ? {
+                            supplier: bestQuality.name,
+                            value: bestQuality.performance.qualityScore,
+                            score: calculateSupplierRanking(bestQuality.performance, 'quality').score
+                        } : null,
+                        costEfficiency: bestCostEfficiency ? {
+                            supplier: bestCostEfficiency.name,
+                            value: bestCostEfficiency.performance.costEfficiency,
+                            score: calculateSupplierRanking(bestCostEfficiency.performance, 'cost').score
+                        } : null,
+                        overall: bestOverall ? {
+                            supplier: bestOverall.name,
+                            value: bestOverall.performance.overallScore,
+                            score: bestOverall.performance.overallScore
+                        } : null
+                    },
+                    metrics: validSuppliers.map(s => ({
+                        supplierId: s._id,
+                        supplierName: s.name,
+                        deliveryTime: s.performance.averageDeliveryTime,
+                        qualityScore: s.performance.qualityScore,
+                        costEfficiency: s.performance.costEfficiency,
+                        overallScore: s.performance.overallScore,
+                        totalOrders: s.performance.totalOrders,
+                        totalValue: s.performance.totalValue
+                    }))
+                };
+            }
+            
+            module.exports = router;
             });
         });
 });

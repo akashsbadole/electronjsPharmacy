@@ -1,34 +1,26 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
 const moment = require("moment");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-
-// Database paths
-const transactionsDbPath = path.join(appData, appName, "server", "databases", "transactions.db");
-const inventoryDbPath = path.join(appData, appName, "server", "databases", "inventory.db");
-const customersDbPath = path.join(appData, appName, "server", "databases", "customers.db");
-const batchesDbPath = path.join(appData, appName, "server", "databases", "batches.db");
-const storeInventoryDbPath = path.join(appData, appName, "server", "databases", "store-inventory.db");
+const dbUtils = require("./db-utils");
 
 // Initialize databases
-const transactionsDB = new Datastore({ filename: transactionsDbPath, autoload: true });
-const inventoryDB = new Datastore({ filename: inventoryDbPath, autoload: true });
-const customersDB = new Datastore({ filename: customersDbPath, autoload: true });
-const batchesDB = new Datastore({ filename: batchesDbPath, autoload: true });
-const storeInventoryDB = new Datastore({ filename: storeInventoryDbPath, autoload: true });
+const transactionsDB = new Datastore({ filename: dbUtils.getDatabasePath("transactions.db"), autoload: true });
+const inventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("inventory.db"), autoload: true });
+const customersDB = new Datastore({ filename: dbUtils.getDatabasePath("customers.db"), autoload: true });
+const batchesDB = new Datastore({ filename: dbUtils.getDatabasePath("batches.db"), autoload: true });
+const storeInventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("store-inventory.db"), autoload: true });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 /**
  * GET endpoint: Get welcome message for Dashboard API.
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Dashboard API");
 });
 
@@ -36,7 +28,7 @@ app.get("/", function (req, res) {
  * GET endpoint: Get executive dashboard KPIs
  * Query parameters: period (today, week, month, year), storeId
  */
-app.get("/kpi", function (req, res) {
+router.get("/kpi", function (req, res) {
     const period = req.query.period || 'month';
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
 
@@ -362,7 +354,7 @@ function getCustomerKPIs(transactions, callback) {
  * GET endpoint: Get sales chart data for dashboard
  * Query parameters: period (today, week, month, year), storeId
  */
-app.get("/sales-chart", function (req, res) {
+router.get("/sales-chart", function (req, res) {
     const period = req.query.period || 'month';
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
 
@@ -473,7 +465,7 @@ app.get("/sales-chart", function (req, res) {
  * GET endpoint: Get top products chart data
  * Query parameters: period (today, week, month, year), limit, storeId
  */
-app.get("/top-products-chart", function (req, res) {
+router.get("/top-products-chart", function (req, res) {
     const period = req.query.period || 'month';
     const limit = parseInt(req.query.limit) || 5;
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
@@ -561,7 +553,7 @@ app.get("/top-products-chart", function (req, res) {
  * GET endpoint: Get recent transactions for dashboard
  * Query parameters: limit, storeId
  */
-app.get("/recent-transactions", function (req, res) {
+router.get("/recent-transactions", function (req, res) {
     const limit = parseInt(req.query.limit) || 10;
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
 
@@ -601,7 +593,7 @@ app.get("/recent-transactions", function (req, res) {
  * GET endpoint: Get low stock alerts for dashboard
  * Query parameters: storeId
  */
-app.get("/low-stock-alerts", function (req, res) {
+router.get("/low-stock-alerts", function (req, res) {
     const storeId = req.query.storeId ? parseInt(req.query.storeId) : null;
 
     if (storeId) {

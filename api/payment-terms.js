@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
@@ -14,9 +14,9 @@ const dbPath = path.join(
     "payment-terms.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let paymentTermsDB = new Datastore({
     filename: dbPath,
@@ -33,7 +33,7 @@ paymentTermsDB.ensureIndex({ fieldName: "name", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Payment Terms API");
 });
 
@@ -44,7 +44,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -98,7 +98,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.name || !req.body.days) {
         return res.status(400).json({
@@ -182,7 +182,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -219,7 +219,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -332,7 +332,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -399,7 +399,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/active", function (req, res) {
+router.get("/active", function (req, res) {
     paymentTermsDB.find({ isActive: true })
         .sort({ name: 1 })
         .exec(function (err, paymentTerms) {
@@ -422,7 +422,7 @@ app.get("/active", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/default", function (req, res) {
+router.get("/default", function (req, res) {
     paymentTermsDB.findOne({ isDefault: true }, function (err, paymentTerm) {
         if (err) {
             console.error(err);
@@ -450,7 +450,7 @@ app.get("/default", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:id/set-default", function (req, res) {
+router.post("/:id/set-default", function (req, res) {
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",

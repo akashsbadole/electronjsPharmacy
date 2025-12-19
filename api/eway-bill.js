@@ -1,13 +1,13 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
 const path = require("path");
 const crypto = require("crypto");
 
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || 'PharmaSoft';
+const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
 const dbPath = path.join(
     appData,
     appName,
@@ -16,9 +16,9 @@ const dbPath = path.join(
     "eway-bill.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let eWayBillDB = new Datastore({
     filename: dbPath,
@@ -36,7 +36,7 @@ eWayBillDB.ensureIndex({ fieldName: "eway_bill_number", unique: true, sparse: tr
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("E-Way Bill API");
 });
 
@@ -47,7 +47,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     // Support pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -100,7 +100,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -130,7 +130,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.transaction_id || !req.body.from_state || !req.body.to_state || 
         !req.body.from_pincode || !req.body.to_pincode) {
@@ -225,7 +225,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -312,7 +312,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -361,7 +361,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:id/cancel", function (req, res) {
+router.post("/:id/cancel", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -421,7 +421,7 @@ app.post("/:id/cancel", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/expiring-soon", function (req, res) {
+router.get("/expiring-soon", function (req, res) {
     // Calculate 24 hours from now
     const now = new Date();
     const tomorrow = new Date(now);
@@ -450,7 +450,7 @@ app.get("/expiring-soon", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/number/:ewayBillNumber", function (req, res) {
+router.get("/number/:ewayBillNumber", function (req, res) {
     if (!req.params.ewayBillNumber) {
         return res.status(400).send("E-Way Bill number is required.");
     }

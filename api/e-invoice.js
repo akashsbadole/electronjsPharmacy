@@ -1,13 +1,13 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
 const path = require("path");
 const crypto = require("crypto");
 
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || 'PharmaSoft';
+const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
 const dbPath = path.join(
     appData,
     appName,
@@ -16,9 +16,9 @@ const dbPath = path.join(
     "e-invoices.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let eInvoiceDB = new Datastore({
     filename: dbPath,
@@ -36,7 +36,7 @@ eInvoiceDB.ensureIndex({ fieldName: "irn", unique: true, sparse: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("E-Invoice API");
 });
 
@@ -47,7 +47,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     // Support pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -100,7 +100,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -130,7 +130,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.transaction_id) {
         return res.status(400).json({
@@ -206,7 +206,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -297,7 +297,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -346,7 +346,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id/export", function (req, res) {
+router.get("/:id/export", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }

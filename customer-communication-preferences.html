@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Communication Preferences - PharmaSoft</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Top Navigation -->
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-light">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="assets/images/logo.svg" alt="PharmaSoft" class="logo">
+                    </a>
+                </div>
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav mr-auto mt-md-0">
+                        <!-- Search -->
+                        <li class="nav-item d-none d-md-block search-box">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                                <i class="ti-search"></i>
+                            </a>
+                            <form class="app-search d-none d-md-block">
+                                <input type="text" class="form-control" placeholder="Search customers...">
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav my-lg-0">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-bell"></i>
+                                <span class="badge badge-xs badge-danger">3</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right mailbox scale-up">
+                                <ul>
+                                    <li>
+                                        <div class="drop-title">Notifications</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-email"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">New customer preferences updated</span>
+                                                <span class="message-time">5 mins ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-alert"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">Customer opted out of marketing</span>
+                                                <span class="message-time">1 hour ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-center" href="#">See all notifications</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <!-- User Profile -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="assets/images/default.jpg" alt="user" class="profile-pic">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right user-dd animated">
+                                <a class="dropdown-item" href="#"><i class="ti-user m-r-5 m-l-5"></i> My Profile</a>
+                                <a class="dropdown-item" href="#"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="ti-power-off m-r-5 m-l-5"></i> Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar">
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="nav-small-cap">PERSONAL</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-view-dashboard"></i>
+                                <span class="hide-menu">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-message-text"></i>
+                                <span class="hide-menu">Customer Communication</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="customer-communication.html">Send Communication</a></li>
+                                <li><a href="communication-campaigns.html">Campaigns</a></li>
+                                <li><a href="customer-communication.html#analytics">Analytics</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document"></i>
+                                <span class="hide-menu">Templates</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="communication-templates.html">Manage Templates</a></li>
+                            </ul>
+                        </li>
+                        <li class="active">
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-account-multiple"></i>
+                                <span class="hide-menu">Customers</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li class="active"><a href="customer-communication-preferences.html">Communication Preferences</a></li>
+                                <li><a href="#">Customer List</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-small-cap">PHARMACY</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-pill"></i>
+                                <span class="hide-menu">Inventory</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document-box"></i>
+                                <span class="hide-menu">Prescriptions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-cash-register"></i>
+                                <span class="hide-menu">Sales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-truck-delivery"></i>
+                                <span class="hide-menu">Delivery</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Page Content -->
+        <div class="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row page-titles">
+                    <div class="col-md-5 align-self-center">
+                        <h4 class="text-themecolor">Customer Communication Preferences</h4>
+                    </div>
+                    <div class="col-md-7 align-self-center text-right">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                                <li class="breadcrumb-item active">Customer Preferences</li>
+                            </ol>
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="exportPreferences()">
+                                <i class="fa fa-download"></i> Export Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Statistics -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-info" id="total-customers">0</h4>
+                                        <h6 class="text-muted m-b-0">Total Customers</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-account-multiple font-20 text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-success" id="sms-enabled">0</h4>
+                                        <h6 class="text-muted m-b-0">SMS Enabled</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-message-text font-20 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-primary" id="email-enabled">0</h4>
+                                        <h6 class="text-muted m-b-0">Email Enabled</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-email font-20 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h4 class="m-b-0 text-warning" id="whatsapp-enabled">0</h4>
+                                        <h6 class="text-muted m-b-0">WhatsApp Enabled</h6>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <i class="mdi mdi-whatsapp font-20 text-warning"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Selection -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Customer Selection</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="customer-select">Select Customer</label>
+                                            <select class="form-control" id="customer-select" onchange="loadCustomerPreferences()">
+                                                <option value="">Select Customer</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="search-customer">Search Customer</label>
+                                            <input type="text" class="form-control" id="search-customer" placeholder="Search by name or phone..." onkeyup="searchCustomers()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Management -->
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Communication Preferences</h4>
+                                <p class="card-subtitle">Manage customer communication preferences and consent</p>
+                                
+                                <form id="preferences-form" style="display: none;">
+                                    <!-- SMS Preferences -->
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <h5 class="mb-3"><i class="mdi mdi-message-text"></i> SMS Preferences</h5>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="sms-enabled">
+                                                    <label class="custom-control-label" for="sms-enabled">Enable SMS</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="sms-marketing">
+                                                    <label class="custom-control-label" for="sms-marketing">Marketing Messages</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="sms-transactional">
+                                                    <label class="custom-control-label" for="sms-transactional">Transactional Messages</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Email Preferences -->
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <h5 class="mb-3"><i class="mdi mdi-email"></i> Email Preferences</h5>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="email-enabled">
+                                                    <label class="custom-control-label" for="email-enabled">Enable Email</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="email-marketing">
+                                                    <label class="custom-control-label" for="email-marketing">Marketing Messages</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="email-transactional">
+                                                    <label class="custom-control-label" for="email-transactional">Transactional Messages</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- WhatsApp Preferences -->
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <h5 class="mb-3"><i class="mdi mdi-whatsapp"></i> WhatsApp Preferences</h5>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-enabled">
+                                                    <label class="custom-control-label" for="whatsapp-enabled">Enable WhatsApp</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-marketing">
+                                                    <label class="custom-control-label" for="whatsapp-marketing">Marketing Messages</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-transactional">
+                                                    <label class="custom-control-label" for="whatsapp-transactional">Transactional Messages</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Global Preferences -->
+                                    <div class="pb-3 mb-3">
+                                        <h5 class="mb-3"><i class="mdi mdi-cog"></i> Global Preferences</h5>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="quiet-hours-enabled">
+                                                    <label class="custom-control-label" for="quiet-hours-enabled">Enable Quiet Hours</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3" id="quiet-hours-settings">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="quiet-hours-start">Quiet Hours Start</label>
+                                                    <input type="time" class="form-control" id="quiet-hours-start" value="22:00">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="quiet-hours-end">Quiet Hours End</label>
+                                                    <input type="time" class="form-control" id="quiet-hours-end" value="08:00">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="saveCustomerPreferences()">Save Preferences</button>
+                                        <button type="button" class="btn btn-secondary" onclick="resetPreferences()">Reset</button>
+                                    </div>
+                                </form>
+                                
+                                <div id="no-customer-selected" class="text-center py-5">
+                                    <i class="mdi mdi-account-multiple font-80 text-muted"></i>
+                                    <h4 class="mt-3 text-muted">No Customer Selected</h4>
+                                    <p class="text-muted">Please select a customer to view and manage their communication preferences</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Customer Information</h4>
+                                <div id="customer-info">
+                                    <div class="text-center py-5">
+                                        <i class="mdi mdi-account font-80 text-muted"></i>
+                                        <h5 class="mt-3 text-muted">No Customer Selected</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Communication History</h4>
+                                <div id="communication-history">
+                                    <div class="text-center py-5">
+                                        <i class="mdi mdi-history font-80 text-muted"></i>
+                                        <h5 class="mt-3 text-muted">No History Available</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Preferences Management -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Bulk Preferences Management</h4>
+                                <p class="card-subtitle">Update preferences for multiple customers at once</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="bulk-segment">Customer Segment</label>
+                                            <select class="form-control" id="bulk-segment">
+                                                <option value="">Select Segment</option>
+                                                <option value="all">All Customers</option>
+                                                <option value="loyalty">Loyalty Members</option>
+                                                <option value="recent">Recent Purchasers</option>
+                                                <option value="prescription">With Active Prescriptions</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="bulk-action">Action</label>
+                                            <select class="form-control" id="bulk-action">
+                                                <option value="">Select Action</option>
+                                                <option value="enable-all">Enable All Channels</option>
+                                                <option value="disable-marketing">Disable Marketing</option>
+                                                <option value="enable-transactional">Enable Transactional Only</option>
+                                                <option value="set-quiet-hours">Set Quiet Hours</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <button type="button" class="btn btn-primary form-control" onclick="applyBulkPreferences()">Apply to Segment</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app-style-switcher.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/sidebarmenu.js"></script>
+    <script src="assets/js/custom.min.js"></script>
+    <script src="assets/js/customer-communication.js"></script>
+    <script src="assets/js/communication-templates.js"></script>
+    <script src="assets/js/communication-campaigns.js"></script>
+    <script src="assets/js/communication-analytics.js"></script>
+    <script>
+        // Initialize page
+        $(document).ready(function() {
+            loadCustomers();
+            updatePreferencesStats();
+            
+            // Set up event listeners
+            $('#quiet-hours-enabled').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#quiet-hours-settings').show();
+                } else {
+                    $('#quiet-hours-settings').hide();
+                }
+            });
+        });
+
+        // Update preferences statistics
+        function updatePreferencesStats() {
+            $.ajax({
+                url: '/api/customer-communication-preferences/all',
+                method: 'GET',
+                success: function(data) {
+                    const preferences = data.preferences || [];
+                    
+                    let totalCustomers = preferences.length;
+                    let smsEnabled = 0;
+                    let emailEnabled = 0;
+                    let whatsappEnabled = 0;
+                    
+                    preferences.forEach(pref => {
+                        if (pref.channels && pref.channels.sms && pref.channels.sms.enabled) smsEnabled++;
+                        if (pref.channels && pref.channels.email && pref.channels.email.enabled) emailEnabled++;
+                        if (pref.channels && pref.channels.whatsapp && pref.channels.whatsapp.enabled) whatsappEnabled++;
+                    });
+                    
+                    $('#total-customers').text(totalCustomers);
+                    $('#sms-enabled').text(smsEnabled);
+                    $('#email-enabled').text(emailEnabled);
+                    $('#whatsapp-enabled').text(whatsappEnabled);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading preferences stats:', error);
+                }
+            });
+        }
+
+        // Load customer preferences
+        function loadCustomerPreferences() {
+            const customerId = $('#customer-select').val();
+            if (!customerId) return;
+            
+            // Load customer information
+            $.ajax({
+                url: `/api/customers/${customerId}`,
+                method: 'GET',
+                success: function(data) {
+                    const customer = data.customer || data;
+                    displayCustomerInfo(customer);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading customer info:', error);
+                }
+            });
+            
+            // Load communication preferences
+            $.ajax({
+                url: `/api/customer-communication-preferences/customer/${customerId}`,
+                method: 'GET',
+                success: function(preferences) {
+                    displayCustomerPreferences(preferences);
+                    loadCommunicationHistory(customerId);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading customer preferences:', error);
+                    showNotification('Error loading customer preferences', 'error');
+                }
+            });
+        }
+
+        // Display customer information
+        function displayCustomerInfo(customer) {
+            const customerInfoHtml = `
+                <div class="text-center">
+                    <img src="assets/images/default.jpg" alt="${customer.name}" class="rounded-circle mb-3" width="80">
+                    <h5>${customer.name}</h5>
+                    <p class="text-muted">${customer.phone}</p>
+                    <p class="text-muted">${customer.email || 'No email'}</p>
+                    <div class="mt-3">
+                        <span class="badge badge-info">ID: ${customer._id}</span>
+                    </div>
+                </div>
+            `;
+            
+            $('#customer-info').html(customerInfoHtml);
+        }
+
+        // Display customer preferences
+        function displayCustomerPreferences(preferences) {
+            $('#preferences-form').show();
+            $('#no-customer-selected').hide();
+            
+            // Set channel preferences
+            $('#sms-enabled').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.enabled);
+            $('#sms-marketing').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.consent && preferences.channels.sms.consent.marketing);
+            $('#sms-transactional').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.consent && preferences.channels.sms.consent.transactional);
+            
+            $('#email-enabled').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.enabled);
+            $('#email-marketing').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.consent && preferences.channels.email.consent.marketing);
+            $('#email-transactional').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.consent && preferences.channels.email.consent.transactional);
+            
+            $('#whatsapp-enabled').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.enabled);
+            $('#whatsapp-marketing').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.consent && preferences.channels.whatsapp.consent.marketing);
+            $('#whatsapp-transactional').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.consent && preferences.channels.whatsapp.consent.transactional);
+            
+            // Set global preferences
+            $('#quiet-hours-enabled').prop('checked', preferences.global && preferences.global.quietHours && preferences.global.quietHours.enabled);
+            $('#quiet-hours-start').val(preferences.global && preferences.global.quietHours ? preferences.global.quietHours.start : '22:00');
+            $('#quiet-hours-end').val(preferences.global && preferences.global.quietHours ? preferences.global.quietHours.end : '08:00');
+            
+            // Show/hide quiet hours settings
+            if (preferences.global && preferences.global.quietHours && preferences.global.quietHours.enabled) {
+                $('#quiet-hours-settings').show();
+            } else {
+                $('#quiet-hours-settings').hide();
+            }
+        }
+
+        // Load communication history
+        function loadCommunicationHistory(customerId) {
+            $.ajax({
+                url: `/api/customer-communication/customer/${customerId}`,
+                method: 'GET',
+                success: function(data) {
+                    const communications = data.communications || [];
+                    displayCommunicationHistory(communications);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading communication history:', error);
+                }
+            });
+        }
+
+        // Display communication history
+        function displayCommunicationHistory(communications) {
+            if (communications.length === 0) {
+                $('#communication-history').html(`
+                    <div class="text-center py-3">
+                        <p class="text-muted">No communication history</p>
+                    </div>
+                `);
+                return;
+            }
+            
+            let historyHtml = '<div class="timeline">';
+            
+            communications.slice(0, 5).forEach(function(comm) {
+                const statusClass = getStatusClass(comm.status);
+                const channelIcon = getChannelIcon(comm.channel);
+                
+                historyHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-point ${statusClass}">
+                            <i class="${channelIcon}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">${new Date(comm.createdAt).toLocaleString()}</div>
+                            <div class="timeline-title">${comm.type}</div>
+                            <div class="timeline-body">${comm.subject || comm.content.substring(0, 50)}...</div>
+                            <div class="timeline-footer">
+                                <span class="badge ${statusClass}">${comm.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyHtml += '</div>';
+            
+            $('#communication-history').html(historyHtml);
+        }
+
+        // Get channel icon
+        function getChannelIcon(channel) {
+            switch (channel) {
+                case 'SMS':
+                    return 'mdi mdi-message-text';
+                case 'EMAIL':
+                    return 'mdi mdi-email';
+                case 'WHATSAPP':
+                    return 'mdi mdi-whatsapp';
+                case 'IN_APP':
+                    return 'mdi mdi-cellphone';
+                case 'PUSH':
+                    return 'mdi mdi-bell';
+                default:
+                    return 'mdi mdi-message';
+            }
+        }
+
+        // Search customers
+        function searchCustomers() {
+            const searchTerm = $('#search-customer').val().toLowerCase();
+            
+            if (!searchTerm) {
+                loadCustomers();
+                return;
+            }
+            
+            $.ajax({
+                url: '/api/customers/search',
+                method: 'GET',
+                data: { q: searchTerm },
+                success: function(data) {
+                    const customers = data.customers || [];
+                    const customerSelect = $('#customer-select');
+                    
+                    customerSelect.empty();
+                    customerSelect.append('<option value="">Select Customer</option>');
+                    
+                    customers.forEach(function(customer) {
+                        customerSelect.append(`<option value="${customer._id}">${customer.name} - ${customer.phone}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error searching customers:', error);
+                }
+            });
+        }
+
+        // Reset preferences
+        function resetPreferences() {
+            $('#preferences-form')[0].reset();
+            showNotification('Preferences reset', 'info');
+        }
+
+        // Apply bulk preferences
+        function applyBulkPreferences() {
+            const segment = $('#bulk-segment').val();
+            const action = $('#bulk-action').val();
+            
+            if (!segment || !action) {
+                showNotification('Please select segment and action', 'warning');
+                return;
+            }
+            
+            const bulkData = {
+                segment: segment,
+                action: action
+            };
+            
+            // Add quiet hours if that action is selected
+            if (action === 'set-quiet-hours') {
+                bulkData.quietHours = {
+                    enabled: true,
+                    start: '22:00',
+                    end: '08:00'
+                };
+            }
+            
+            $.ajax({
+                url: '/api/customer-communication-preferences/bulk-update',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(bulkData),
+                success: function(response) {
+                    if (response.success) {
+                        showNotification('Bulk preferences applied successfully', 'success');
+                        updatePreferencesStats();
+                    } else {
+                        showNotification('Error applying bulk preferences', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error applying bulk preferences:', error);
+                    showNotification('Error applying bulk preferences', 'error');
+                }
+            });
+        }
+
+        // Export preferences
+        function exportPreferences() {
+            $.ajax({
+                url: '/api/customer-communication-preferences/export',
+                method: 'GET',
+                success: function(data) {
+                    // Create a download link for the CSV
+                    const csvContent = data.csv;
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('hidden', '');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', 'customer-preferences.csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    showNotification('Preferences exported successfully', 'success');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error exporting preferences:', error);
+                    showNotification('Error exporting preferences', 'error');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

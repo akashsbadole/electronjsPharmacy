@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Management - PharmaSoft</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Notiflix -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notiflix@3.2.4/dist/notiflix-3.2.4.min.css">
+    
+    <style>
+        .delivery-tab-content {
+            display: none;
+        }
+        
+        .delivery-tab-content.active {
+            display: block;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending { background-color: #ffc107; color: #000; }
+        .status-assigned { background-color: #17a2b8; color: #fff; }
+        .status-picked { background-color: #6f42c1; color: #fff; }
+        .status-in-transit { background-color: #007bff; color: #fff; }
+        .status-delivered { background-color: #28a745; color: #fff; }
+        .status-cancelled { background-color: #dc3545; color: #fff; }
+        .status-failed { background-color: #fd7e14; color: #fff; }
+        
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .form-group.required label::after {
+            content: " *";
+            color: red;
+        }
+        
+        .driver-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .route-map {
+            height: 400px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fa fa-truck"></i> Delivery Management</h2>
+                <p class="text-muted">Manage delivery orders, drivers, and routes</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link delivery-tab active" href="#delivery-orders" data-toggle="tab">
+                    <i class="fa fa-list"></i> Delivery Orders
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link delivery-tab" href="#drivers" data-toggle="tab">
+                    <i class="fa fa-users"></i> Drivers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link delivery-tab" href="#routes" data-toggle="tab">
+                    <i class="fa fa-route"></i> Routes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link delivery-tab" href="#tracking" data-toggle="tab">
+                    <i class="fa fa-map-marker-alt"></i> Tracking
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Delivery Orders Tab -->
+        <div id="delivery-orders" class="delivery-tab-content active">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="deliveryOrderSearch" class="form-control" placeholder="Search delivery orders...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#createDeliveryOrderModal">
+                        <i class="fa fa-plus"></i> New Delivery Order
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped" id="deliveryOrdersTable">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Delivery Address</th>
+                            <th>Status</th>
+                            <th>Charge</th>
+                            <th>Driver</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Delivery orders will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Drivers Tab -->
+        <div id="drivers" class="delivery-tab-content">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="driverSearch" class="form-control" placeholder="Search drivers...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#createDriverModal">
+                        <i class="fa fa-plus"></i> New Driver
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped" id="driversTable">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Vehicle</th>
+                            <th>Vehicle Number</th>
+                            <th>Availability</th>
+                            <th>Rating</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Drivers will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Routes Tab -->
+        <div id="routes" class="delivery-tab-content">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="routeSearch" class="form-control" placeholder="Search routes...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#createRouteModal">
+                        <i class="fa fa-plus"></i> New Route
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped" id="routesTable">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Route ID</th>
+                            <th>Name</th>
+                            <th>Driver</th>
+                            <th>Date</th>
+                            <th>Orders</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Routes will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Tracking Tab -->
+        <div id="tracking" class="delivery-tab-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="trackingOrderId">Order ID / Tracking Code</label>
+                        <input type="text" id="trackingOrderId" class="form-control" placeholder="Enter order ID or tracking code">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary btn-block" onclick="DeliveryManagement.trackOrder()">
+                            <i class="fa fa-search"></i> Track Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="trackingResult" class="mt-4" style="display: none;">
+                <!-- Tracking results will be displayed here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Delivery Order Modal -->
+    <div class="modal fade" id="createDeliveryOrderModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Delivery Order</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="deliveryOrderForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="transactionId">Transaction ID</label>
+                                    <input type="text" id="transactionId" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="customerId">Customer ID</label>
+                                    <input type="text" id="customerId" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="storeId">Store ID</label>
+                                    <input type="number" id="storeId" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="deliveryPhone">Delivery Phone</label>
+                                    <input type="tel" id="deliveryPhone" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="deliveryAddress">Delivery Address</label>
+                            <textarea id="deliveryAddress" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="deliveryPincode">Pincode</label>
+                                    <input type="text" id="deliveryPincode" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="priorityLevel">Priority Level</label>
+                                    <select id="priorityLevel" class="form-control">
+                                        <option value="1">Normal</option>
+                                        <option value="2">Urgent</option>
+                                        <option value="3">Emergency</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="distanceKm">Distance (km)</label>
+                                    <input type="number" id="distanceKm" class="form-control" step="0.1" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="deliveryInstructions">Delivery Instructions</label>
+                            <textarea id="deliveryInstructions" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduledDeliveryTime">Scheduled Delivery Time</label>
+                            <input type="datetime-local" id="scheduledDeliveryTime" class="form-control">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="deliveryLat">Latitude</label>
+                                    <input type="number" id="deliveryLat" class="form-control" step="any">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="deliveryLng">Longitude</label>
+                                    <input type="number" id="deliveryLng" class="form-control" step="any">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="DeliveryManagement.createDeliveryOrder()">Create Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Driver Modal -->
+    <div class="modal fade" id="createDriverModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Driver</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="driverForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="driverStoreId">Store ID</label>
+                                    <input type="number" id="driverStoreId" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="driverName">Name</label>
+                                    <input type="text" id="driverName" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="driverPhone">Phone</label>
+                                    <input type="tel" id="driverPhone" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverEmail">Email</label>
+                                    <input type="email" id="driverEmail" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverLicenseNumber">License Number</label>
+                                    <input type="text" id="driverLicenseNumber" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverLicenseExpiry">License Expiry</label>
+                                    <input type="date" id="driverLicenseExpiry" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverVehicleNumber">Vehicle Number</label>
+                                    <input type="text" id="driverVehicleNumber" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverVehicleType">Vehicle Type</label>
+                                    <select id="driverVehicleType" class="form-control">
+                                        <option value="">Select Vehicle Type</option>
+                                        <option value="BIKE">Bike</option>
+                                        <option value="SCOOTER">Scooter</option>
+                                        <option value="CAR">Car</option>
+                                        <option value="VAN">Van</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="driverVehicleCapacity">Vehicle Capacity (orders)</label>
+                                    <input type="number" id="driverVehicleCapacity" class="form-control" min="1" value="10">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" id="driverIsAvailable" class="form-check-input" checked>
+                                        <label class="form-check-label" for="driverIsAvailable">
+                                            Available for deliveries
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="DeliveryManagement.createDriver()">Create Driver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Route Modal -->
+    <div class="modal fade" id="createRouteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Route</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="routeForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="routeStoreId">Store ID</label>
+                                    <input type="number" id="routeStoreId" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="routeName">Route Name</label>
+                                    <input type="text" id="routeName" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="routeDescription">Route Description</label>
+                            <textarea id="routeDescription" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="routeDriverId">Driver</label>
+                                    <select id="routeDriverId" class="form-control">
+                                        <option value="">Select Driver</option>
+                                        <!-- Drivers will be populated here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group required">
+                                    <label for="routeDate">Route Date</label>
+                                    <input type="date" id="routeDate" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="DeliveryManagement.createRoute()">Create Route</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Delivery Order Modal -->
+    <div class="modal fade" id="viewDeliveryOrderModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delivery Order Details</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Order Information</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Order ID:</strong></td><td id="viewOrderId"></td></tr>
+                                <tr><td><strong>Customer:</strong></td><td id="viewCustomer"></td></tr>
+                                <tr><td><strong>Address:</strong></td><td id="viewAddress"></td></tr>
+                                <tr><td><strong>Status:</strong></td><td id="viewStatus"></td></tr>
+                                <tr><td><strong>Charge:</strong></td><td id="viewCharge"></td></tr>
+                                <tr><td><strong>Driver:</strong></td><td id="viewDriver"></td></tr>
+                                <tr><td><strong>Created:</strong></td><td id="viewCreated"></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Status History</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="statusHistoryTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Notes</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Status history will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Driver Modal -->
+    <div class="modal fade" id="viewDriverModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Driver Details</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr><td><strong>Driver ID:</strong></td><td id="viewDriverId"></td></tr>
+                                <tr><td><strong>Name:</strong></td><td id="viewDriverName"></td></tr>
+                                <tr><td><strong>Phone:</strong></td><td id="viewDriverPhone"></td></tr>
+                                <tr><td><strong>Email:</strong></td><td id="viewDriverEmail"></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr><td><strong>Vehicle:</strong></td><td id="viewDriverVehicle"></td></tr>
+                                <tr><td><strong>License:</strong></td><td id="viewDriverLicense"></td></tr>
+                                <tr><td><strong>Rating:</strong></td><td id="viewDriverRating"></td></tr>
+                                <tr><td><strong>Total Deliveries:</strong></td><td id="viewDriverDeliveries"></td></tr>
+                                <tr><td><strong>Availability:</strong></td><td id="viewDriverAvailability"></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Delivery Order Modal -->
+    <div class="modal fade" id="editDeliveryOrderModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Delivery Order</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDeliveryOrderForm">
+                        <input type="hidden" id="editOrderId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editTransactionId">Transaction ID</label>
+                                    <input type="text" id="editTransactionId" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editCustomerId">Customer ID</label>
+                                    <input type="text" id="editCustomerId" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editStoreId">Store ID</label>
+                                    <input type="number" id="editStoreId" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDeliveryPhone">Delivery Phone</label>
+                                    <input type="tel" id="editDeliveryPhone" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeliveryAddress">Delivery Address</label>
+                            <textarea id="editDeliveryAddress" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editDeliveryPincode">Pincode</label>
+                                    <input type="text" id="editDeliveryPincode" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editPriorityLevel">Priority Level</label>
+                                    <select id="editPriorityLevel" class="form-control">
+                                        <option value="1">Normal</option>
+                                        <option value="2">Urgent</option>
+                                        <option value="3">Emergency</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editScheduledDeliveryTime">Scheduled Delivery Time</label>
+                                    <input type="datetime-local" id="editScheduledDeliveryTime" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeliveryInstructions">Delivery Instructions</label>
+                            <textarea id="editDeliveryInstructions" class="form-control" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="DeliveryManagement.updateDeliveryOrder()">Update Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Driver Modal -->
+    <div class="modal fade" id="editDriverModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Driver</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDriverForm">
+                        <input type="hidden" id="editDriverId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverStoreId">Store ID</label>
+                                    <input type="number" id="editDriverStoreId" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverName">Name</label>
+                                    <input type="text" id="editDriverName" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverPhone">Phone</label>
+                                    <input type="tel" id="editDriverPhone" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverEmail">Email</label>
+                                    <input type="email" id="editDriverEmail" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverLicenseNumber">License Number</label>
+                                    <input type="text" id="editDriverLicenseNumber" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverLicenseExpiry">License Expiry</label>
+                                    <input type="date" id="editDriverLicenseExpiry" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverVehicleNumber">Vehicle Number</label>
+                                    <input type="text" id="editDriverVehicleNumber" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverVehicleType">Vehicle Type</label>
+                                    <select id="editDriverVehicleType" class="form-control">
+                                        <option value="">Select Vehicle Type</option>
+                                        <option value="BIKE">Bike</option>
+                                        <option value="SCOOTER">Scooter</option>
+                                        <option value="CAR">Car</option>
+                                        <option value="VAN">Van</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editDriverVehicleCapacity">Vehicle Capacity (orders)</label>
+                                    <input type="number" id="editDriverVehicleCapacity" class="form-control" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" id="editDriverIsAvailable" class="form-check-input">
+                                        <label class="form-check-label" for="editDriverIsAvailable">
+                                            Available for deliveries
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="DeliveryManagement.updateDriver()">Update Driver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="assets/js/bootstrap.min.js"></script>
+    <!-- Notiflix -->
+    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.4/dist/notiflix-3.2.4.min.js"></script>
+    <!-- Delivery Management JS -->
+    <script src="assets/js/delivery-management.js"></script>
+</body>
+</html>

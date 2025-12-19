@@ -40,13 +40,20 @@ let order_index = 0;
 let user_index = 0;
 let product_index = 0;
 let transaction_index;
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-let host = "localhost";
-let port = process.env.PORT;
-let img_path = path.join(appData, appName, "uploads", "/");
-let api = "http://" + host + ":" + port + "/api/";
-const bcrypt = require("bcrypt");
+// Loyalty and promotions variables
+let currentCustomer = null;
+let customerLoyaltyAccount = null;
+let availablePromotions = [];
+let appliedPromotions = [];
+let loyaltyPointsEarned = 0;
+let availableRewards = [];
+const appName = remote.app.getName();
+const appData = remote.app.getPath("appData");
+const host = "localhost";
+const port = process.env.PORT;
+const img_path = path.join(appData, appName, "uploads", "/");
+const api = "http://" + host + ":" + port + "/api/";
+const bcrypt = require("bcryptjs");
 let categories = [];
 let holdOrderList = [];
 let customerOrderList = [];
@@ -378,6 +385,259 @@ if (auth == undefined) {
       });
     }
 
+    // Add event handler for customer selection
+    $("#customer").on("change", function() {
+      const customerData = JSON.parse($(this).val());
+      if (customerData && customerData.id !== 0) {
+        loadCustomerLoyalty(customerData.id);
+      } else {
+        // Reset loyalty data when "Walk in customer" is selected
+        currentCustomer = null;
+        customerLoyaltyAccount = null;
+        appliedPromotions = [];
+        $("#loyaltyInfo").hide();
+        displayAvailablePromotions();
+        displayAppliedPromotions();
+        $(this).renderTable(cart);
+      }
+    });
+
+    // Load customer loyalty information when customer is selected
+    function loadCustomerLoyalty(customerId) {
+      if (!customerId || customerId === 0) {
+        currentCustomer = null;
+        customerLoyaltyAccount = null;
+        $("#loyaltyInfo").hide();
+        return;
+      }
+
+      $.get(api + "customers/" + customerId, function (customer) {
+        currentCustomer = customer;
+        
+        if (customer.loyaltyAccount) {
+          customerLoyaltyAccount = customer.loyaltyAccount;
+          displayLoyaltyInfo();
+        } else {
+          customerLoyaltyAccount = null;
+          $("#loyaltyInfo").hide();
+        }
+        
+        // Load available promotions for this customer
+        loadAvailablePromotions();
+      });
+    }
+
+    // Display customer loyalty information in the POS
+    function displayLoyaltyInfo() {
+      if (!customerLoyaltyAccount) {
+        $("#loyaltyInfo").hide();
+        return;
+      }
+
+      $("#loyaltyTier").text(customerLoyaltyAccount.tier);
+      $("#loyaltyPoints").text(customerLoyaltyAccount.points);
+      $("#loyaltyMemberSince").text(moment(customerLoyaltyAccount.memberSince).format("MMM DD, YYYY"));
+      
+      // Calculate points to next tier
+      const tierThresholds = {
+        'Basic': 100,
+        'Silver': 500,
+        'Gold': 1000,
+        'Platinum': 0 // Platinum is the highest tier
+      };
+      
+      const currentTier = customerLoyaltyAccount.tier;
+      let pointsToNextTier = 0;
+      
+      if (currentTier === 'Basic') {
+        pointsToNextTier = tierThresholds.Silver - customerLoyaltyAccount.points;
+      } else if (currentTier === 'Silver') {
+        pointsToNextTier = tierThresholds.Gold - customerLoyaltyAccount.points;
+      } else if (currentTier === 'Gold') {
+        pointsToNextTier = tierThresholds.Platinum - customerLoyaltyAccount.points;
+      }
+      
+      if (pointsToNextTier > 0) {
+        $("#pointsToNextTier").text(pointsToNextTier + " points to " + getNextTier(currentTier));
+        $("#nextTierInfo").show();
+      } else {
+        $("#nextTierInfo").hide();
+      }
+      
+      $("#loyaltyInfo").show();
+    }
+
+    // Get the next tier name
+    function getNextTier(currentTier) {
+      const tierProgression = ['Basic', 'Silver', 'Gold', 'Platinum'];
+      const currentIndex = tierProgression.indexOf(currentTier);
+      return currentIndex < tierProgression.length - 1 ? tierProgression[currentIndex + 1] : '';
+    }
+
+    // Load available promotions
+    function loadAvailablePromotions() {
+      $.get(api + "promotions/active", function (promotions) {
+        availablePromotions = promotions;
+        displayAvailablePromotions();
+      });
+    }
+
+    // Display available promotions in the POS
+    function displayAvailablePromotions() {
+      $("#availablePromotions").empty();
+      
+      if (availablePromotions.length === 0) {
+        $("#availablePromotions").html("<p>No available promotions</p>");
+        return;
+      }
+      
+      availablePromotions.forEach((promotion, index) => {
+        // Check if this promotion is already applied
+        const isApplied = appliedPromotions.some(p => p._id === promotion._id);
+        
+        // Check if promotion is applicable to current cart
+        const isApplicable = checkPromotionApplicability(promotion);
+        
+        if (!isApplied && isApplicable) {
+          const promotionElement = $(`
+            <div class="promotion-item">
+              <div class="promotion-details">
+                <h5>${promotion.name}</h5>
+                <p>${promotion.description}</p>
+                <small>Valid until: ${moment(promotion.endDate).format("MMM DD, YYYY")}</small>
+              </div>
+              <div class="promotion-action">
+                <button class="btn btn-sm btn-success" onclick="applyPromotion(${index})">
+                  Apply
+                </button>
+              </div>
+            </div>
+          `);
+          
+          $("#availablePromotions").append(promotionElement);
+        }
+      });
+    }
+
+    // Check if a promotion is applicable to the current cart
+    function checkPromotionApplicability(promotion) {
+      // Check minimum purchase amount
+      if (promotion.minimumPurchase && subTotal < promotion.minimumPurchase) {
+        return false;
+      }
+      
+      // Check customer tier requirement
+      if (promotion.customerTiers && promotion.customerTiers.length > 0) {
+        if (!customerLoyaltyAccount || !promotion.customerTiers.includes(customerLoyaltyAccount.tier)) {
+          return false;
+        }
+      }
+      
+      // Check product applicability
+      if (promotion.applicableProducts && promotion.applicableProducts.length > 0) {
+        const hasApplicableProduct = cart.some(item =>
+          promotion.applicableProducts.includes(item.id)
+        );
+        if (!hasApplicableProduct) {
+          return false;
+        }
+      }
+      
+      // Check category applicability
+      if (promotion.applicableCategories && promotion.applicableCategories.length > 0) {
+        const hasApplicableCategory = cart.some(item => {
+          const product = allProducts.find(p => p._id == item.id);
+          return product && promotion.applicableCategories.includes(product.category);
+        });
+        if (!hasApplicableCategory) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+
+    // Apply a promotion to the current cart
+    function applyPromotion(promotionIndex) {
+      const promotion = availablePromotions[promotionIndex];
+      
+      // Calculate promotion discount
+      let discountAmount = 0;
+      
+      if (promotion.type === 'percentage_discount') {
+        discountAmount = (subTotal * promotion.value) / 100;
+      } else if (promotion.type === 'fixed_amount') {
+        discountAmount = promotion.value;
+      } else if (promotion.type === 'buy_x_get_y') {
+        // Find applicable products for buy X get Y
+        const applicableItems = cart.filter(item =>
+          promotion.applicableProducts.includes(item.id)
+        );
+        
+        if (applicableItems.length > 0) {
+          // Sort by price to get the most expensive item for discount
+          applicableItems.sort((a, b) => (b.price * b.quantity) - (a.price * a.quantity));
+          const discountItem = applicableItems[0];
+          discountAmount = discountItem.price * promotion.value;
+        }
+      } else if (promotion.type === 'points_multiplier') {
+        // Points multiplier doesn't affect cart total directly
+        // We'll handle this during transaction processing
+        discountAmount = 0;
+      }
+      
+      // Add to applied promotions
+      appliedPromotions.push({
+        ...promotion,
+        discountAmount: discountAmount
+      });
+      
+      // Update cart calculation
+      $(this).renderTable(cart);
+      
+      // Refresh available promotions
+      displayAvailablePromotions();
+      
+      // Show applied promotions
+      displayAppliedPromotions();
+    }
+
+    // Display applied promotions
+    function displayAppliedPromotions() {
+      $("#appliedPromotions").empty();
+      
+      if (appliedPromotions.length === 0) {
+        $("#appliedPromotions").html("<p>No promotions applied</p>");
+        return;
+      }
+      
+      appliedPromotions.forEach((promotion, index) => {
+        const promotionElement = $(`
+          <div class="applied-promotion-item">
+            <div class="promotion-details">
+              <h5>${promotion.name}</h5>
+              <p>Discount: ${validator.unescape(settings.symbol)}${moneyFormat(promotion.discountAmount.toFixed(2))}</p>
+            </div>
+            <div class="promotion-action">
+              <button class="btn btn-sm btn-danger" onclick="removePromotion(${index})">
+                Remove
+              </button>
+            </div>
+          </div>
+        `);
+        
+        $("#appliedPromotions").append(promotionElement);
+      });
+    }
+
+    // Remove an applied promotion
+    function removePromotion(promotionIndex) {
+      appliedPromotions.splice(promotionIndex, 1);
+      $(this).renderTable(cart);
+      displayAvailablePromotions();
+      displayAppliedPromotions();
+    }
+
     $.fn.addToCart = function (id, count, stock) {
       $.get(api + "inventory/product/" + id, function (product) {
         if (isExpired(product.expirationDate)) {
@@ -526,17 +786,30 @@ if (auth == undefined) {
       let total = 0;
       let grossTotal;
       let total_items = 0;
+      let totalPromotionDiscount = 0;
+      
       $.each(cart, function (index, data) {
         total += data.quantity * data.price;
         total_items += parseInt(data.quantity);
       });
+      
       $("#total").text(total_items);
-      total = total - $("#inputDiscount").val();
+      
+      // Calculate total promotion discounts
+      totalPromotionDiscount = appliedPromotions.reduce((sum, promotion) => {
+        return sum + (promotion.discountAmount || 0);
+      }, 0);
+      
+      // Apply manual discount and promotion discounts
+      const manualDiscount = parseFloat($("#inputDiscount").val()) || 0;
+      total = total - manualDiscount - totalPromotionDiscount;
+      
       $("#price").text(validator.unescape(settings.symbol) + moneyFormat(total.toFixed(2)));
+      $("#promotionDiscount").text(validator.unescape(settings.symbol) + moneyFormat(totalPromotionDiscount.toFixed(2)));
 
       subTotal = total;
 
-      if ($("#inputDiscount").val() >= total) {
+      if (manualDiscount >= total) {
         $("#inputDiscount").val(0);
       }
 
@@ -551,7 +824,41 @@ if (auth == undefined) {
 
       $("#gross_price").text(validator.unescape(settings.symbol) + moneyFormat(orderTotal));
       $("#payablePrice").val(moneyFormat(grossTotal));
+      
+      // Calculate estimated loyalty points
+      calculateEstimatedLoyaltyPoints();
     };
+    
+    // Calculate estimated loyalty points for current transaction
+    function calculateEstimatedLoyaltyPoints() {
+      if (!customerLoyaltyAccount) {
+        $("#estimatedPoints").text("0");
+        return;
+      }
+      
+      let basePoints = Math.floor(subTotal); // 1 point per currency unit
+      let bonusMultiplier = 1;
+      
+      // Check for points multiplier promotions
+      appliedPromotions.forEach(promotion => {
+        if (promotion.type === 'points_multiplier') {
+          bonusMultiplier = Math.max(bonusMultiplier, promotion.value);
+        }
+      });
+      
+      // Apply tier bonus
+      const tierBonuses = {
+        'Basic': 1,
+        'Silver': 1.2,
+        'Gold': 1.5,
+        'Platinum': 2
+      };
+      
+      const tierBonus = tierBonuses[customerLoyaltyAccount.tier] || 1;
+      loyaltyPointsEarned = Math.floor(basePoints * bonusMultiplier * tierBonus);
+      
+      $("#estimatedPoints").text(loyaltyPointsEarned);
+    }
 
     $.fn.renderTable = function (cartList) {
       $("#cartTable .card-body").empty();
@@ -666,6 +973,9 @@ if (auth == undefined) {
           diagOptions.cancelButtonText,
           () => {
             cart = [];
+            // Reset loyalty and promotions data
+            appliedPromotions = [];
+            loyaltyPointsEarned = 0;
             $(this).renderTable(cart);
             holdOrder = 0;
             notiflix.Report.success(
@@ -687,6 +997,216 @@ if (auth == undefined) {
         notiflix.Report.warning("Oops!", "There is nothing to pay!", "Ok");
       }
     });
+
+    // Add delivery button handler
+    $("#deliveryButton").on("click", function () {
+      if (cart.length != 0) {
+        // Check if customer is selected
+        const customerData = JSON.parse($("#customer").val());
+        if (customerData && customerData.id !== 0) {
+          loadCustomerDeliveryAddresses(customerData.id);
+          $("#deliveryModal").modal("toggle");
+        } else {
+          notiflix.Report.warning(
+            "Customer Required!",
+            "Please select a customer for delivery orders",
+            "Ok"
+          );
+        }
+      } else {
+        notiflix.Report.warning("Oops!", "There is nothing to deliver!", "Ok");
+      }
+    });
+
+    // Load customer delivery addresses
+    function loadCustomerDeliveryAddresses(customerId) {
+      $.get(api + "customers/" + customerId, function (customer) {
+        $("#deliveryAddress").empty();
+        $("#deliveryAddress").append(`<option value="">Select delivery address</option>`);
+        
+        if (customer.deliveryAddresses && customer.deliveryAddresses.length > 0) {
+          customer.deliveryAddresses.forEach((address, index) => {
+            const addressText = `${address.address}, ${address.city}, ${address.state} ${address.postalCode}`;
+            $("#deliveryAddress").append(
+              `<option value="${index}">${addressText}</option>`
+            );
+          });
+        }
+        
+        // Add new address button
+        $("#deliveryAddress").append(
+          `<option value="new">+ Add New Address</option>`
+        );
+      });
+    }
+
+    // Handle delivery address selection
+    $("#deliveryAddress").on("change", function() {
+      const selectedValue = $(this).val();
+      if (selectedValue === "new") {
+        $("#newAddressForm").show();
+      } else {
+        $("#newAddressForm").hide();
+      }
+    });
+
+    // Process delivery order
+    $("#processDelivery").on("click", function() {
+      const customerData = JSON.parse($("#customer").val());
+      const selectedAddress = $("#deliveryAddress").val();
+      const deliveryPriority = $("#deliveryPriority").val();
+      const deliveryNotes = $("#deliveryNotes").val();
+      
+      let deliveryAddress = null;
+      
+      if (selectedAddress === "new") {
+        // Validate new address form
+        if (!$("#newAddress").val() || !$("#newCity").val() || !$("#newState").val() || !$("#newPostalCode").val()) {
+          notiflix.Report.warning(
+            "Incomplete Address!",
+            "Please fill in all address fields",
+            "Ok"
+          );
+          return;
+        }
+        
+        deliveryAddress = {
+          address: $("#newAddress").val(),
+          city: $("#newCity").val(),
+          state: $("#newState").val(),
+          postalCode: $("#newPostalCode").val(),
+          isDefault: $("#isDefaultAddress").is(":checked")
+        };
+      } else if (selectedAddress !== "") {
+        // Use existing address
+        $.get(api + "customers/" + customerData.id, function (customer) {
+          deliveryAddress = customer.deliveryAddresses[selectedValue];
+          createDeliveryOrder(deliveryAddress, deliveryPriority, deliveryNotes);
+        });
+        return;
+      } else {
+        notiflix.Report.warning(
+          "Address Required!",
+          "Please select or enter a delivery address",
+          "Ok"
+        );
+        return;
+      }
+      
+      // If new address, save it first
+      if (selectedAddress === "new") {
+        $.ajax({
+          url: api + "customers/" + customerData.id + "/delivery-address",
+          type: "POST",
+          data: JSON.stringify(deliveryAddress),
+          contentType: "application/json; charset=utf-8",
+          success: function() {
+            createDeliveryOrder(deliveryAddress, deliveryPriority, deliveryNotes);
+          },
+          error: function() {
+            notiflix.Report.failure(
+              "Error",
+              "Failed to save delivery address",
+              "Ok"
+            );
+          }
+        });
+      }
+    });
+
+    // Create delivery order function
+    function createDeliveryOrder(deliveryAddress, deliveryPriority, deliveryNotes) {
+      const customerData = JSON.parse($("#customer").val());
+      
+      let deliveryData = {
+        customerId: customerData.id,
+        customerName: customerData.name,
+        items: cart,
+        deliveryAddress: deliveryAddress,
+        priority: deliveryPriority,
+        notes: deliveryNotes,
+        subtotal: subTotal,
+        tax: totalVat,
+        total: orderTotal,
+        paymentStatus: "pending"
+      };
+      
+      $.ajax({
+        url: api + "delivery/orders",
+        type: "POST",
+        data: JSON.stringify(deliveryData),
+        contentType: "application/json; charset=utf-8",
+        success: function(deliveryOrder) {
+          // Create transaction record
+          const transactionData = {
+            order: deliveryOrder.orderNumber,
+            ref_number: deliveryOrder.orderNumber,
+            discount: $("#inputDiscount").val() || 0,
+            customer: customerData,
+            status: 0, // On hold for delivery
+            subtotal: parseFloat(subTotal).toFixed(2),
+            tax: totalVat,
+            order_type: 2, // Delivery order type
+            items: cart,
+            date: new Date(),
+            payment_type: "",
+            payment_info: "",
+            total: orderTotal,
+            paid: "",
+            change: "",
+            _id: Math.floor(Date.now() / 1000),
+            till: platform ? platform.till : 1,
+            mac: platform ? platform.mac : "",
+            user: user.fullname,
+            user_id: user._id,
+            loyaltyPointsEarned: loyaltyPointsEarned,
+            appliedPromotions: appliedPromotions,
+            customerId: customerData.id,
+            isDelivery: true,
+            deliveryAddress: deliveryAddress,
+            deliveryOrderId: deliveryOrder._id
+          };
+          
+          $.ajax({
+            url: api + "new",
+            type: "POST",
+            data: JSON.stringify(transactionData),
+            contentType: "application/json; charset=utf-8",
+            success: function() {
+              // Reset cart and data
+              cart = [];
+              appliedPromotions = [];
+              loyaltyPointsEarned = 0;
+              $(this).renderTable(cart);
+              
+              $("#deliveryModal").modal("hide");
+              notiflix.Report.success(
+                "Delivery Order Created!",
+                `Delivery order #${deliveryOrder.orderNumber} has been created successfully`,
+                "Ok"
+              );
+              
+              loadProducts();
+              loadCustomers();
+            },
+            error: function() {
+              notiflix.Report.failure(
+                "Error",
+                "Failed to create transaction record",
+                "Ok"
+              );
+            }
+          });
+        },
+        error: function() {
+          notiflix.Report.failure(
+            "Error",
+            "Failed to create delivery order",
+            "Ok"
+          );
+        }
+      });
+    }
 
     $("#hold").on("click", function () {
       if (cart.length != 0) {
@@ -726,6 +1246,9 @@ if (auth == undefined) {
       let orderNumber = holdOrder;
       let type = "";
       let tax_row = "";
+      let promotion_row = "";
+      let loyalty_row = "";
+      
       switch (paymentType) {
         case 1:
           type = "Cash";
@@ -733,6 +1256,29 @@ if (auth == undefined) {
         case 3:
           type = "Card";
           break;
+      }
+
+      // Calculate total promotion discounts
+      const totalPromotionDiscount = appliedPromotions.reduce((sum, promotion) => {
+        return sum + (promotion.discountAmount || 0);
+      }, 0);
+
+      // Add promotion discounts to receipt
+      if (totalPromotionDiscount > 0) {
+        promotion_row = `<tr>
+            <td>Promotions</td>
+            <td>:</td>
+            <td class="text-right">-${validator.unescape(settings.symbol)}${moneyFormat(totalPromotionDiscount.toFixed(2))}</td>
+        </tr>`;
+      }
+
+      // Add loyalty information to receipt
+      if (customerLoyaltyAccount && loyaltyPointsEarned > 0) {
+        loyalty_row = `<tr>
+            <td>Loyalty Points Earned</td>
+            <td>:</td>
+            <td class="text-right">${loyaltyPointsEarned} pts</td>
+        </tr>`;
       }
 
       if (paid != "") {
@@ -790,7 +1336,7 @@ if (auth == undefined) {
 
       logo = path.join(img_path, validator.unescape(settings.img));
 
-      receipt = `<div style="font-size: 10px">                            
+      receipt = `<div style="font-size: 10px">
         <p style="text-align: center;">
         ${
           checkFileExists(logo)
@@ -802,8 +1348,8 @@ if (auth == undefined) {
             ${validator.unescape(settings.address_two)} <br>
             ${
               validator.unescape(settings.contact) != "" ? "Tel: " + validator.unescape(settings.contact) + "<br>" : ""
-            } 
-            ${validator.unescape(settings.tax) != "" ? "Vat No: " + validator.unescape(settings.tax) + "<br>" : ""} 
+            }
+            ${validator.unescape(settings.tax) != "" ? "Vat No: " + validator.unescape(settings.tax) + "<br>" : ""}
         </p>
         <hr>
         <left>
@@ -813,6 +1359,7 @@ if (auth == undefined) {
             Customer : ${
               customer == 0 ? "Walk in customer" : _.escape(customer.name)
             } <br>
+            ${customerLoyaltyAccount ? `Loyalty Tier: ${customerLoyaltyAccount.tier} <br>` : ''}
             Cashier : ${user.fullname} <br>
             Date : ${date}<br>
             </p>
@@ -828,9 +1375,9 @@ if (auth == undefined) {
             </tr>
             </thead>
             <tbody>
-             ${items}                
+             ${items}
             <tr><td colspan="3"><hr></td></tr>
-            <tr>                        
+            <tr>
                 <td><b>Subtotal</b></td>
                 <td>:</td>
                 <td class="text-right"><b>${validator.unescape(settings.symbol)}${moneyFormat(
@@ -847,6 +1394,7 @@ if (auth == undefined) {
                     : ""
                 }</td>
             </tr>
+            ${promotion_row}
             ${tax_row}
             <tr>
                 <td><h5>Total</h5></td>
@@ -857,6 +1405,7 @@ if (auth == undefined) {
                     )}</h3>
                 </td>
             </tr>
+            ${loyalty_row}
             ${payment == 0 ? "" : payment}
             </tbody>
             </table>
@@ -901,6 +1450,10 @@ if (auth == undefined) {
         mac: platform.mac,
         user: user.fullname,
         user_id: user._id,
+        // Add loyalty and promotions data
+        loyaltyPointsEarned: loyaltyPointsEarned,
+        appliedPromotions: appliedPromotions,
+        customerId: customer !== 0 ? customer.id : null
       };
 
       $.ajax({
@@ -912,6 +1465,9 @@ if (auth == undefined) {
         processData: false,
         success: function (data) {
           cart = [];
+          // Reset loyalty and promotions data after successful transaction
+          appliedPromotions = [];
+          loyaltyPointsEarned = 0;
           receipt = DOMPurify.sanitize(receipt,{ ALLOW_UNKNOWN_PROTOCOLS: true });
           $("#viewTransaction").html("");
           $("#viewTransaction").html(receipt);

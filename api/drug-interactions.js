@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "drug-interactions.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let drugInteractionsDB = new Datastore({
     filename: dbPath,
@@ -35,7 +35,7 @@ drugInteractionsDB.ensureIndex({ fieldName: "product_id_2" });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Drug Interactions API");
 });
 
@@ -46,7 +46,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -126,7 +126,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.product_id_1 || !req.body.product_id_2 || !req.body.interaction_level || !req.body.interaction_description) {
         return res.status(400).json({
@@ -241,7 +241,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Interaction ID is required.");
     }
@@ -283,7 +283,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/:id", function (req, res) {
+router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Interaction ID is required.");
     }
@@ -353,7 +353,7 @@ app.put("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Interaction ID is required.");
     }
@@ -402,7 +402,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/check", function (req, res) {
+router.post("/check", function (req, res) {
     // Validate required fields
     if (!req.body.drug_ids || !Array.isArray(req.body.drug_ids) || req.body.drug_ids.length < 2) {
         return res.status(400).json({
@@ -501,7 +501,7 @@ app.post("/check", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/drug/:drugId", function (req, res) {
+router.get("/drug/:drugId", function (req, res) {
     if (!req.params.drugId) {
         return res.status(400).send("Drug ID is required.");
     }

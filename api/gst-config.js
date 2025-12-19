@@ -1,12 +1,12 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
 const path = require("path");
 
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || 'PharmaSoft';
+const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
 const dbPath = path.join(
     appData,
     appName,
@@ -15,9 +15,9 @@ const dbPath = path.join(
     "gst-config.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let gstConfigDB = new Datastore({
     filename: dbPath,
@@ -33,7 +33,7 @@ gstConfigDB.ensureIndex({ fieldName: "_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("GST Configuration API");
 });
 
@@ -44,7 +44,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     // Get the active GST configuration
     gstConfigDB.findOne({ is_active: true }, function (err, config) {
         if (err) {
@@ -78,7 +78,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/", function (req, res) {
+router.post("/", function (req, res) {
     // Validate required fields
     if (!req.body.gst_number || !req.body.state_code) {
         return res.status(400).json({
@@ -185,7 +185,7 @@ app.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/all", function (req, res) {
+router.get("/all", function (req, res) {
     gstConfigDB.find({}, function (err, docs) {
         if (err) {
             console.error(err);
@@ -206,7 +206,7 @@ app.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:id", function (req, res) {
+router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -236,7 +236,7 @@ app.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/:id", function (req, res) {
+router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
@@ -281,7 +281,7 @@ app.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/calculate", function (req, res) {
+router.post("/calculate", function (req, res) {
     // Validate required fields
     if (!req.body.amount || !req.body.customer_state) {
         return res.status(400).json({

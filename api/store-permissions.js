@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
@@ -14,9 +15,9 @@ const dbPath = path.join(
     "store-permissions.db",
 );
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let storePermissionsDB = new Datastore({
     filename: dbPath,
@@ -33,7 +34,7 @@ storePermissionsDB.ensureIndex({ fieldName: ["userId", "storeId"], unique: true 
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Store Permissions API");
 });
 
@@ -44,7 +45,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/user/:userId", function (req, res) {
+router.get("/user/:userId", function (req, res) {
     if (!req.params.userId) {
         return res.status(400).send("User ID is required.");
     }
@@ -73,7 +74,7 @@ app.get("/user/:userId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/store/:storeId", function (req, res) {
+router.get("/store/:storeId", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }
@@ -102,7 +103,7 @@ app.get("/store/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/user/:userId/store/:storeId", function (req, res) {
+router.get("/user/:userId/store/:storeId", function (req, res) {
     if (!req.params.userId || !req.params.storeId) {
         return res.status(400).send("User ID and Store ID are required.");
     }
@@ -132,7 +133,7 @@ app.get("/user/:userId/store/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/update", function (req, res) {
+router.post("/update", function (req, res) {
     // Validate required fields
     if (!req.body.userId || !req.body.storeId) {
         return res.status(400).json({
@@ -248,7 +249,7 @@ app.post("/update", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.delete("/user/:userId/store/:storeId", function (req, res) {
+router.delete("/user/:userId/store/:storeId", function (req, res) {
     if (!req.params.userId || !req.params.storeId) {
         return res.status(400).send("User ID and Store ID are required.");
     }
@@ -289,7 +290,7 @@ app.delete("/user/:userId/store/:storeId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/user/:userId/store/:storeId/check/:permission", function (req, res) {
+router.get("/user/:userId/store/:storeId/check/:permission", function (req, res) {
     if (!req.params.userId || !req.params.storeId || !req.params.permission) {
         return res.status(400).send("User ID, Store ID, and permission are required.");
     }
@@ -344,7 +345,7 @@ app.get("/user/:userId/store/:storeId/check/:permission", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/grant-default-permissions", function (req, res) {
+router.post("/grant-default-permissions", function (req, res) {
     if (!req.body.userId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -458,7 +459,7 @@ app.post("/grant-default-permissions", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/store/:storeId/users", function (req, res) {
+router.get("/store/:storeId/users", function (req, res) {
     if (!req.params.storeId) {
         return res.status(400).send("Store ID is required.");
     }

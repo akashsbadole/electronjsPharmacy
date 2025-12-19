@@ -1,5 +1,5 @@
-const app = require("express")();
-const server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const multer = require("multer");
@@ -7,8 +7,7 @@ const sanitizeFilename = require('sanitize-filename');
 const fs = require("fs");
 const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const dbUtils = require('./db-utils');
 const validFileTypes = [
     "image/jpg",
     "image/jpeg",
@@ -17,16 +16,10 @@ const validFileTypes = [
 const maxFileSize = 2097152 //2MB = 2*1024*1024
 const defaultLogoName = "logo";
 const {filterFile} = require('../assets/js/utils');
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "settings.db",
-);
+const dbPath = dbUtils.getDatabasePath("settings.db");
 
 const storage = multer.diskStorage({
-    destination: path.join(appData, appName, "uploads"),
+    destination: dbUtils.getUploadsDir(),
     filename: function (req, file, callback) {
         callback(null, defaultLogoName+path.extname(file.originalname));
     },
@@ -39,9 +32,9 @@ const upload = multer({
 }).single("imagename");
 
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let settingsDB = new Datastore({
     filename: dbPath,
@@ -57,7 +50,7 @@ settingsDB.ensureIndex({ fieldName: "_id", unique: true });
  * @returns {void}
  */
 
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Settings API");
 });
 
@@ -68,7 +61,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/get", function (req, res) {
+router.get("/get", function (req, res) {
     settingsDB.findOne(
         {
             _id: 1,
@@ -87,7 +80,7 @@ app.get("/get", function (req, res) {
  * @returns {void}
  */
 
-app.post("/post", function (req, res) {
+router.post("/post", function (req, res) {
     upload(req, res, function (err) {
 
         if (err) {

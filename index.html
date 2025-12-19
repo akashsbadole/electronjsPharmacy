@@ -5,6 +5,330 @@
     <meta charset="UTF-8">
     <title></title>
     <link href="assets/dist/css/bundle.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/dashboard.css" rel="stylesheet" type="text/css" />
+    <style>
+        /* Custom Reports Wizard Styles */
+        .wizard-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        
+        .wizard-step-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
+        }
+        
+        .wizard-step-indicator.active .step-number {
+            background: #007bff;
+            color: white;
+        }
+        
+        .wizard-step-indicator.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .step-title {
+            font-size: 12px;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .wizard-step {
+            display: none;
+        }
+        
+        .wizard-step.active {
+            display: block;
+        }
+        
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .field-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .field-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .field-item:hover {
+            background: #e3f2fd;
+            border-color: #007bff;
+        }
+        
+        .field-item.selected {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+        
+        .selected-fields-list {
+            min-height: 200px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        
+        .selected-field-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        
+        .remove-field {
+            color: #dc3545;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .report-view {
+            margin-top: 20px;
+        }
+        
+        .report-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .report-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .report-card h5 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .report-card .report-meta {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        
+        .template-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .template-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            border-color: #007bff;
+        }
+        
+        .template-card.selected {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .template-card h5 {
+            margin-top: 0;
+            color: #28a745;
+        }
+        
+        .template-card .template-description {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 10px 0;
+        }
+        
+        .template-card .template-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .schedule-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .schedule-item.inactive {
+            border-left-color: #6c757d;
+            opacity: 0.7;
+        }
+        
+        .schedule-item h5 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .schedule-item .schedule-meta {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        
+        .schedule-item .schedule-actions {
+            margin-top: 10px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-section h5 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .export-btn.csv {
+            background: #28a745;
+            color: white;
+        }
+        
+        .export-btn.excel {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .export-btn.pdf {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .export-btn.json {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
 
 <body>
@@ -91,6 +415,24 @@
                         </button>
                         <button id="analyticsReportsBtn" data-toggle="modal" data-target="#analyticsReportsModal" type="button" class="btn btn-primary waves-effect waves-light">
                             <span class="btn-label"><i class="glyphicon glyphicon-stats"></i></span> Analytics & Reports
+                        </button>
+                        <button id="customReportsBtn" data-toggle="modal" data-target="#customReportsModal" type="button" class="btn btn-info waves-effect waves-light">
+                            <span class="btn-label"><i class="fa fa-chart-bar"></i></span> Custom Reports
+                        </button>
+                        <button id="loyaltyManagementBtn" data-toggle="modal" data-target="#loyaltyManagementModal" type="button" class="btn btn-warning waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-star"></i></span> Loyalty Program
+                        </button>
+                        <button id="promotionsManagementBtn" data-toggle="modal" data-target="#promotionsManagementModal" type="button" class="btn btn-info waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-gift"></i></span> Promotions
+                        </button>
+                        <button id="rewardsManagementBtn" data-toggle="modal" data-target="#rewardsManagementModal" type="button" class="btn btn-success waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-trophy"></i></span> Rewards
+                        </button>
+                        <button id="deliveryManagementBtn" data-toggle="modal" data-target="#deliveryManagementModal" type="button" class="btn btn-primary waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-truck"></i></span> Delivery Management
+                        </button>
+                        <button id="customerCommunicationBtn" data-toggle="modal" data-target="#customerCommunicationModal" type="button" class="btn btn-info waves-effect waves-light">
+                            <span class="btn-label"><i class="glyphicon glyphicon-envelope"></i></span> Customer Communication
                         </button>
                         <button type="button" title="My Profile" class="btn btn-default waves-effect waves-light" id="cashier">
                             <span class="btn-label"><i class="glyphicon glyphicon-user"></i> </span> <span id="loggedin-user"></span>
@@ -278,6 +620,77 @@
                                 <button type="button" id="payButton" class="btn btn-success waves-effect waves-light">
                                     <span class="btn-label"><i class="fa fa-money"></i></span>Pay
                                 </button>
+                                <button type="button" id="deliveryButton" class="btn btn-info waves-effect waves-light">
+                                    <span class="btn-label"><i class="fa fa-truck"></i></span>Delivery
+                                </button>
+                            </div>
+                            <hr>
+                            <!-- Loyalty Information Section -->
+                            <div class="row" id="loyaltySection" style="display: none;">
+                                <div class="col-md-12">
+                                    <div class="card-box">
+                                        <div class="card-title">
+                                            <h4>Loyalty Information</h4>
+                                        </div>
+                                        <div class="card-body" id="loyaltyInfo" style="display: none;">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Loyalty Tier:</strong>
+                                                    <span id="loyaltyTier">-</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Current Points:</strong>
+                                                    <span id="loyaltyPoints">0</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Member Since:</strong>
+                                                    <span id="loyaltyMemberSince">-</span>
+                                                </div>
+                                                <div class="col-md-3" id="nextTierInfo" style="display: none;">
+                                                    <strong>Points to Next Tier:</strong>
+                                                    <span id="pointsToNextTier">0</span>
+                                                </div>
+                                            </div>
+                                            <div class="row m-t-10">
+                                                <div class="col-md-6">
+                                                    <strong>Estimated Points for This Transaction:</strong>
+                                                    <span id="estimatedPoints">0</span>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Promotion Discount:</strong>
+                                                    <span id="promotionDiscount">0.00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Promotions Section -->
+                            <div class="row" id="promotionsSection" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="card-box">
+                                        <div class="card-title">
+                                            <h4>Available Promotions</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="availablePromotions">
+                                                <p>No available promotions</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-box">
+                                        <div class="card-title">
+                                            <h4>Applied Promotions</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="appliedPromotions">
+                                                <p>No promotions applied</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <hr>
                         </div>
@@ -1329,6 +1742,8 @@
                             <li><a href="#inventoryAnalyticsTab" data-toggle="tab">Inventory Analytics</a></li>
                             <li><a href="#customerAnalyticsTab" data-toggle="tab">Customer Analytics</a></li>
                             <li><a href="#reportsTab" data-toggle="tab">Reports</a></li>
+                            <li><a href="#customReportsTab" data-toggle="tab">Custom Reports</a></li>
+                            <li><a href="#scheduledReportsTab" data-toggle="tab">Scheduled Reports</a></li>
                         </ul>
                         <div class="tab-content">
                             <!-- Executive Dashboard Tab -->
@@ -1393,6 +1808,343 @@
                                                             <!-- Recent transactions will be loaded here -->
                                                         </tbody>
                                                     </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Reports Tab -->
+                                <div class="tab-pane" id="customReportsTab">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <!-- Report Builder Sidebar -->
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Report Configuration</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <form id="reportBuilderForm">
+                                                        <!-- Template Selection -->
+                                                        <div class="form-group">
+                                                            <label for="reportTemplate">Start from Template</label>
+                                                            <select id="reportTemplate" class="form-control">
+                                                                <option value="">Create Custom Report</option>
+                                                            </select>
+                                                        </div>
+                    
+                                                        <!-- Report Name -->
+                                                        <div class="form-group">
+                                                            <label for="reportName">Report Name*</label>
+                                                            <input type="text" id="reportName" class="form-control" placeholder="Enter report name" required>
+                                                        </div>
+                    
+                                                        <!-- Report Description -->
+                                                        <div class="form-group">
+                                                            <label for="reportDescription">Description</label>
+                                                            <textarea id="reportDescription" class="form-control" rows="3" placeholder="Enter report description"></textarea>
+                                                        </div>
+                    
+                                                        <!-- Report Type -->
+                                                        <div class="form-group">
+                                                            <label for="reportType">Report Type</label>
+                                                            <select id="reportType" class="form-control">
+                                                                <option value="tabular">Tabular Report</option>
+                                                                <option value="summary">Summary Report</option>
+                                                                <option value="chart">Chart Report</option>
+                                                            </select>
+                                                        </div>
+                    
+                                                        <!-- Quick Actions -->
+                                                        <div class="btn-group-vertical">
+                                                            <button type="button" class="btn btn-info btn-sm" onclick="resetWizard()">
+                                                                <i class="fa fa-refresh"></i> Reset
+                                                            </button>
+                                                            <button type="button" class="btn btn-success btn-sm" onclick="saveCustomReport()" style="display: none;" id="quickSaveBtn">
+                                                                <i class="fa fa-save"></i> Quick Save
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <div class="col-md-9">
+                                            <!-- Template Gallery Toggle -->
+                                            <div class="mb-3">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-primary" onclick="hideTemplateGallery()">
+                                                        <i class="fa fa-magic"></i> Report Builder
+                                                    </button>
+                                                    <button type="button" class="btn btn-success" onclick="showTemplateGallery()">
+                                                        <i class="fa fa-th-large"></i> Template Gallery
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Template Gallery -->
+                                            <div id="templateGallery" style="display: none;">
+                                                <div class="card-box">
+                                                    <div class="card-title">
+                                                        <h4>Report Template Gallery</h4>
+                                                        <div class="pull-right">
+                                                            <button type="button" class="btn btn-sm btn-info" onclick="loadReportTemplates()">
+                                                                <i class="fa fa-refresh"></i> Refresh Templates
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="templateGalleryContent">
+                                                            <!-- Templates will be loaded here -->
+                                                        </div>
+                                                        
+                                                        <div class="text-center mt-3">
+                                                            <button type="button" class="btn btn-default" onclick="hideTemplateGallery()">
+                                                                <i class="fa fa-arrow-left"></i> Back to Report Builder
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Report Builder Wizard -->
+                                            <div class="wizard-container">
+                                                <!-- Wizard Progress Indicators -->
+                                                <div class="wizard-steps">
+                                                    <div class="wizard-step-indicator active" id="step1-indicator">
+                                                        <span class="step-number">1</span>
+                                                        <span class="step-title">Data Source</span>
+                                                    </div>
+                                                    <div class="wizard-step-indicator" id="step2-indicator">
+                                                        <span class="step-number">2</span>
+                                                        <span class="step-title">Fields</span>
+                                                    </div>
+                                                    <div class="wizard-step-indicator" id="step3-indicator">
+                                                        <span class="step-number">3</span>
+                                                        <span class="step-title">Filters</span>
+                                                    </div>
+                                                    <div class="wizard-step-indicator" id="step4-indicator">
+                                                        <span class="step-number">4</span>
+                                                        <span class="step-title">Grouping</span>
+                                                    </div>
+                                                    <div class="wizard-step-indicator" id="step5-indicator">
+                                                        <span class="step-number">5</span>
+                                                        <span class="step-title">Configuration</span>
+                                                    </div>
+                                                </div>
+                    
+                                                <!-- Wizard Steps -->
+                                                <div class="wizard-content">
+                                                    <!-- Step 1: Data Source -->
+                                                    <div class="wizard-step" id="step1-dataSource">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Select Data Source</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="form-group">
+                                                                    <label for="dataSource">Data Source*</label>
+                                                                    <select id="dataSource" class="form-control" required>
+                                                                        <option value="">Select Data Source</option>
+                                                                    </select>
+                                                                    <small class="text-muted">Choose the primary data source for your report</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                    
+                                                    <!-- Step 2: Fields Selection -->
+                                                    <div class="wizard-step" id="step2-fields" style="display: none;">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Select Fields</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <h5>Available Fields</h5>
+                                                                        <div id="availableFields" class="field-list">
+                                                                            <!-- Fields will be populated here -->
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <h5>Selected Fields</h5>
+                                                                        <div id="selectedFieldsList" class="selected-fields-list">
+                                                                            <!-- Selected fields will appear here -->
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                    
+                                                    <!-- Step 3: Filters -->
+                                                    <div class="wizard-step" id="step3-filters" style="display: none;">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Configure Filters</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" id="enableDateFilter" class="custom-control-input">
+                                                                                <label class="custom-control-label" for="enableDateFilter">
+                                                                                    Date Range Filter
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" id="enableCustomerFilter" class="custom-control-input">
+                                                                                <label class="custom-control-label" for="enableCustomerFilter">
+                                                                                    Customer Filter
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" id="enableStoreFilter" class="custom-control-input">
+                                                                                <label class="custom-control-label" for="enableStoreFilter">
+                                                                                    Store Filter
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" id="enableCategoryFilter" class="custom-control-input">
+                                                                                <label class="custom-control-label" for="enableCategoryFilter">
+                                                                                    Category Filter
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" id="enableStatusFilter" class="custom-control-input">
+                                                                                <label class="custom-control-label" for="enableStatusFilter">
+                                                                                    Status Filter
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                    
+                                                    <!-- Step 4: Grouping -->
+                                                    <div class="wizard-step" id="step4-grouping" style="display: none;">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Configure Grouping</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="form-group">
+                                                                    <div class="custom-control custom-checkbox">
+                                                                        <input type="checkbox" id="enableGrouping" class="custom-control-input">
+                                                                        <label class="custom-control-label" for="enableGrouping">
+                                                                            Enable Data Grouping
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group" id="groupBySection" style="display: none;">
+                                                                    <label for="groupBy">Group By Fields</label>
+                                                                    <select id="groupBy" class="form-control" multiple>
+                                                                        <!-- Grouping options will be populated based on selected fields -->
+                                                                    </select>
+                                                                    <small class="text-muted">Hold Ctrl/Cmd to select multiple fields</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                    
+                                                    <!-- Step 5: Configuration -->
+                                                    <div class="wizard-step" id="step5-configuration" style="display: none;">
+                                                        <div class="card-box">
+                                                            <div class="card-title">
+                                                                <h4>Final Configuration</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <h5>Sorting</h5>
+                                                                        <div class="form-group">
+                                                                            <label for="sortBy">Sort By</label>
+                                                                            <select id="sortBy" class="form-control">
+                                                                                <!-- Sort options will be populated based on selected fields -->
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="sortDirection">Sort Direction</label>
+                                                                            <select id="sortDirection" class="form-control">
+                                                                                <option value="asc">Ascending</option>
+                                                                                <option value="desc">Descending</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <h5>Chart Configuration</h5>
+                                                                        <div class="form-group">
+                                                                            <label for="chartType">Chart Type</label>
+                                                                            <select id="chartType" class="form-control">
+                                                                                <option value="">No Chart</option>
+                                                                                <option value="line">Line Chart</option>
+                                                                                <option value="bar">Bar Chart</option>
+                                                                                <option value="pie">Pie Chart</option>
+                                                                                <option value="doughnut">Doughnut Chart</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="chartXAxis">X-Axis Field</label>
+                                                                            <select id="chartXAxis" class="form-control">
+                                                                                <!-- Chart axis options will be populated -->
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="chartYAxis">Y-Axis Field</label>
+                                                                            <select id="chartYAxis" class="form-control">
+                                                                                <!-- Chart axis options will be populated -->
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                    
+                                                <!-- Wizard Navigation -->
+                                                <div class="wizard-navigation">
+                                                    <button type="button" class="btn btn-default wizard-prev" onclick="prevWizardStep()" style="display: none;">
+                                                        <i class="fa fa-arrow-left"></i> Previous
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary wizard-next" onclick="nextWizardStep()">
+                                                        Next <i class="fa fa-arrow-right"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-success wizard-finish" onclick="saveCustomReport()" style="display: none;">
+                                                        <i class="fa fa-check"></i> Create Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <div class="col-md-12" id="existingReportsSection" style="display: none;">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>My Custom Reports</h4>
+                                                    <div class="pull-right">
+                                                        <button type="button" class="btn btn-sm btn-success" onclick="loadExistingReports()">
+                                                            <i class="fa fa-refresh"></i> Refresh
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div id="existingReportsList">
+                                                        <!-- Existing reports will be loaded here -->
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1652,16 +2404,1023 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Loyalty Management Modal -->
+        <div id="loyaltyManagementModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="loyaltyManagementModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="loyaltyManagementModalLabel">Loyalty Program Management</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#loyaltyOverviewTab" data-toggle="tab">Overview</a></li>
+                            <li><a href="#loyaltyMembersTab" data-toggle="tab">Members</a></li>
+                            <li><a href="#loyaltySettingsTab" data-toggle="tab">Settings</a></li>
+                            <li><a href="#loyaltyAnalyticsTab" data-toggle="tab">Analytics</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <!-- Overview Tab -->
+                            <div class="tab-pane active" id="loyaltyOverviewTab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-info" onclick="loadLoyaltyOverview()">Refresh</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="loyalty-stats-grid">
+                                    <div class="loyalty-stat-card">
+                                        <div class="loyalty-stat-value" id="totalMembers">0</div>
+                                        <div class="loyalty-stat-label">Total Members</div>
+                                    </div>
+                                    <div class="loyalty-stat-card">
+                                        <div class="loyalty-stat-value" id="activeMembers">0</div>
+                                        <div class="loyalty-stat-label">Active Members</div>
+                                    </div>
+                                    <div class="loyalty-stat-card">
+                                        <div class="loyalty-stat-value" id="totalPointsIssued">0</div>
+                                        <div class="loyalty-stat-label">Total Points Issued</div>
+                                    </div>
+                                    <div class="loyalty-stat-card">
+                                        <div class="loyalty-stat-value" id="totalPointsRedeemed">0</div>
+                                        <div class="loyalty-stat-label">Total Points Redeemed</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Membership by Tier</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="tierChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Members Tab -->
+                            <div class="tab-pane" id="loyaltyMembersTab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <input type="text" id="loyaltyMemberSearch" placeholder="Search members..." class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <select id="tierFilter" class="form-control">
+                                                <option value="">All Tiers</option>
+                                                <option value="Basic">Basic</option>
+                                                <option value="Silver">Silver</option>
+                                                <option value="Gold">Gold</option>
+                                                <option value="Platinum">Platinum</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-info btn-block" onclick="loadLoyaltyMembers()">Search</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="loyaltyMembersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Customer</th>
+                                                <th>Tier</th>
+                                                <th>Points</th>
+                                                <th>Member Since</th>
+                                                <th>Last Activity</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="loyaltyMembersBody">
+                                            <!-- Loyalty members will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Settings Tab -->
+                            <div class="tab-pane" id="loyaltySettingsTab">
+                                <form id="loyaltySettingsForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="pointsPerCurrency">Points per Currency Unit</label>
+                                                <input type="number" id="pointsPerCurrency" name="pointsPerCurrency" class="form-control" min="0.1" step="0.1" value="1">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="pointsExpiryDays">Points Expiry (Days)</label>
+                                                <input type="number" id="pointsExpiryDays" name="pointsExpiryDays" class="form-control" min="0" value="365">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="basicTierThreshold">Basic to Silver Threshold</label>
+                                                <input type="number" id="basicTierThreshold" name="basicTierThreshold" class="form-control" min="0" value="100">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="silverTierThreshold">Silver to Gold Threshold</label>
+                                                <input type="number" id="silverTierThreshold" name="silverTierThreshold" class="form-control" min="0" value="500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="goldTierThreshold">Gold to Platinum Threshold</label>
+                                                <input type="number" id="goldTierThreshold" name="goldTierThreshold" class="form-control" min="0" value="1000">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="welcomeBonusPoints">Welcome Bonus Points</label>
+                                                <input type="number" id="welcomeBonusPoints" name="welcomeBonusPoints" class="form-control" min="0" value="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="birthdayBonusPoints">Birthday Bonus Points</label>
+                                                <input type="number" id="birthdayBonusPoints" name="birthdayBonusPoints" class="form-control" min="0" value="100">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="referralBonusPoints">Referral Bonus Points</label>
+                                                <input type="number" id="referralBonusPoints" name="referralBonusPoints" class="form-control" min="0" value="25">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-success">Save Settings</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Analytics Tab -->
+                            <div class="tab-pane" id="loyaltyAnalyticsTab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="loyaltyAnalyticsPeriod">Period</label>
+                                            <select id="loyaltyAnalyticsPeriod" class="form-control">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly" selected>Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-info" onclick="loadLoyaltyAnalytics()">Refresh</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Points Issued vs Redeemed</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="pointsTrendChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h4>Member Activity</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="memberActivityChart" width="400" height="200"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Promotions Management Modal -->
+        <div id="promotionsManagementModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="promotionsManagementModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="promotionsManagementModalLabel">Promotions Management</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newPromotionModal" data-dismiss="modal">
+                                    <i class="glyphicon glyphicon-plus"></i> Create New Promotion
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" id="promotionSearch" placeholder="Search promotions..." class="form-control">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="promotionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Value</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        <th>Usage</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="promotionsBody">
+                                    <!-- Promotions will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- New Promotion Modal -->
+        <div id="newPromotionModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="newPromotionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="newPromotionModalLabel">Create New Promotion</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="savePromotion" data-parsley-validate>
+                            <input type="hidden" name="id" id="promotion_id">
+                            <div class="form-group">
+                                <label for="promotionName">Promotion Name*</label>
+                                <input type="text" required="required" name="name" placeholder="Enter promotion name" class="form-control" id="promotionName">
+                            </div>
+                            <div class="form-group">
+                                <label for="promotionDescription">Description</label>
+                                <textarea name="description" placeholder="Enter promotion description" class="form-control" id="promotionDescription"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="promotionType">Promotion Type*</label>
+                                <select name="type" required class="form-control" id="promotionType">
+                                    <option value="">Select Type</option>
+                                    <option value="percentage_discount">Percentage Discount</option>
+                                    <option value="fixed_amount">Fixed Amount Discount</option>
+                                    <option value="buy_x_get_y">Buy X Get Y</option>
+                                    <option value="points_multiplier">Points Multiplier</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="promotionValue">Value*</label>
+                                <input type="number" required="required" name="value" placeholder="Enter promotion value" class="form-control" id="promotionValue" min="0" step="0.01">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="promotionStartDate">Start Date*</label>
+                                        <input type="date" required="required" name="startDate" class="form-control" id="promotionStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="promotionEndDate">End Date*</label>
+                                        <input type="date" required="required" name="endDate" class="form-control" id="promotionEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="minimumPurchase">Minimum Purchase Amount</label>
+                                <input type="number" name="minimumPurchase" placeholder="Enter minimum purchase amount" class="form-control" id="minimumPurchase" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="usageLimit">Usage Limit (0 for unlimited)</label>
+                                <input type="number" name="usageLimit" placeholder="Enter usage limit" class="form-control" id="usageLimit" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerTiers">Applicable Customer Tiers</label>
+                                <select name="customerTiers" class="form-control" id="customerTiers" multiple>
+                                    <option value="Basic">Basic</option>
+                                    <option value="Silver">Silver</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="Platinum">Platinum</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="isActive" id="isActive" checked> Active</label>
+                            </div>
+                            <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rewards Management Modal -->
+        <div id="rewardsManagementModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="rewardsManagementModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="rewardsManagementModalLabel">Rewards Catalog Management</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newRewardModal" data-dismiss="modal">
+                                    <i class="glyphicon glyphicon-plus"></i> Add New Reward
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" id="rewardSearch" placeholder="Search rewards..." class="form-control">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div id="rewardsCatalog" class="rewards-grid">
+                                <!-- Rewards will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- New Reward Modal -->
+        <div id="newRewardModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="newRewardModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="newRewardModalLabel">Add New Reward</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="saveReward" data-parsley-validate>
+                            <input type="hidden" name="id" id="reward_id">
+                            <div class="form-group">
+                                <label for="rewardName">Reward Name*</label>
+                                <input type="text" required="required" name="name" placeholder="Enter reward name" class="form-control" id="rewardName">
+                            </div>
+                            <div class="form-group">
+                                <label for="rewardDescription">Description</label>
+                                <textarea name="description" placeholder="Enter reward description" class="form-control" id="rewardDescription"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="rewardType">Reward Type*</label>
+                                <select name="type" required class="form-control" id="rewardType">
+                                    <option value="">Select Type</option>
+                                    <option value="discount">Discount</option>
+                                    <option value="free_product">Free Product</option>
+                                    <option value="service">Service</option>
+                                    <option value="voucher">Voucher</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="rewardValue">Reward Value</label>
+                                <input type="text" name="value" placeholder="Enter reward value" class="form-control" id="rewardValue">
+                            </div>
+                            <div class="form-group">
+                                <label for="rewardPoints">Points Required*</label>
+                                <input type="number" required="required" name="points" placeholder="Enter points required" class="form-control" id="rewardPoints" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="rewardImage">Image URL</label>
+                                <input type="text" name="image" placeholder="Enter image URL" class="form-control" id="rewardImage">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="rewardQuantity">Available Quantity</label>
+                                        <input type="number" name="quantity" placeholder="Enter available quantity" class="form-control" id="rewardQuantity" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="rewardExpiry">Expiry Date</label>
+                                        <input type="date" name="expiryDate" class="form-control" id="rewardExpiry">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerTiers">Applicable Customer Tiers</label>
+                                <select name="customerTiers" class="form-control" id="rewardCustomerTiers" multiple>
+                                    <option value="Basic">Basic</option>
+                                    <option value="Silver">Silver</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="Platinum">Platinum</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="isActive" id="rewardIsActive" checked> Active</label>
+                            </div>
+                            <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Modal -->
+            <div id="deliveryModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="deliveryModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-md">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                            <h4 class="modal-title" id="deliveryModalLabel">Create Delivery Order</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="deliveryAddress">Delivery Address*</label>
+                                <select id="deliveryAddress" class="form-control" required>
+                                    <option value="">Select delivery address</option>
+                                </select>
+                            </div>
+                            
+                            <div id="newAddressForm" style="display: none;">
+                                <hr>
+                                <h5>Add New Delivery Address</h5>
+                                <div class="form-group">
+                                    <label for="newAddress">Address*</label>
+                                    <input type="text" id="newAddress" class="form-control" placeholder="Enter street address" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="newCity">City*</label>
+                                            <input type="text" id="newCity" class="form-control" placeholder="Enter city" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="newState">State*</label>
+                                            <input type="text" id="newState" class="form-control" placeholder="Enter state" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newPostalCode">Postal Code*</label>
+                                    <input type="text" id="newPostalCode" class="form-control" placeholder="Enter postal code" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="isDefaultAddress"> Set as default address
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="deliveryPriority">Delivery Priority*</label>
+                                <select id="deliveryPriority" class="form-control" required>
+                                    <option value="standard">Standard (2-3 hours)</option>
+                                    <option value="express">Express (1 hour)</option>
+                                    <option value="urgent">Urgent (30 minutes)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="deliveryNotes">Delivery Notes</label>
+                                <textarea id="deliveryNotes" class="form-control" placeholder="Enter any special delivery instructions"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="button" id="processDelivery" class="btn btn-success">Create Delivery Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Management Button -->
+            <button id="deliveryManagementBtn" data-toggle="modal" data-target="#deliveryManagementModal" type="button" class="btn btn-primary waves-effect waves-light">
+                <span class="btn-label"><i class="glyphicon glyphicon-truck"></i></span> Delivery Management
+            </button>
+            
+            <!-- Delivery Management Modal -->
+            <div id="deliveryManagementModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="deliveryManagementModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                            <h4 class="modal-title" id="deliveryManagementModalLabel">Delivery Management</h4>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#deliveryOrdersTab" data-toggle="tab">Delivery Orders</a></li>
+                                <li><a href="#driversTab" data-toggle="tab">Drivers</a></li>
+                                <li><a href="#routesTab" data-toggle="tab">Routes</a></li>
+                                <li><a href="#trackingTab" data-toggle="tab">Tracking</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <!-- Delivery Orders Tab -->
+                                <div class="tab-pane active" id="deliveryOrdersTab">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newDeliveryOrderModal" data-dismiss="modal">
+                                                <i class="glyphicon glyphicon-plus"></i> New Delivery Order
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="text" id="deliveryOrderSearch" placeholder="Search delivery orders..." class="form-control">
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="deliveryOrdersTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order #</th>
+                                                    <th>Customer</th>
+                                                    <th>Address</th>
+                                                    <th>Status</th>
+                                                    <th>Priority</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="deliveryOrdersBody">
+                                                <!-- Delivery orders will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Drivers Tab -->
+                                <div class="tab-pane" id="driversTab">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newDriverModal" data-dismiss="modal">
+                                                <i class="glyphicon glyphicon-plus"></i> Add Driver
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="text" id="driverSearch" placeholder="Search drivers..." class="form-control">
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="driversTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Phone</th>
+                                                    <th>Vehicle</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="driversBody">
+                                                <!-- Drivers will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Routes Tab -->
+                                <div class="tab-pane" id="routesTab">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newRouteModal" data-dismiss="modal">
+                                                <i class="glyphicon glyphicon-plus"></i> Create Route
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-primary" onclick="showRoutePlanningModal()">
+                                                <i class="glyphicon glyphicon-map-marker"></i> Plan Route
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" id="routeSearch" placeholder="Search routes..." class="form-control">
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="routesTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Route Name</th>
+                                                    <th>Driver</th>
+                                                    <th>Orders</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="routesBody">
+                                                <!-- Routes will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tracking Tab -->
+                                <div class="tab-pane" id="trackingTab">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="trackingOrderId">Enter Delivery Order ID</label>
+                                                <div class="input-group">
+                                                    <input type="text" id="trackingOrderId" class="form-control" placeholder="Enter order ID to track">
+                                                    <span class="input-group-btn">
+                                                        <button type="button" class="btn btn-primary" onclick="trackDelivery()">Track</button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div id="trackingResults" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div id="trackingMap" style="height: 400px; width: 100%;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="row m-t-20">
+                                            <div class="col-md-12">
+                                                <div class="card-box">
+                                                    <div class="card-title">
+                                                        <h4>Delivery Details</h4>
+                                                    </div>
+                                                    <div class="card-body" id="deliveryDetails">
+                                                        <!-- Delivery details will be loaded here -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- Report Execution Modal -->
+    <div id="reportExecutionModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="reportExecutionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="reportExecutionModalLabel">Execute Custom Report</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <strong>Report:</strong> <span id="executionReportName"></span><br>
+                                <strong>Description:</strong> <span id="executionReportDescription"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="reportExecutionForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="executionStartDate">Start Date</label>
+                                    <input type="date" id="executionStartDate" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="executionEndDate">End Date</label>
+                                    <input type="date" id="executionEndDate" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="executionFilters">
+                            <!-- Dynamic filters will be populated here -->
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="executionLimit">Record Limit</label>
+                                    <input type="number" id="executionLimit" class="form-control" value="1000" min="1" max="10000">
+                                    <small class="text-muted">Maximum number of records to return (max: 10,000)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="executionFormat">Export Format</label>
+                                    <select id="executionFormat" class="form-control">
+                                        <option value="json">JSON</option>
+                                        <option value="csv">CSV</option>
+                                        <option value="excel">Excel</option>
+                                        <option value="pdf">PDF</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" class="btn btn-success" onclick="runReportExecution()">
+                                    <i class="fa fa-play"></i> Execute Report
+                                </button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Results Modal -->
+    <div id="reportResultsModal" class="modal fade bs-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="reportResultsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="reportResultsModalLabel">Report Results</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="pull-right">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="exportReportData('csv')">
+                                        <i class="fa fa-file-excel-o"></i> Export CSV
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-success" onclick="exportReportData('excel')">
+                                        <i class="fa fa-file-excel-o"></i> Export Excel
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="exportReportData('pdf')">
+                                        <i class="fa fa-file-pdf-o"></i> Export PDF
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-info" onclick="refreshReportResults()">
+                                        <i class="fa fa-refresh"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <h4 id="resultsReportName"></h4>
+                            <p class="text-muted" id="resultsReportDescription"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-info" id="reportExecutionInfo">
+                                <strong>Execution Time:</strong> <span id="executionTime"></span><br>
+                                <strong>Records Found:</strong> <span id="recordCount"></span><br>
+                                <strong>Execution Date:</strong> <span id="executionDate"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Tabular Results -->
+                            <div id="tabularResults" class="report-view">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered" id="resultsTable">
+                                        <thead>
+                                            <tr id="resultsTableHeader">
+                                                <!-- Headers will be populated dynamically -->
+                                            </tr>
+                                        </thead>
+                                        <tbody id="resultsTableBody">
+                                            <!-- Data will be populated dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <nav aria-label="Report results pagination">
+                                    <ul class="pagination" id="resultsPagination">
+                                        <!-- Pagination will be populated dynamically -->
+                                    </ul>
+                                </nav>
+                            </div>
+                            
+                            <!-- Chart Results -->
+                            <div id="chartResults" class="report-view" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <canvas id="reportChart" width="400" height="200"></canvas>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card-box">
+                                            <div class="card-title">
+                                                <h5>Chart Options</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-group">
+                                                    <label for="chartTypeSelector">Chart Type</label>
+                                                    <select id="chartTypeSelector" class="form-control" onchange="updateChartType()">
+                                                        <option value="bar">Bar Chart</option>
+                                                        <option value="line">Line Chart</option>
+                                                        <option value="pie">Pie Chart</option>
+                                                        <option value="doughnut">Doughnut Chart</option>
+                                                    </select>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="downloadChart()">
+                                                    <i class="fa fa-download"></i> Download Chart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Summary Results -->
+                            <div id="summaryResults" class="report-view" style="display: none;">
+                                <div id="summaryContent">
+                                    <!-- Summary content will be populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Route Planning Modal -->
+    <div id="routePlanningModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Route Planning & Visualization</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div id="routePlanningMap" style="height: 500px; width: 100%; border: 1px solid #ccc; border-radius: 5px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4>Route Information</h4>
+                                </div>
+                                <div class="panel-body" id="routePlanningInfo">
+                                    <p>Click on map to add waypoints for manual route planning, or load an existing route to visualize it.</p>
+                                    <hr>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="clearRouteMap()">
+                                        <i class="glyphicon glyphicon-trash"></i> Clear Route
+                                    </button>
+                                    <button type="button" class="btn btn-info btn-sm" onclick="optimizeManualRoute()">
+                                        <i class="glyphicon glyphicon-refresh"></i> Optimize Route
+                                    </button>
+                                    <hr>
+                                    <div id="routeStats" style="display: none;">
+                                        <h5>Route Statistics</h5>
+                                        <p><strong>Total Distance:</strong> <span id="routeDistance">0</span> km</p>
+                                        <p><strong>Estimated Time:</strong> <span id="routeTime">0</span> minutes</p>
+                                        <p><strong>Waypoints:</strong> <span id="routeWaypoints">0</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveManualRoute()">Save Route</button>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="assets/dist/js/bundle.min.js"></script>
-    <script src="assets/plugins/chart.js/Chart.min.js"></script>
+    <script src="assets/plugins/chartjs/Chart.min.js"></script>
     <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <!-- Leaflet JS for maps -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="assets/js/store-management.js"></script>
     <script src="assets/js/transfer-management.js"></script>
     <script src="assets/js/supplier-management.js"></script>
     <script src="assets/js/customer-management.js"></script>
     <script src="assets/js/accounts-management.js"></script>
+    <script src="assets/js/analytics.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/reports.js"></script>
     <script src="assets/js/analytics-reports.js"></script>
+    <script src="assets/js/custom-reports.js"></script>
+    <script src="assets/js/report-templates.js"></script>
+    <script src="assets/js/report-execution.js"></script>
+    <script src="assets/js/report-scheduler.js"></script>
+    <script src="assets/js/loyalty-management.js"></script>
+    <script src="assets/js/delivery-management.js"></script>
+    <script src="assets/js/customer-communication.js"></script>
+    <script src="assets/js/communication-templates.js"></script>
+    <script src="assets/js/communication-campaigns.js"></script>
+    <script src="assets/js/communication-analytics.js"></script>
+    
+    <!-- Customer Communication Modal -->
+    <div id="customerCommunicationModal" class="modal fade bs-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="customerCommunicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="customerCommunicationModalLabel">Customer Communication</h4>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#communicationDashboardTab" data-toggle="tab">Dashboard</a></li>
+                        <li><a href="#communicationMessagesTab" data-toggle="tab">Messages</a></li>
+                        <li><a href="#communicationTemplatesTab" data-toggle="tab">Templates</a></li>
+                        <li><a href="#communicationCampaignsTab" data-toggle="tab">Campaigns</a></li>
+                        <li><a href="#communicationPreferencesTab" data-toggle="tab">Preferences</a></li>
+                        <li><a href="#communicationAnalyticsTab" data-toggle="tab">Analytics</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- Dashboard Tab -->
+                        <div class="tab-pane active" id="communicationDashboardTab">
+                            <iframe src="customer-communication.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                        
+                        <!-- Messages Tab -->
+                        <div class="tab-pane" id="communicationMessagesTab">
+                            <iframe src="customer-communication.html#messages" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                        
+                        <!-- Templates Tab -->
+                        <div class="tab-pane" id="communicationTemplatesTab">
+                            <iframe src="communication-templates.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                        
+                        <!-- Campaigns Tab -->
+                        <div class="tab-pane" id="communicationCampaignsTab">
+                            <iframe src="communication-campaigns.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                        
+                        <!-- Preferences Tab -->
+                        <div class="tab-pane" id="communicationPreferencesTab">
+                            <iframe src="customer-communication-preferences.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                        
+                        <!-- Analytics Tab -->
+                        <div class="tab-pane" id="communicationAnalyticsTab">
+                            <iframe src="communication-analytics.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Reports Modal -->
+    <div id="customReportsModal" class="modal fade bs-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="customReportsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="customReportsModalLabel">Custom Reports</h4>
+                </div>
+                <div class="modal-body">
+                    <iframe src="custom-reports.html" style="width: 100%; height: 80vh; border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reorder Analytics - PharmaSpot</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .analytics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .analytics-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .analytics-card p {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .performance-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .performance-label {
+            flex: 1;
+            font-weight: 500;
+        }
+        .performance-bar {
+            flex: 2;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .performance-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .performance-value {
+            flex: 0.5;
+            text-align: right;
+            font-weight: bold;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .metric-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .metric-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .trend-indicator {
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .trend-up {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .trend-down {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .trend-neutral {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="topbar">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="index.html">
+                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                </a>
+            </div>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Reorder Analytics</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Reorder Analytics</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="filter-section">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="timePeriod">Time Period</label>
+                                <select class="form-control" id="timePeriod">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="storeFilter">Store</label>
+                                <select class="form-control" id="storeFilter">
+                                    <option value="">All Stores</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="supplierFilter">Supplier</label>
+                                <select class="form-control" id="supplierFilter">
+                                    <option value="">All Suppliers</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="metricType">Metric Type</label>
+                                <select class="form-control" id="metricType">
+                                    <option value="">All Metrics</option>
+                                    <option value="REORDER_SUGGESTION_ACCURACY">Suggestion Accuracy</option>
+                                    <option value="TRIGGER_PERFORMANCE">Trigger Performance</option>
+                                    <option value="AUTOMATION_EFFICIENCY">Automation Efficiency</option>
+                                    <option value="SUPPLIER_PERFORMANCE">Supplier Performance</option>
+                                    <option value="INVENTORY_TURNOVER">Inventory Turnover</option>
+                                    <option value="STOCK_OUT_ANALYSIS">Stock Out Analysis</option>
+                                    <option value="DEMAND_FORECAST_ACCURACY">Demand Forecast Accuracy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                                <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
+                                <button class="btn btn-success float-right" id="generateReport">Generate Report</button>
+                                <button class="btn btn-info float-right mr-2" id="refreshData">Refresh Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="row" id="keyMetrics">
+                <div class="col-md-3">
+                    <div class="analytics-card">
+                        <h3 id="suggestionAccuracy">0%</h3>
+                        <p>Suggestion Accuracy</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analytics-card">
+                        <h3 id="automationEfficiency">0%</h3>
+                        <p>Automation Efficiency</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analytics-card">
+                        <h3 id="inventoryTurnover">0</h3>
+                        <p>Inventory Turnover</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analytics-card">
+                        <h3 id="stockOutRate">0%</h3>
+                        <p>Stock Out Rate</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row">
+                <!-- Suggestion Accuracy Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Suggestion Accuracy Trend</div>
+                        <canvas id="suggestionAccuracyChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Automation Efficiency Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Automation Efficiency</div>
+                        <canvas id="automationEfficiencyChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Trigger Performance Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Trigger Performance</div>
+                        <canvas id="triggerPerformanceChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Supplier Performance Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Supplier Performance Comparison</div>
+                        <canvas id="supplierPerformanceChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Inventory Turnover Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Inventory Turnover Rate</div>
+                        <canvas id="inventoryTurnoverChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Stock Out Analysis Chart -->
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-title">Stock Out Analysis</div>
+                        <canvas id="stockOutChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Suggestion Accuracy by Type</div>
+                            <div class="metric-value" id="accuracyByType">85%</div>
+                        </div>
+                        <div id="accuracyByTypeContainer">
+                            <!-- Performance indicators will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Automation Success Rate</div>
+                            <div class="metric-value" id="automationSuccessRate">92%</div>
+                        </div>
+                        <div id="automationSuccessContainer">
+                            <!-- Performance indicators will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Top Performing Suppliers</div>
+                            <div class="metric-value" id="topSupplierCount">5</div>
+                        </div>
+                        <div id="topSuppliersContainer">
+                            <!-- Supplier list will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Critical Stock Items</div>
+                            <div class="metric-value" id="criticalStockCount">12</div>
+                        </div>
+                        <div id="criticalStockContainer">
+                            <!-- Critical stock items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let charts = {};
+            
+            // Initialize
+            loadStores();
+            loadSuppliers();
+            loadAnalyticsData();
+            
+            // Event handlers
+            $('#applyFilters').click(function() {
+                loadAnalyticsData();
+            });
+            
+            $('#resetFilters').click(function() {
+                resetFilters();
+            });
+            
+            $('#refreshData').click(function() {
+                loadAnalyticsData();
+            });
+            
+            $('#generateReport').click(function() {
+                generateAnalyticsReport();
+            });
+            
+            // Functions
+            function loadStores() {
+                $.ajax({
+                    url: '/api/stores',
+                    type: 'GET',
+                    success: function(stores) {
+                        const storeSelect = $('#storeFilter');
+                        storeSelect.empty().append('<option value="">All Stores</option>');
+                        
+                        stores.forEach(function(store) {
+                            storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        console.error('Failed to load stores');
+                    }
+                });
+            }
+            
+            function loadSuppliers() {
+                $.ajax({
+                    url: '/api/suppliers',
+                    type: 'GET',
+                    success: function(suppliers) {
+                        const supplierSelect = $('#supplierFilter');
+                        supplierSelect.empty().append('<option value="">All Suppliers</option>');
+                        
+                        suppliers.forEach(function(supplier) {
+                            supplierSelect.append(`<option value="${supplier._id}">${supplier.name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        console.error('Failed to load suppliers');
+                    }
+                });
+            }
+            
+            function loadAnalyticsData() {
+                showLoading();
+                
+                const timePeriod = $('#timePeriod').val();
+                const storeId = $('#storeFilter').val();
+                const supplierId = $('#supplierFilter').val();
+                const metricType = $('#metricType').val();
+                
+                // Load dashboard analytics
+                $.ajax({
+                    url: '/api/reorder-analytics/dashboard',
+                    type: 'GET',
+                    data: {
+                        timePeriod: timePeriod,
+                        storeId: storeId || null,
+                        supplierId: supplierId || null,
+                        metricType: metricType || null
+                    },
+                    success: function(data) {
+                        updateKeyMetrics(data);
+                        updateCharts(data);
+                        updateDetailedMetrics(data);
+                        hideLoading();
+                    },
+                    error: function() {
+                        console.error('Failed to load analytics data');
+                        hideLoading();
+                    }
+                });
+            }
+            
+            function updateKeyMetrics(data) {
+                $('#suggestionAccuracy').text((data.suggestionAccuracy || 0) + '%');
+                $('#automationEfficiency').text((data.automationEfficiency || 0) + '%');
+                $('#inventoryTurnover').text(data.inventoryTurnover || 0);
+                $('#stockOutRate').text((data.stockOutRate || 0) + '%');
+            }
+            
+            function updateCharts(data) {
+                // Destroy existing charts
+                Object.values(charts).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                
+                // Suggestion Accuracy Chart
+                const accuracyCtx = document.getElementById('suggestionAccuracyChart').getContext('2d');
+                charts.suggestionAccuracy = new Chart(accuracyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.accuracyLabels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Suggestion Accuracy %',
+                            data: data.accuracyData || [85, 88, 82, 90],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Automation Efficiency Chart
+                const efficiencyCtx = document.getElementById('automationEfficiencyChart').getContext('2d');
+                charts.automationEfficiency = new Chart(efficiencyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.efficiencyLabels || ['Stock Level', 'Expiry', 'Demand Forecast', 'Seasonal'],
+                        datasets: [{
+                            label: 'Automation Efficiency %',
+                            data: data.efficiencyData || [92, 88, 85, 90],
+                            backgroundColor: [
+                                'rgba(102, 126, 234, 0.7)',
+                                'rgba(118, 75, 162, 0.7)',
+                                'rgba(255, 152, 0, 0.7)',
+                                'rgba(76, 175, 80, 0.7)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Trigger Performance Chart
+                const triggerCtx = document.getElementById('triggerPerformanceChart').getContext('2d');
+                charts.triggerPerformance = new Chart(triggerCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.triggerLabels || ['Successful', 'Failed', 'Pending'],
+                        datasets: [{
+                            data: data.triggerData || [75, 15, 10],
+                            backgroundColor: [
+                                'rgba(76, 175, 80, 0.7)',
+                                'rgba(244, 67, 54, 0.7)',
+                                'rgba(255, 193, 7, 0.7)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                
+                // Supplier Performance Chart
+                const supplierCtx = document.getElementById('supplierPerformanceChart').getContext('2d');
+                charts.supplierPerformance = new Chart(supplierCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Delivery Time', 'Quality', 'Cost Efficiency', 'Reliability', 'Communication'],
+                        datasets: data.supplierData || [{
+                            label: 'Supplier A',
+                            data: [85, 90, 75, 88, 92],
+                            borderColor: 'rgba(102, 126, 234, 0.7)',
+                            backgroundColor: 'rgba(102, 126, 234, 0.2)'
+                        }, {
+                            label: 'Supplier B',
+                            data: [78, 85, 90, 82, 88],
+                            borderColor: 'rgba(118, 75, 162, 0.7)',
+                            backgroundColor: 'rgba(118, 75, 162, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Inventory Turnover Chart
+                const turnoverCtx = document.getElementById('inventoryTurnoverChart').getContext('2d');
+                charts.inventoryTurnover = new Chart(turnoverCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.turnoverLabels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Inventory Turnover',
+                            data: data.turnoverData || [3.2, 3.5, 3.1, 3.8, 4.0, 3.7],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                
+                // Stock Out Chart
+                const stockOutCtx = document.getElementById('stockOutChart').getContext('2d');
+                charts.stockOut = new Chart(stockOutCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.stockOutLabels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Stock Outs',
+                            data: data.stockOutData || [5, 3, 7, 2],
+                            backgroundColor: 'rgba(244, 67, 54, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateDetailedMetrics(data) {
+                // Update accuracy by type
+                $('#accuracyByType').text((data.overallAccuracy || 0) + '%');
+                
+                const accuracyContainer = $('#accuracyByTypeContainer');
+                accuracyContainer.empty();
+                
+                if (data.accuracyByType) {
+                    data.accuracyByType.forEach(function(item) {
+                        const trendClass = item.trend > 0 ? 'trend-up' : (item.trend < 0 ? 'trend-down' : 'trend-neutral');
+                        const trendSymbol = item.trend > 0 ? '↑' : (item.trend < 0 ? '↓' : '→');
+                        
+                        const indicator = `
+                            <div class="performance-indicator">
+                                <div class="performance-label">${item.type}</div>
+                                <div class="performance-bar">
+                                    <div class="performance-fill" style="width: ${item.value}%; background-color: ${item.color};"></div>
+                                </div>
+                                <div class="performance-value">${item.value}%</div>
+                            </div>
+                        `;
+                        
+                        accuracyContainer.append(indicator);
+                    });
+                }
+                
+                // Update automation success rate
+                $('#automationSuccessRate').text((data.automationSuccessRate || 0) + '%');
+                
+                const automationContainer = $('#automationSuccessContainer');
+                automationContainer.empty();
+                
+                if (data.automationByType) {
+                    data.automationByType.forEach(function(item) {
+                        const indicator = `
+                            <div class="performance-indicator">
+                                <div class="performance-label">${item.type}</div>
+                                <div class="performance-bar">
+                                    <div class="performance-fill" style="width: ${item.value}%; background-color: ${item.color};"></div>
+                                </div>
+                                <div class="performance-value">${item.value}%</div>
+                            </div>
+                        `;
+                        
+                        automationContainer.append(indicator);
+                    });
+                }
+                
+                // Update top suppliers
+                $('#topSupplierCount').text(data.topSuppliers ? data.topSuppliers.length : 0);
+                
+                const suppliersContainer = $('#topSuppliersContainer');
+                suppliersContainer.empty();
+                
+                if (data.topSuppliers) {
+                    data.topSuppliers.forEach(function(supplier, index) {
+                        const supplierItem = `
+                            <div class="performance-indicator">
+                                <div class="performance-label">${index + 1}. ${supplier.name}</div>
+                                <div class="performance-bar">
+                                    <div class="performance-fill" style="width: ${supplier.score}%; background-color: #667eea;"></div>
+                                </div>
+                                <div class="performance-value">${supplier.score}</div>
+                            </div>
+                        `;
+                        
+                        suppliersContainer.append(supplierItem);
+                    });
+                }
+                
+                // Update critical stock items
+                $('#criticalStockCount').text(data.criticalStockItems ? data.criticalStockItems.length : 0);
+                
+                const criticalContainer = $('#criticalStockContainer');
+                criticalContainer.empty();
+                
+                if (data.criticalStockItems) {
+                    data.criticalStockItems.slice(0, 5).forEach(function(item) {
+                        const criticalItem = `
+                            <div class="performance-indicator">
+                                <div class="performance-label">${item.productName}</div>
+                                <div class="performance-bar">
+                                    <div class="performance-fill" style="width: ${item.stockLevel}%; background-color: #f44336;"></div>
+                                </div>
+                                <div class="performance-value">${item.currentStock}/${item.minStock}</div>
+                            </div>
+                        `;
+                        
+                        criticalContainer.append(criticalItem);
+                    });
+                }
+            }
+            
+            function resetFilters() {
+                $('#timePeriod').val('weekly');
+                $('#storeFilter').val('');
+                $('#supplierFilter').val('');
+                $('#metricType').val('');
+                
+                loadAnalyticsData();
+            }
+            
+            function generateAnalyticsReport() {
+                showLoading();
+                
+                const timePeriod = $('#timePeriod').val();
+                const storeId = $('#storeFilter').val();
+                const supplierId = $('#supplierFilter').val();
+                const metricType = $('#metricType').val();
+                
+                $.ajax({
+                    url: '/api/reorder-analytics/generate-report',
+                    type: 'POST',
+                    data: {
+                        timePeriod: timePeriod,
+                        storeId: storeId || null,
+                        supplierId: supplierId || null,
+                        metricType: metricType || null,
+                        format: 'PDF'
+                    },
+                    success: function(data) {
+                        hideLoading();
+                        
+                        // Create download link
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = data.reportUrl || '#';
+                        downloadLink.download = data.fileName || `reorder-analytics-report-${new Date().toISOString().split('T')[0]}.pdf`;
+                        downloadLink.click();
+                        
+                        alert('Analytics report generated successfully!');
+                    },
+                    error: function() {
+                        hideLoading();
+                        alert('Failed to generate analytics report. Please try again.');
+                    }
+                });
+            }
+            
+            function showLoading() {
+                $('#loadingOverlay').show();
+            }
+            
+            function hideLoading() {
+                $('#loadingOverlay').hide();
+            }
+        });
+    </script>
+</body>
+</html>

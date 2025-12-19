@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Custom Reports - PharmaSpot</title>
+    <link href="assets/dist/css/bundle.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/dashboard.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h2>Custom Reports</h2>
+                    <p class="text-muted">Create and manage custom reports with flexible data sources and configurations</p>
+                </div>
+
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#reportBuilderTab" data-toggle="tab">Report Builder</a></li>
+                    <li><a href="#templateGalleryTab" data-toggle="tab">Template Gallery</a></li>
+                    <li><a href="#myReportsTab" data-toggle="tab">My Reports</a></li>
+                    <li><a href="#scheduledReportsTab" data-toggle="tab">Scheduled Reports</a></li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Report Builder Tab -->
+                    <div class="tab-pane active" id="reportBuilderTab">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <!-- Report Builder Sidebar -->
+                                <div class="card-box">
+                                    <div class="card-title">
+                                        <h4>Report Configuration</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="reportBuilderForm">
+                                            <!-- Template Selection -->
+                                            <div class="form-group">
+                                                <label for="reportTemplate">Start from Template</label>
+                                                <select id="reportTemplate" class="form-control">
+                                                    <option value="">Create Custom Report</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Report Name -->
+                                            <div class="form-group">
+                                                <label for="reportName">Report Name*</label>
+                                                <input type="text" id="reportName" class="form-control" placeholder="Enter report name" required>
+                                            </div>
+
+                                            <!-- Report Description -->
+                                            <div class="form-group">
+                                                <label for="reportDescription">Description</label>
+                                                <textarea id="reportDescription" class="form-control" rows="3" placeholder="Enter report description"></textarea>
+                                            </div>
+
+                                            <!-- Report Type -->
+                                            <div class="form-group">
+                                                <label for="reportType">Report Type</label>
+                                                <select id="reportType" class="form-control">
+                                                    <option value="tabular">Tabular Report</option>
+                                                    <option value="summary">Summary Report</option>
+                                                    <option value="chart">Chart Report</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Quick Actions -->
+                                            <div class="btn-group-vertical">
+                                                <button type="button" class="btn btn-info btn-sm" onclick="resetWizard()">
+                                                    <i class="fa fa-refresh"></i> Reset
+                                                </button>
+                                                <button type="button" class="btn btn-success btn-sm" onclick="saveCustomReport()" style="display: none;" id="quickSaveBtn">
+                                                    <i class="fa fa-save"></i> Quick Save
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-9">
+                                <!-- Report Builder Wizard -->
+                                <div class="wizard-container">
+                                    <!-- Wizard Progress Indicators -->
+                                    <div class="wizard-steps">
+                                        <div class="wizard-step-indicator active" id="step1-indicator">
+                                            <span class="step-number">1</span>
+                                            <span class="step-title">Data Source</span>
+                                        </div>
+                                        <div class="wizard-step-indicator" id="step2-indicator">
+                                            <span class="step-number">2</span>
+                                            <span class="step-title">Fields</span>
+                                        </div>
+                                        <div class="wizard-step-indicator" id="step3-indicator">
+                                            <span class="step-number">3</span>
+                                            <span class="step-title">Filters</span>
+                                        </div>
+                                        <div class="wizard-step-indicator" id="step4-indicator">
+                                            <span class="step-number">4</span>
+                                            <span class="step-title">Grouping</span>
+                                        </div>
+                                        <div class="wizard-step-indicator" id="step5-indicator">
+                                            <span class="step-number">5</span>
+                                            <span class="step-title">Configuration</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Wizard Steps -->
+                                    <div class="wizard-content">
+                                        <!-- Step 1: Data Source -->
+                                        <div class="wizard-step" id="step1-dataSource">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Select Data Source</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="form-group">
+                                                        <label for="dataSource">Data Source*</label>
+                                                        <select id="dataSource" class="form-control" required>
+                                                            <option value="">Select Data Source</option>
+                                                        </select>
+                                                        <small class="text-muted">Choose the primary data source for your report</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 2: Fields Selection -->
+                                        <div class="wizard-step" id="step2-fields" style="display: none;">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Select Fields</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h5>Available Fields</h5>
+                                                            <div id="availableFields" class="field-list">
+                                                                <!-- Fields will be populated here -->
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h5>Selected Fields</h5>
+                                                            <div id="selectedFieldsList" class="selected-fields-list">
+                                                                <!-- Selected fields will appear here -->
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 3: Filters -->
+                                        <div class="wizard-step" id="step3-filters" style="display: none;">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Configure Filters</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" id="enableDateFilter" class="custom-control-input">
+                                                                    <label class="custom-control-label" for="enableDateFilter">
+                                                                        Date Range Filter
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" id="enableCustomerFilter" class="custom-control-input">
+                                                                    <label class="custom-control-label" for="enableCustomerFilter">
+                                                                        Customer Filter
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" id="enableStoreFilter" class="custom-control-input">
+                                                                    <label class="custom-control-label" for="enableStoreFilter">
+                                                                        Store Filter
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" id="enableCategoryFilter" class="custom-control-input">
+                                                                    <label class="custom-control-label" for="enableCategoryFilter">
+                                                                        Category Filter
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" id="enableStatusFilter" class="custom-control-input">
+                                                                    <label class="custom-control-label" for="enableStatusFilter">
+                                                                        Status Filter
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 4: Grouping -->
+                                        <div class="wizard-step" id="step4-grouping" style="display: none;">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Configure Grouping</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="form-group">
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input type="checkbox" id="enableGrouping" class="custom-control-input">
+                                                            <label class="custom-control-label" for="enableGrouping">
+                                                                Enable Data Grouping
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group" id="groupBySection" style="display: none;">
+                                                        <label for="groupBy">Group By Fields</label>
+                                                        <select id="groupBy" class="form-control" multiple>
+                                                            <!-- Grouping options will be populated based on selected fields -->
+                                                        </select>
+                                                        <small class="text-muted">Hold Ctrl/Cmd to select multiple fields</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 5: Configuration -->
+                                        <div class="wizard-step" id="step5-configuration" style="display: none;">
+                                            <div class="card-box">
+                                                <div class="card-title">
+                                                    <h4>Final Configuration</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h5>Sorting</h5>
+                                                            <div class="form-group">
+                                                                <label for="sortBy">Sort By</label>
+                                                                <select id="sortBy" class="form-control">
+                                                                    <!-- Sort options will be populated based on selected fields -->
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="sortDirection">Sort Direction</label>
+                                                                <select id="sortDirection" class="form-control">
+                                                                    <option value="asc">Ascending</option>
+                                                                    <option value="desc">Descending</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h5>Chart Configuration</h5>
+                                                            <div class="form-group">
+                                                                <label for="chartType">Chart Type</label>
+                                                                <select id="chartType" class="form-control">
+                                                                    <option value="">No Chart</option>
+                                                                    <option value="line">Line Chart</option>
+                                                                    <option value="bar">Bar Chart</option>
+                                                                    <option value="pie">Pie Chart</option>
+                                                                    <option value="doughnut">Doughnut Chart</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="chartXAxis">X-Axis Field</label>
+                                                                <select id="chartXAxis" class="form-control">
+                                                                    <!-- Chart axis options will be populated -->
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="chartYAxis">Y-Axis Field</label>
+                                                                <select id="chartYAxis" class="form-control">
+                                                                    <!-- Chart axis options will be populated -->
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Wizard Navigation -->
+                                    <div class="wizard-navigation">
+                                        <button type="button" class="btn btn-default wizard-prev" onclick="prevWizardStep()" style="display: none;">
+                                            <i class="fa fa-arrow-left"></i> Previous
+                                        </button>
+                                        <button type="button" class="btn btn-primary wizard-next" onclick="nextWizardStep()">
+                                            Next <i class="fa fa-arrow-right"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-success wizard-finish" onclick="saveCustomReport()" style="display: none;">
+                                            <i class="fa fa-check"></i> Create Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Gallery Tab -->
+                    <div class="tab-pane" id="templateGalleryTab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card-box">
+                                    <div class="card-title">
+                                        <h4>Report Templates</h4>
+                                        <div class="pull-right">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="initializeSystemTemplates()">
+                                                <i class="fa fa-refresh"></i> Initialize Templates
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="templateCategory">Filter by Category</label>
+                                                    <select id="templateCategory" class="form-control" onchange="filterTemplates()">
+                                                        <option value="">All Categories</option>
+                                                        <option value="Sales">Sales</option>
+                                                        <option value="Inventory">Inventory</option>
+                                                        <option value="Financial">Financial</option>
+                                                        <option value="Customer">Customer</option>
+                                                        <option value="Supplier">Supplier</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="templateSearch">Search Templates</label>
+                                                    <input type="text" id="templateSearch" class="form-control" placeholder="Search templates..." onkeyup="filterTemplates()">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="templateGallery">
+                                            <div class="text-center p-4">
+                                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                                <p class="mt-2">Loading templates...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Reports Tab -->
+                    <div class="tab-pane" id="myReportsTab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card-box">
+                                    <div class="card-title">
+                                        <h4>My Custom Reports</h4>
+                                        <div class="pull-right">
+                                            <button type="button" class="btn btn-sm btn-success" onclick="loadExistingReports()">
+                                                <i class="fa fa-refresh"></i> Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="existingReportsList">
+                                            <!-- Existing reports will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduled Reports Tab -->
+                    <div class="tab-pane" id="scheduledReportsTab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card-box">
+                                    <div class="card-title">
+                                        <h4>Scheduled Reports</h4>
+                                        <div class="pull-right">
+                                            <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#scheduleReportModal">
+                                                <i class="fa fa-plus"></i> Schedule Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="scheduledReportsList">
+                                            <!-- Scheduled reports will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Execution Modal -->
+    <div id="reportExecutionModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Execute Report</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="executionReportId">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 id="executionReportName"></h5>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" id="dateFilterSection" style="display: none;">
+                            <div class="form-group">
+                                <label for="executionStartDate">Start Date</label>
+                                <input type="date" id="executionStartDate" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="dateFilterSection2" style="display: none;">
+                            <div class="form-group">
+                                <label for="executionEndDate">End Date</label>
+                                <input type="date" id="executionEndDate" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="executionPage">Page</label>
+                                <input type="number" id="executionPage" class="form-control" value="1" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="executionLimit">Records per Page</label>
+                                <select id="executionLimit" class="form-control">
+                                    <option value="25">25</option>
+                                    <option value="50" selected>50</option>
+                                    <option value="100">100</option>
+                                    <option value="200">200</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="executeReportBtn" onclick="runReportExecution()">
+                        <i class="fa fa-play"></i> Execute Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Results Modal -->
+    <div id="reportResultsModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Report Results</h4>
+                </div>
+                <div class="modal-body">
+                    <!-- Report Summary -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <span id="resultsReportName">Report Results</span>
+                                        <small class="text-muted" id="resultsReportDescription"></small>
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-clock-o text-primary mr-2"></i>
+                                                <div>
+                                                    <small class="text-muted">Execution Time</small>
+                                                    <div id="executionTime">N/A</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-calendar text-info mr-2"></i>
+                                                <div>
+                                                    <small class="text-muted">Execution Date</small>
+                                                    <div id="executionDate">N/A</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-database text-success mr-2"></i>
+                                                <div>
+                                                    <small class="text-muted">Record Count</small>
+                                                    <div id="recordCount">0</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-refresh text-warning mr-2"></i>
+                                                <div>
+                                                    <small class="text-muted">Actions</small>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="refreshReportResults()">
+                                                        <i class="fa fa-refresh"></i> Refresh
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- View Options -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary active" id="tabularViewBtn" onclick="switchView('tabular')">
+                                    <i class="fa fa-table"></i> Table View
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="chartViewBtn" onclick="switchView('chart')">
+                                    <i class="fa fa-bar-chart"></i> Chart View
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="summaryViewBtn" onclick="switchView('summary')">
+                                    <i class="fa fa-pie-chart"></i> Summary View
+                                </button>
+                            </div>
+                            
+                            <div class="btn-group ml-2" role="group">
+                                <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-download"></i> Export
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" onclick="exportReportData('csv')">
+                                        <i class="fa fa-file-excel-o text-success"></i> Export CSV
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="exportReportData('excel')">
+                                        <i class="fa fa-file-excel-o text-info"></i> Export Excel
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="exportReportData('pdf')">
+                                        <i class="fa fa-file-pdf-o text-danger"></i> Export PDF
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="exportReportData('json')">
+                                        <i class="fa fa-file-code-o text-warning"></i> Export JSON
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="btn-group ml-2" role="group" id="chartOptionsGroup" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-bar-chart"></i> Chart Type
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" onclick="updateChartType('bar')">
+                                        <i class="fa fa-bar-chart"></i> Bar Chart
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="updateChartType('line')">
+                                        <i class="fa fa-line-chart"></i> Line Chart
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="updateChartType('pie')">
+                                        <i class="fa fa-pie-chart"></i> Pie Chart
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="updateChartType('doughnut')">
+                                        <i class="fa fa-circle-o-notch"></i> Doughnut Chart
+                                    </a>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="downloadChart()">
+                                    <i class="fa fa-download"></i> Download Chart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Report Data -->
+                    <div id="reportResultsContainer">
+                        <!-- Tabular Results -->
+                        <div id="tabularResults" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead id="resultsTableHeader">
+                                        <!-- Headers will be populated here -->
+                                    </thead>
+                                    <tbody id="resultsTableBody">
+                                        <!-- Data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart Results -->
+                        <div id="chartResults" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="chart-container" style="height: 400px;">
+                                        <canvas id="reportChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary Results -->
+                        <div id="summaryResults" style="display: none;">
+                            <div id="summaryContent">
+                                <!-- Summary will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Report Modal -->
+    <div id="scheduleReportModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Schedule Report</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="scheduleReportForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="scheduleReport">Report*</label>
+                                    <select id="scheduleReport" class="form-control" required>
+                                        <option value="">Select Report</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="scheduleType">Schedule Type*</label>
+                                    <select id="scheduleType" class="form-control" required>
+                                        <option value="">Select Schedule Type</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="hourly">Hourly</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="scheduleRecipients">Recipients (comma separated)</label>
+                                    <input type="text" id="scheduleRecipients" class="form-control" placeholder="email1@example.com, email2@example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="scheduleExportFormat">Export Format</label>
+                                    <select id="scheduleExportFormat" class="form-control">
+                                        <option value="csv">CSV</option>
+                                        <option value="excel">Excel</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="customCronSection" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="customCronExpression">Custom Cron Expression</label>
+                                    <input type="text" id="customCronExpression" class="form-control" placeholder="0 0 * * *">
+                                    <small class="text-muted">Format: minute hour day month day-of-week</small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveScheduledReport()">
+                        <i class="fa fa-clock-o"></i> Schedule Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/dist/js/bundle.min.js"></script>
+    <script src="assets/js/chart.min.js"></script>
+    <script src="assets/js/custom-reports.js"></script>
+    <script src="assets/js/report-templates.js"></script>
+    <script src="assets/js/report-execution.js"></script>
+    <script src="assets/js/report-scheduler.js"></script>
+</body>
+</html>

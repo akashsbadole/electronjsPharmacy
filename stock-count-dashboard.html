@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Count Dashboard - PharmaSoft</title>
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/icons.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
+    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="assets/css/responsive.css" rel="stylesheet" type="text/css" />
+    <script src="assets/js/modernizr.min.js"></script>
+</head>
+<body class="fixed-left">
+    <!-- Begin page -->
+    <div id="wrapper">
+        <!-- Top Bar Start -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="text-center">
+                    <a href="index.html" class="logo"><i class="md md-local-pharmacy"></i> <span>PharmaSoft</span></a>
+                </div>
+            </div>
+            <div class="navbar navbar-default" role="navigation">
+                <div class="container">
+                    <div class="navbar-collapse2">
+                        <ul class="nav navbar-nav hidden-xs">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                    <i class="md md-menu"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="stock-count-management.html">Stock Count Management</a></li>
+                                    <li><a href="stock-count-sheet.html">Count Sheet</a></li>
+                                    <li><a href="stock-count-variances.html">Variances</a></li>
+                                    <li><a href="stock-count-reports.html">Reports</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right pull-right">
+                            <li class="hidden-xs">
+                                <a href="#" id="btn-fullscreen" class="waves-effect">
+                                    <i class="md md-fullscreen"></i>
+                                </a>
+                            </li>
+                            <li class="hidden-xs">
+                                <a href="#" class="right-bar-toggle waves-effect">
+                                    <i class="md md-settings-remote"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Top Bar End -->
+
+        <!-- ========== Left Sidebar Start ========== -->
+        <div class="left side-menu">
+            <div class="sidebar-inner slimscrollleft">
+                <div id="sidebar-menu">
+                    <ul>
+                        <li>
+                            <a href="stock-count-management.html" class="waves-effect">
+                                <i class="md md-assignment"></i>
+                                <span> Stock Counts </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-sheet.html" class="waves-effect">
+                                <i class="md md-clipboard"></i>
+                                <span> Count Sheet </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-variances.html" class="waves-effect">
+                                <i class="md md-warning"></i>
+                                <span> Variances </span>
+                            </a>
+                        </li>
+                        <li class="active">
+                            <a href="#" class="waves-effect">
+                                <i class="md md-dashboard"></i>
+                                <span> Dashboard </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-count-reports.html" class="waves-effect">
+                                <i class="md md-assessment"></i>
+                                <span> Reports </span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- Left Sidebar End -->
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="content-page">
+            <!-- Start content -->
+            <div class="content">
+                <div class="container">
+                    <!-- Page title -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="page-header-title">
+                                <h4 class="page-title">Stock Count Dashboard</h4>
+                                <ol class="breadcrumb">
+                                    <li><a href="index.html">PharmaSoft</a></li>
+                                    <li><a href="stock-count-management.html">Stock Counts</a></li>
+                                    <li class="active">Dashboard</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="row">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshDashboard()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-play-arrow text-primary"></i> Active Counts</h4>
+                                <h2 class="m-b-20" id="activeCounts">0</h2>
+                                <p class="text-muted">
+                                    <span id="activeCounters">0</span> counters assigned
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshDashboard()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-check-circle text-success"></i> Completed Today</h4>
+                                <h2 class="m-b-20" id="completedToday">0</h2>
+                                <p class="text-muted">
+                                    <span id="avgCompletionTime">0</span> avg. hours
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshDashboard()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-warning text-warning"></i> Pending Approval</h4>
+                                <h2 class="m-b-20" id="pendingApproval">0</h2>
+                                <p class="text-muted">
+                                    <span id="highValueVariances">0</span> high-value
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="refreshDashboard()">Refresh</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="text-muted m-t-0"><i class="md md-trending-down text-danger"></i> Accuracy Rate</h4>
+                                <h2 class="m-b-20" id="accuracyRate">0%</h2>
+                                <p class="text-muted">
+                                    Last 30 days average
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card-box">
+                                <div class="dropdown pull-right">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="md md-more-vert"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" onclick="updateCountTrendChart('week')">Last Week</a></li>
+                                        <li><a href="#" onclick="updateCountTrendChart('month')">Last Month</a></li>
+                                        <li><a href="#" onclick="updateCountTrendChart('quarter')">Last Quarter</a></li>
+                                    </ul>
+                                </div>
+                                <h4 class="m-t-0 header-title"><b>Stock Count Trends</b></h4>
+                                <p class="text-muted m-b-30">Stock count completion trends over time</p>
+                                <div class="text-center">
+                                    <canvas id="countTrendChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Count Types Distribution</b></h4>
+                                <p class="text-muted m-b-30">Distribution of different count types</p>
+                                <div class="text-center">
+                                    <canvas id="countTypeChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Details -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Active Stock Counts</b></h4>
+                                <p class="text-muted m-b-30">Currently active stock counts and their progress</p>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Stock Count</th>
+                                                <th>Type</th>
+                                                <th>Progress</th>
+                                                <th>Assigned To</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="activeCountsList">
+                                            <tr>
+                                                <td colspan="5" class="text-center">
+                                                    <div class="spinner">
+                                                        <i class="fa fa-spinner fa-spin"></i> Loading active counts...
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Counter Performance</b></h4>
+                                <p class="text-muted m-b-30">Performance metrics for assigned counters</p>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Counter</th>
+                                                <th>Active Counts</th>
+                                                <th>Items Counted</th>
+                                                <th>Accuracy</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="counterPerformanceList">
+                                            <tr>
+                                                <td colspan="5" class="text-center">
+                                                    <div class="spinner">
+                                                        <i class="fa fa-spinner fa-spin"></i> Loading counter data...
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Recent Activities</b></h4>
+                                <p class="text-muted m-b-30">Recent stock count activities and updates</p>
+                                <ul class="activity-list" id="recentActivitiesList">
+                                    <li class="text-center">
+                                        <div class="spinner">
+                                            <i class="fa fa-spinner fa-spin"></i> Loading recent activities...
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title"><b>Quick Actions</b></h4>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <a href="stock-count-management.html" class="btn btn-primary btn-lg btn-block">
+                                                <i class="md md-assignment"></i><br>
+                                                Create New Count
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <button type="button" class="btn btn-info btn-lg btn-block" onclick="showActiveCounts()">
+                                                <i class="md md-play-arrow"></i><br>
+                                                View Active Counts
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <button type="button" class="btn btn-warning btn-lg btn-block" onclick="showPendingApprovals()">
+                                                <i class="md md-warning"></i><br>
+                                                Review Variances
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <a href="stock-count-reports.html" class="btn btn-success btn-lg btn-block">
+                                                <i class="md md-assessment"></i><br>
+                                                Generate Reports
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- End Right content here -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- END wrapper -->
+
+    <!-- Counter Details Modal -->
+    <div id="counterDetailsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Counter Details</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Counter Information</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td><strong>Name</strong></td>
+                                    <td id="counterName">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Active Counts</strong></td>
+                                    <td id="counterActiveCounts">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Items Counted</strong></td>
+                                    <td id="counterTotalItems">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Accuracy Rate</strong></td>
+                                    <td id="counterAccuracy">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Assigned Stock Counts</h5>
+                            <div id="assignedCountsList">
+                                <p class="text-muted">Loading assigned counts...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/detect.js"></script>
+    <script src="assets/js/fastclick.js"></script>
+    <script src="assets/js/jquery.slimscroll.js"></script>
+    <script src="assets/js/jquery.blockUI.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+    <script src="assets/js/jquery.nicescroll.js"></script>
+    <script src="assets/js/jquery.scrollTo.min.js"></script>
+    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
+    <script src="assets/plugins/chartjs/Chart.min.js"></script>
+    <script src="assets/js/stock-count-dashboard.js"></script>
+</body>
+</html>

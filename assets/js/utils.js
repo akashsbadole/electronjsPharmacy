@@ -67,9 +67,15 @@ const checkFileType = (fileType, validFileTypes) => {
 };
 
 const getFileHash = (filePath) => {
-  const fileData = fs.readFileSync(filePath);
-  const hash = crypto.createHash("sha256").update(fileData).digest("hex");
-  return hash;
+  try {
+    if (!fs.existsSync(filePath)) return "missing";
+    const fileData = fs.readFileSync(filePath);
+    const hash = crypto.createHash("sha256").update(fileData).digest("hex");
+    return hash;
+  } catch (err) {
+    console.warn("Could not generate hash for file:", filePath, err);
+    return "error";
+  }
 };
 
 
@@ -89,13 +95,18 @@ const filterFile = (req, file, callback) => {
 /*Security*/
 
 const setContentSecurityPolicy = () => {
-  let scriptHash = getFileHash(path.join(__dirname,"../dist","js","bundle.min.js"))
-  let styleHash = getFileHash(path.join(__dirname,"../dist","css","bundle.min.css"));
-  let content = `default-src 'self'; img-src 'self' data:;script-src 'self' 'unsafe-eval' 'unsafe-inline' sha256-${scriptHash}; style-src 'self' 'unsafe-inline' sha256-${styleHash};font-src 'self';base-uri 'self'; form-action 'self'; ;connect-src 'self' http://localhost:${PORT};`;
-  let metaTag = document.createElement("meta");
-  metaTag.setAttribute("http-equiv", "Content-Security-Policy");
-  metaTag.setAttribute("content", content);
-  document.head.appendChild(metaTag);
+  try {
+    const scriptHash = getFileHash(path.join(__dirname,"../dist","js","bundle.min.js"))
+    const styleHash = getFileHash(path.join(__dirname,"../dist","css","bundle.min.css"));
+    const currentPort = process.env.PORT || PORT || 0;
+    const content = `default-src 'self'; img-src 'self' data:;script-src 'self' 'unsafe-eval' 'unsafe-inline' sha256-${scriptHash}; style-src 'self' 'unsafe-inline' sha256-${styleHash};font-src 'self';base-uri 'self'; form-action 'self'; ;connect-src 'self' http://localhost:${currentPort};`;
+    const metaTag = document.createElement("meta");
+    metaTag.setAttribute("http-equiv", "Content-Security-Policy");
+    metaTag.setAttribute("content", content);
+    document.head.appendChild(metaTag);
+  } catch (err) {
+    console.error("Failed to set CSP:", err);
+  }
 };
 
 module.exports = {

@@ -1,36 +1,24 @@
-let app = require("express")();
-let server = require("http").Server(app);
+const express = require("express");
+const router = express.Router();
+const server = require("http").Server();
 let bodyParser = require("body-parser");
 let Datastore = require("@seald-io/nedb");
 let Inventory = require("./inventory");
 const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-  appData,
-  appName,
-  "server",
-  "databases",
-  "transactions.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath("transactions.db");
 
 // Initialize stores database for store context
-const storesDBPath = path.join(
-  appData,
-  appName,
-  "server",
-  "databases",
-  "stores.db",
-);
+const storesDBPath = dbUtils.getDatabasePath("stores.db");
 
 const storesDB = new Datastore({
   filename: storesDBPath,
   autoload: true,
 });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 let transactionsDB = new Datastore({
   filename: dbPath,
@@ -46,7 +34,7 @@ transactionsDB.ensureIndex({ fieldName: "_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
   res.send("Transactions API");
 });
 
@@ -57,7 +45,7 @@ app.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/all", function (req, res) {
+router.get("/all", function (req, res) {
   transactionsDB.find({}, function (err, docs) {
     res.send(docs);
   });
@@ -70,7 +58,7 @@ app.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/on-hold", function (req, res) {
+router.get("/on-hold", function (req, res) {
   transactionsDB.find(
     { $and: [{ ref_number: { $ne: "" } }, { status: 0 }] },
     function (err, docs) {
@@ -86,7 +74,7 @@ app.get("/on-hold", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/customer-orders", function (req, res) {
+router.get("/customer-orders", function (req, res) {
   transactionsDB.find(
     { $and: [{ customer: { $ne: "0" } }, { status: 0 }, { ref_number: "" }] },
     function (err, docs) {
@@ -102,7 +90,7 @@ app.get("/customer-orders", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/by-date", function (req, res) {
+router.get("/by-date", function (req, res) {
   let startDate = new Date(req.query.start);
   let endDate = new Date(req.query.end);
   const storeId = req.query.storeId ? parseInt(req.query.storeId) : Inventory.getCurrentStoreId();
@@ -155,7 +143,7 @@ app.get("/by-date", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/new", function (req, res) {
+router.post("/new", function (req, res) {
   let newTransaction = req.body;
 
   // Get current store ID from inventory module
@@ -173,19 +161,37 @@ app.post("/new", function (req, res) {
         message: "An unexpected error occurred.",
       });
     } else {
+      // Create delivery order if transaction is a delivery
+      if (newTransaction.isDelivery && newTransaction.deliveryAddress) {
+        createDeliveryOrder(transaction, function(err) {
+          if (err) {
+            console.error("Failed to create delivery order:", err);
+          }
+        });
+      }
+
       res.sendStatus(200);
 
       if (newTransaction.paid >= newTransaction.total) {
         Inventory.decrementInventory(newTransaction.items, { storeId: currentStoreId });
       }
       
-      // Create customer invoice for credit sales
-      if (newTransaction.customer && newTransaction.customer !== "0" && newTransaction.paid < newTransaction.total) {
-        createCustomerInvoice(transaction, function(err) {
+      // Award loyalty points if customer is enrolled
+      if (newTransaction.customer && newTransaction.customer !== "0") {
+        awardLoyaltyPoints(transaction, function(err) {
           if (err) {
-            console.error("Failed to create customer invoice:", err);
+            console.error("Failed to award loyalty points:", err);
           }
         });
+        
+        // Create customer invoice for credit sales
+        if (newTransaction.paid < newTransaction.total) {
+          createCustomerInvoice(transaction, function(err) {
+            if (err) {
+              console.error("Failed to create customer invoice:", err);
+            }
+          });
+        }
       }
     }
   });
@@ -198,7 +204,7 @@ app.post("/new", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.put("/new", function (req, res) {
+router.put("/new", function (req, res) {
   let oderId = req.body._id;
   transactionsDB.update(
     {
@@ -227,7 +233,7 @@ app.put("/new", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/delete", function (req, res) {
+router.post("/delete", function (req, res) {
   let transaction = req.body;
   transactionsDB.remove(
     {
@@ -254,7 +260,7 @@ app.post("/delete", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.get("/:transactionId", function (req, res) {
+router.get("/:transactionId", function (req, res) {
   transactionsDB.find({ _id: req.params.transactionId }, function (err, doc) {
     if (doc) res.send(doc[0]);
   });
@@ -268,7 +274,7 @@ app.get("/:transactionId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/calculate-gst", function (req, res) {
+router.post("/calculate-gst", function (req, res) {
     // Validate required fields
     if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
         return res.status(400).json({
@@ -286,14 +292,7 @@ app.post("/calculate-gst", function (req, res) {
 
     // Get active GST configuration
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    const dbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "gst-config.db",
-    );
+    const dbPath = dbUtils.getDatabasePath("gst-config.db");
     
     const gstConfigDB = new Datastore({
         filename: dbPath,
@@ -410,7 +409,7 @@ app.post("/calculate-gst", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:transactionId/generate-e-invoice", function (req, res) {
+router.post("/:transactionId/generate-e-invoice", function (req, res) {
     if (!req.params.transactionId) {
         return res.status(400).send("Transaction ID is required.");
     }
@@ -434,14 +433,7 @@ app.post("/:transactionId/generate-e-invoice", function (req, res) {
 
         // Check if e-invoice already exists for this transaction
         const Datastore = require("@seald-io/nedb");
-        const path = require("path");
-        const dbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "e-invoices.db",
-        );
+        const dbPath = dbUtils.getDatabasePath("e-invoices.db");
         
         const eInvoiceDB = new Datastore({
             filename: dbPath,
@@ -536,7 +528,7 @@ app.post("/:transactionId/generate-e-invoice", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-app.post("/:transactionId/generate-eway-bill", function (req, res) {
+router.post("/:transactionId/generate-eway-bill", function (req, res) {
     if (!req.params.transactionId) {
         return res.status(400).send("Transaction ID is required.");
     }
@@ -577,14 +569,7 @@ app.post("/:transactionId/generate-eway-bill", function (req, res) {
 
         // Check if e-way bill already exists for this transaction
         const Datastore = require("@seald-io/nedb");
-        const path = require("path");
-        const dbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "eway-bill.db",
-        );
+        const dbPath = dbUtils.getDatabasePath("eway-bill.db");
         
         const eWayBillDB = new Datastore({
             filename: dbPath,
@@ -683,16 +668,9 @@ app.post("/:transactionId/generate-eway-bill", function (req, res) {
  */
 function createCustomerInvoice(transaction, callback) {
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
     
     // Create customer invoice
-    const customerInvoicesDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "customer-invoices.db",
-    );
+    const customerInvoicesDbPath = dbUtils.getDatabasePath("customer-invoices.db");
     
     const customerInvoicesDB = new Datastore({
         filename: customerInvoicesDbPath,
@@ -705,8 +683,8 @@ function createCustomerInvoice(transaction, callback) {
     // Calculate due date based on payment terms
     let dueDate = new Date();
     const customerAccountsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
+        appData,
+        appName,
         "server",
         "databases",
         "customer-accounts.db",
@@ -724,13 +702,7 @@ function createCustomerInvoice(transaction, callback) {
         
         if (account && account.paymentTermId) {
             // Get payment terms
-            const paymentTermsDbPath = path.join(
-                process.env.APPDATA,
-                process.env.APPNAME,
-                "server",
-                "databases",
-                "payment-terms.db",
-            );
+            const paymentTermsDbPath = dbUtils.getDatabasePath("payment-terms.db");
             
             const paymentTermsDB = new Datastore({
                 filename: paymentTermsDbPath,
@@ -804,15 +776,8 @@ function createCustomerInvoice(transaction, callback) {
  */
 function createCustomerInvoiceItems(invoiceId, items, callback) {
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
     
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "customer-invoice-items.db",
-    );
+    const itemsDbPath = dbUtils.getDatabasePath("customer-invoice-items.db");
     
     const itemsDB = new Datastore({
         filename: itemsDbPath,
@@ -858,15 +823,8 @@ function createCustomerInvoiceItems(invoiceId, items, callback) {
  */
 function updateCustomerAccountBalance(customerId, amount, callback) {
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
     
-    const customerAccountsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "customer-accounts.db",
-    );
+    const customerAccountsDbPath = dbUtils.getDatabasePath("customer-accounts.db");
     
     const customerAccountsDB = new Datastore({
         filename: customerAccountsDbPath,
@@ -934,4 +892,233 @@ function generateInvoiceNumber(type) {
     
     const prefix = type === 'SUPPLIER' ? 'SINV' : 'CINV';
     return `${prefix}${year}${month}${day}${time.toString().slice(-6)}`;
+}
+
+/**
+ * Helper function to award loyalty points for a transaction
+ *
+ * @param {Object} transaction transaction object
+ * @param {function} callback callback function
+ * @returns {void}
+ */
+function awardLoyaltyPoints(transaction, callback) {
+    if (!transaction.customer || transaction.customer === "0") {
+        return callback(null);
+    }
+    
+    const Datastore = require("@seald-io/nedb");
+    
+    // Get customer loyalty account
+    const customerLoyaltyDbPath = dbUtils.getDatabasePath("customer-loyalty-accounts.db");
+    
+    const customerLoyaltyDB = new Datastore({
+        filename: customerLoyaltyDbPath,
+        autoload: true,
+    });
+    
+    customerLoyaltyDB.findOne({ customer_id: transaction.customer }, function (err, loyaltyAccount) {
+        if (err) {
+            return callback(err);
+        }
+        
+        if (!loyaltyAccount || !loyaltyAccount.is_active) {
+            return callback(null); // Customer not enrolled in loyalty program
+        }
+        
+        // Calculate points to award (1% of transaction amount)
+        const transactionAmount = transaction.subtotal || transaction.total;
+        let pointsToAward = Math.floor(transactionAmount * 0.01);
+        
+        // Apply tier bonus
+        const tierBonus = getTierBonus(loyaltyAccount.tier);
+        pointsToAward = Math.floor(pointsToAward * (1 + tierBonus));
+        
+        if (pointsToAward <= 0) {
+            return callback(null);
+        }
+        
+        // Update loyalty account
+        const updatedAccount = {
+            current_points: loyaltyAccount.current_points + pointsToAward,
+            total_points_earned: loyaltyAccount.total_points_earned + pointsToAward,
+            last_activity_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date()
+        };
+        
+        // Check for tier progression
+        const newTier = checkTierProgression(updatedAccount.total_points_earned);
+        if (newTier !== loyaltyAccount.tier) {
+            updatedAccount.tier = newTier;
+            updatedAccount.tier_expiry_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+        }
+        
+        customerLoyaltyDB.update(
+            { _id: loyaltyAccount._id },
+            { $set: updatedAccount },
+            {},
+            function (err, numReplaced) {
+                if (err) {
+                    return callback(err);
+                }
+                
+                // Create loyalty transaction record
+                const loyaltyTransactionsDbPath = dbUtils.getDatabasePath("loyalty-transactions.db");
+                
+                const loyaltyTransactionsDB = new Datastore({
+                    filename: loyaltyTransactionsDbPath,
+                    autoload: true,
+                });
+                
+                const loyaltyTransaction = {
+                    _id: Math.floor(Date.now() / 1000) + Math.random(),
+                    customer_loyalty_id: loyaltyAccount._id,
+                    transaction_id: transaction._id,
+                    transaction_type: "EARN",
+                    points: pointsToAward,
+                    description: `Purchase points earned - Transaction #${transaction._id}`,
+                    reference_id: transaction._id.toString(),
+                    created_at: new Date()
+                };
+                
+                loyaltyTransactionsDB.insert(loyaltyTransaction, function (err) {
+                    if (err) {
+                        console.error("Failed to create loyalty transaction:", err);
+                    }
+                    
+                    callback(null);
+                });
+            }
+        );
+    });
+}
+
+/**
+ * Helper function to get tier bonus multiplier.
+ *
+ * @param {string} tier Customer tier
+ * @returns {number} Bonus multiplier
+ */
+function getTierBonus(tier) {
+    const tierBonuses = {
+        'Basic': 0,
+        'Silver': 0.1, // 10% bonus
+        'Gold': 0.25, // 25% bonus
+        'Platinum': 0.5 // 50% bonus
+    };
+    return tierBonuses[tier] || 0;
+}
+
+/**
+ * Helper function to create delivery order from transaction
+ *
+ * @param {Object} transaction transaction object
+ * @param {function} callback callback function
+ * @returns {void}
+ */
+function createDeliveryOrder(transaction, callback) {
+    const Datastore = require("@seald-io/nedb");
+    
+    const deliveryOrdersDbPath = dbUtils.getDatabasePath("delivery-orders.db");
+    
+    const deliveryOrdersDB = new Datastore({
+        filename: deliveryOrdersDbPath,
+        autoload: true,
+    });
+    
+    // Generate unique ID for delivery order
+    const deliveryOrderId = "DEL-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+    
+    // Calculate delivery fee based on distance (simplified)
+    let deliveryCharge = 25; // Base fee
+    if (transaction.deliveryDistance) {
+        deliveryCharge += transaction.deliveryDistance * 5; // ₹5 per km
+    }
+    
+    const deliveryOrder = {
+        _id: deliveryOrderId,
+        transaction_id: transaction._id,
+        customer_id: transaction.customer,
+        store_id: transaction.storeId,
+        delivery_address: transaction.deliveryAddress,
+        delivery_lat: transaction.deliveryLat || null,
+        delivery_lng: transaction.deliveryLng || null,
+        delivery_pincode: transaction.deliveryPincode || null,
+        delivery_phone: transaction.deliveryPhone || null,
+        delivery_instructions: transaction.deliveryInstructions || null,
+        delivery_status: "PENDING",
+        priority_level: transaction.priorityLevel || 1,
+        scheduled_delivery_time: transaction.scheduledDeliveryTime || null,
+        estimated_delivery_time: calculateEstimatedDeliveryTime(transaction.scheduledDeliveryTime),
+        delivery_charge: deliveryCharge,
+        distance_km: transaction.deliveryDistance || 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+        sync_version: 1
+    };
+    
+    deliveryOrdersDB.insert(deliveryOrder, function (err, deliveryOrder) {
+        if (err) {
+            return callback(err);
+        }
+        
+        // Create initial status update
+        const deliveryStatusUpdatesDbPath = dbUtils.getDatabasePath("delivery-status-updates.db");
+        
+        const deliveryStatusUpdatesDB = new Datastore({
+            filename: deliveryStatusUpdatesDbPath,
+            autoload: true,
+        });
+        
+        const statusUpdate = {
+            _id: "STATUS-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9),
+            delivery_order_id: deliveryOrderId,
+            status: "PENDING",
+            notes: "Delivery order created from transaction",
+            update_time: new Date(),
+            updated_by: null
+        };
+        
+        deliveryStatusUpdatesDB.insert(statusUpdate, function (err) {
+            if (err) {
+                console.error("Failed to create delivery status update:", err);
+            }
+            
+            callback(null);
+        });
+    });
+}
+
+/**
+ * Helper function to calculate estimated delivery time
+ *
+ * @param {Date} scheduledTime Scheduled delivery time
+ * @returns {Date} Estimated delivery time
+ */
+function calculateEstimatedDeliveryTime(scheduledTime) {
+    if (scheduledTime) {
+        return new Date(scheduledTime);
+    }
+    
+    // Default: 2 hours from now for regular delivery
+    const eta = new Date();
+    eta.setHours(eta.getHours() + 2);
+    return eta;
+}
+
+/**
+ * Helper function to check tier progression based on total points earned.
+ *
+ * @param {number} totalPoints Total points earned
+ * @returns {string} New tier
+ */
+function checkTierProgression(totalPoints) {
+    if (totalPoints >= 10000) {
+        return 'Platinum';
+    } else if (totalPoints >= 5000) {
+        return 'Gold';
+    } else if (totalPoints >= 2000) {
+        return 'Silver';
+    } else {
+        return 'Basic';
+    }
 }

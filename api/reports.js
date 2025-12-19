@@ -1,34 +1,26 @@
-const app = require("express")();
+const express = require("express");
+const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
 const moment = require("moment");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-
-// Database paths
-const transactionsDbPath = path.join(appData, appName, "server", "databases", "transactions.db");
-const inventoryDbPath = path.join(appData, appName, "server", "databases", "inventory.db");
-const customersDbPath = path.join(appData, appName, "server", "databases", "customers.db");
-const batchesDbPath = path.join(appData, appName, "server", "databases", "batches.db");
-const storeInventoryDbPath = path.join(appData, appName, "server", "databases", "store-inventory.db");
+const dbUtils = require("./db-utils");
 
 // Initialize databases
-const transactionsDB = new Datastore({ filename: transactionsDbPath, autoload: true });
-const inventoryDB = new Datastore({ filename: inventoryDbPath, autoload: true });
-const customersDB = new Datastore({ filename: customersDbPath, autoload: true });
-const batchesDB = new Datastore({ filename: batchesDbPath, autoload: true });
-const storeInventoryDB = new Datastore({ filename: storeInventoryDbPath, autoload: true });
+const transactionsDB = new Datastore({ filename: dbUtils.getDatabasePath("transactions.db"), autoload: true });
+const inventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("inventory.db"), autoload: true });
+const customersDB = new Datastore({ filename: dbUtils.getDatabasePath("customers.db"), autoload: true });
+const batchesDB = new Datastore({ filename: dbUtils.getDatabasePath("batches.db"), autoload: true });
+const storeInventoryDB = new Datastore({ filename: dbUtils.getDatabasePath("store-inventory.db"), autoload: true });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
-module.exports = app;
+module.exports = router;
 
 /**
  * GET endpoint: Get welcome message for Reports API.
  */
-app.get("/", function (req, res) {
+router.get("/", function (req, res) {
     res.send("Reports API");
 });
 
@@ -36,7 +28,7 @@ app.get("/", function (req, res) {
  * POST endpoint: Generate sales report
  * Request body: { startDate, endDate, storeId, reportType }
  */
-app.post("/sales", function (req, res) {
+router.post("/sales", function (req, res) {
     const { startDate, endDate, storeId, reportType } = req.body;
 
     if (!startDate || !endDate) {
@@ -155,7 +147,7 @@ app.post("/sales", function (req, res) {
  * POST endpoint: Generate inventory report
  * Request body: { storeId, reportType }
  */
-app.post("/inventory", function (req, res) {
+router.post("/inventory", function (req, res) {
     const { storeId, reportType } = req.body;
 
     // Get current inventory
@@ -295,7 +287,7 @@ function generateInventoryReport(products, storeInventories, storeId, res) {
  * POST endpoint: Generate customer report
  * Request body: { startDate, endDate, customerId, reportType }
  */
-app.post("/customers", function (req, res) {
+router.post("/customers", function (req, res) {
     const { startDate, endDate, customerId, reportType } = req.body;
 
     let query = { status: 1 }; // Paid transactions only
@@ -397,7 +389,7 @@ app.post("/customers", function (req, res) {
  * POST endpoint: Generate financial report (Profit & Loss)
  * Request body: { startDate, endDate, storeId, reportType }
  */
-app.post("/financial", function (req, res) {
+router.post("/financial", function (req, res) {
     const { startDate, endDate, storeId, reportType } = req.body;
 
     if (!startDate || !endDate) {
@@ -499,7 +491,7 @@ app.post("/financial", function (req, res) {
  * POST endpoint: Generate custom report with flexible parameters
  * Request body: { reportConfig, filters }
  */
-app.post("/custom", function (req, res) {
+router.post("/custom", function (req, res) {
     const { reportConfig, filters } = req.body;
 
     if (!reportConfig) {

@@ -992,3 +992,275 @@ ul.ColVis_collection li {
   background-color: #fb6d9d;
 }
 
+/* =============
+   Loyalty & Promotions
+============= */
+.loyalty-info {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.loyalty-tier {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.tier-basic {
+  background-color: #6c757d;
+  color: white;
+}
+
+.tier-silver {
+  background-color: #adb5bd;
+  color: #212529;
+}
+
+.tier-gold {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.tier-platinum {
+  background-color: #e5e5e5;
+  color: #212529;
+  background: linear-gradient(45deg, #c0c0c0, #f8f8f8);
+}
+
+.points-balance {
+  font-size: 24px;
+  font-weight: 700;
+  color: #5d9cec;
+  margin: 10px 0;
+}
+
+.points-progress {
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.points-progress-bar {
+  height: 100%;
+  background-color: #5d9cec;
+  transition: width 0.3s ease;
+}
+
+.promotion-card {
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.promotion-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.promotion-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.promotion-card.applied {
+  border-color: #5fbeaa;
+  background-color: #f0fdf4;
+}
+
+.promotion-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.promotion-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.promotion-discount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5fbeaa;
+}
+
+.promotion-validity {
+  font-size: 12px;
+  color: #999;
+}
+
+.loyalty-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  margin-left: 5px;
+}
+
+.badge-points {
+  background-color: #5d9cec;
+}
+
+.badge-tier {
+  background-color: #ffbd4a;
+}
+
+.loyalty-section {
+  margin-bottom: 20px;
+}
+
+.loyalty-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.promotion-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.promotion-list-item {
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.promotion-list-item:last-child {
+  border-bottom: none;
+}
+
+.promotion-action {
+  text-align: right;
+}
+
+.promotion-action button {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.loyalty-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.loyalty-summary-item {
+  text-align: center;
+}
+
+.loyalty-summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d9cec;
+}
+
+.loyalty-summary-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.points-breakdown {
+  font-size: 12px;
+  color: #666;
+}
+
+.points-earned {
+  color: #5fbeaa;
+}
+
+.points-redeemed {
+  color: #f05050;
+}
+
+.rewards-card {
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.rewards-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.rewards-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.rewards-points {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d9cec;
+  margin-bottom: 10px;
+}
+
+.rewards-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.loyalty-analytics-card {
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.loyalty-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.loyalty-stat-card {
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  padding: 15px;
+  text-align: center;
+}
+
+.loyalty-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #5d9cec;
+}
+
+.loyalty-stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.loyalty-chart-container {
+  height: 300px;
+  margin-bottom: 20px;
+}
+

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication Templates - PharmaSoft</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/icons.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Top Navigation -->
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-light">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="assets/images/logo.svg" alt="PharmaSoft" class="logo">
+                    </a>
+                </div>
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav mr-auto mt-md-0">
+                        <!-- Search -->
+                        <li class="nav-item d-none d-md-block search-box">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                                <i class="ti-search"></i>
+                            </a>
+                            <form class="app-search d-none d-md-block">
+                                <input type="text" class="form-control" placeholder="Search templates...">
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav my-lg-0">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-bell"></i>
+                                <span class="badge badge-xs badge-danger">3</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right mailbox scale-up">
+                                <ul>
+                                    <li>
+                                        <div class="drop-title">Notifications</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-email"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">New template approval pending</span>
+                                                <span class="message-time">5 mins ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <div class="message-icon">
+                                                <i class="ti-check"></i>
+                                            </div>
+                                            <div class="message-content">
+                                                <span class="message-title">Template approved</span>
+                                                <span class="message-time">1 hour ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-center" href="#">See all notifications</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <!-- User Profile -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="assets/images/default.jpg" alt="user" class="profile-pic">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right user-dd animated">
+                                <a class="dropdown-item" href="#"><i class="ti-user m-r-5 m-l-5"></i> My Profile</a>
+                                <a class="dropdown-item" href="#"><i class="ti-settings m-r-5 m-l-5"></i> Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="ti-power-off m-r-5 m-l-5"></i> Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="scroll-sidebar">
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="nav-small-cap">PERSONAL</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-view-dashboard"></i>
+                                <span class="hide-menu">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-message-text"></i>
+                                <span class="hide-menu">Customer Communication</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="customer-communication.html">Send Communication</a></li>
+                                <li><a href="customer-communication.html#campaigns">Campaigns</a></li>
+                                <li><a href="customer-communication.html#analytics">Analytics</a></li>
+                            </ul>
+                        </li>
+                        <li class="active">
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document"></i>
+                                <span class="hide-menu">Templates</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li class="active"><a href="communication-templates.html">Manage Templates</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-account-multiple"></i>
+                                <span class="hide-menu">Customers</span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="#">Customer List</a></li>
+                                <li><a href="#">Customer Preferences</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-small-cap">PHARMACY</li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-pill"></i>
+                                <span class="hide-menu">Inventory</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-file-document-box"></i>
+                                <span class="hide-menu">Prescriptions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-cash-register"></i>
+                                <span class="hide-menu">Sales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false">
+                                <i class="mdi mdi-truck-delivery"></i>
+                                <span class="hide-menu">Delivery</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Page Content -->
+        <div class="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row page-titles">
+                    <div class="col-md-5 align-self-center">
+                        <h4 class="text-themecolor">Communication Templates</h4>
+                    </div>
+                    <div class="col-md-7 align-self-center text-right">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                                <li class="breadcrumb-item active">Templates</li>
+                            </ol>
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="showTemplateModal()">
+                                <i class="fa fa-plus-circle"></i> Create New Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Management Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Template Management</h4>
+                                <h6 class="card-subtitle">Manage communication templates for different channels</h6>
+                                
+                                <!-- Filters -->
+                                <div class="row margin-top-20">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-type">Filter by Type</label>
+                                            <select class="form-control" id="filter-type" onchange="filterTemplates()">
+                                                <option value="">All Types</option>
+                                                <option value="SMS">SMS</option>
+                                                <option value="EMAIL">Email</option>
+                                                <option value="WHATSAPP">WhatsApp</option>
+                                                <option value="IN_APP">In-App</option>
+                                                <option value="PUSH">Push Notification</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-category">Filter by Category</label>
+                                            <select class="form-control" id="filter-category" onchange="filterTemplates()">
+                                                <option value="">All Categories</option>
+                                                <option value="marketing">Marketing</option>
+                                                <option value="transactional">Transactional</option>
+                                                <option value="reminder">Reminder</option>
+                                                <option value="alert">Alert</option>
+                                                <option value="promotional">Promotional</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-status">Filter by Status</label>
+                                            <select class="form-control" id="filter-status" onchange="filterTemplates()">
+                                                <option value="">All Statuses</option>
+                                                <option value="DRAFT">Draft</option>
+                                                <option value="PENDING_APPROVAL">Pending Approval</option>
+                                                <option value="APPROVED">Approved</option>
+                                                <option value="REJECTED">Rejected</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter-language">Filter by Language</label>
+                                            <select class="form-control" id="filter-language" onchange="filterTemplates()">
+                                                <option value="">All Languages</option>
+                                                <option value="en">English</option>
+                                                <option value="hi">Hindi</option>
+                                                <option value="gu">Gujarati</option>
+                                                <option value="mr">Marathi</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Templates Table -->
+                                <div class="table-responsive margin-top-20">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Category</th>
+                                                <th>Language</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="templates-table-body">
+                                            <tr>
+                                                <td colspan="7" class="text-center">Loading templates...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Preview Section -->
+                <div class="row" id="template-preview-section" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Template Preview</h4>
+                                <div id="template-preview-content">
+                                    <!-- Preview content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal fade" id="template-modal" tabindex="-1" role="dialog" aria-labelledby="template-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="template-modal-label">Create/Edit Template</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="template-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="template-name">Template Name</label>
+                                    <input type="text" class="form-control" id="template-name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="template-type">Type</label>
+                                    <select class="form-control" id="template-type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="SMS">SMS</option>
+                                        <option value="EMAIL">Email</option>
+                                        <option value="WHATSAPP">WhatsApp</option>
+                                        <option value="IN_APP">In-App</option>
+                                        <option value="PUSH">Push Notification</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="template-category">Category</label>
+                                    <select class="form-control" id="template-category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="transactional">Transactional</option>
+                                        <option value="reminder">Reminder</option>
+                                        <option value="alert">Alert</option>
+                                        <option value="promotional">Promotional</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="template-language">Language</label>
+                                    <select class="form-control" id="template-language" required>
+                                        <option value="en">English</option>
+                                        <option value="hi">Hindi</option>
+                                        <option value="gu">Gujarati</option>
+                                        <option value="mr">Marathi</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-content">Content</label>
+                            <textarea class="form-control" id="template-content" rows="8" required></textarea>
+                            <small class="form-text text-muted">Use variables like {{customerName}}, {{prescriptionNumber}}, etc.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-variables">Variables (comma separated)</label>
+                            <input type="text" class="form-control" id="template-variables" placeholder="customerName, prescriptionNumber, pharmacyName">
+                            <small class="form-text text-muted">List of variables that can be used in this template</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="previewTemplate()">Preview</button>
+                    <button type="button" class="btn btn-success" onclick="saveTemplate()">Save Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app-style-switcher.js"></script>
+    <script src="assets/js/waves.js"></script>
+    <script src="assets/js/sidebarmenu.js"></script>
+    <script src="assets/js/custom.min.js"></script>
+    <script src="assets/js/customer-communication.js"></script>
+    <script src="assets/js/communication-templates.js"></script>
+    <script>
+        // Initialize page
+        $(document).ready(function() {
+            loadTemplates();
+        });
+
+        // Filter templates
+        function filterTemplates() {
+            const type = $('#filter-type').val();
+            const category = $('#filter-category').val();
+            const status = $('#filter-status').val();
+            const language = $('#filter-language').val();
+
+            $.ajax({
+                url: '/api/communication-templates/all',
+                method: 'GET',
+                data: {
+                    type: type,
+                    category: category,
+                    approvalStatus: status,
+                    language: language
+                },
+                success: function(data) {
+                    templates = data.templates || [];
+                    populateTemplatesTable();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error filtering templates:', error);
+                    showNotification('Error filtering templates', 'error');
+                }
+            });
+        }
+
+        // Preview template
+        function previewTemplate() {
+            const type = $('#template-type').val();
+            const content = $('#template-content').val();
+            const variables = $('#template-variables').val();
+
+            if (!type || !content) {
+                showNotification('Please fill in template type and content', 'warning');
+                return;
+            }
+
+            let previewHtml = '';
+
+            if (type === 'EMAIL') {
+                previewHtml = `
+                    <div class="email-preview">
+                        <h5>Email Preview</h5>
+                        <div class="border p-3">
+                            <div class="mb-2"><strong>Subject:</strong> ${$('#template-name').val()}</div>
+                            <div class="mb-2"><strong>Body:</strong></div>
+                            <div>${content}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                previewHtml = `
+                    <div class="sms-preview">
+                        <h5>SMS/WhatsApp Preview</h5>
+                        <div class="border p-3">
+                            <div class="message-bubble">${content}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            $('#template-preview-content').html(previewHtml);
+            $('#template-preview-section').show();
+        }
+    </script>
+</body>
+</html>
