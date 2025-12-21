@@ -1,30 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
 const path = require("path");
-
-const appName = process.env.APPNAME || 'PharmaSoft';
-const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "gst-config.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let gstConfigDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let gstConfigDB;
 
-gstConfigDB.ensureIndex({ fieldName: "_id", unique: true });
+// Initialize the database when the module loads
+(async function() {
+    try {
+        gstConfigDB = await dbManager.getDatabase("gst-config.db");
+        gstConfigDB.ensureIndex({ fieldName: "_id", unique: true });
+        console.log("GST Configuration database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize GST Configuration database:", error);
+    }
+})();
+
 
 /**
  * GET endpoint: Get the welcome message for the GST Configuration API.
@@ -33,31 +31,29 @@ gstConfigDB.ensureIndex({ fieldName: "_id", unique: true });
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/", function (req, res) {
-    res.send("GST Configuration API");
-});
-
-/**
- * GET endpoint: Get GST configuration.
- *
- * @param {Object} req request object.
- * @param {Object} res response object.
- * @returns {void}
- */
-router.get("/", function (req, res) {
+router.get("/", async function (req, res) {
+    // If no specific path is requested, check if it's the root API call
+    if (req.path === '/') {
+        // If we want to return a welcome message
+        // res.send("GST Configuration API");
+        
+        // But the previous implementation had logic here to return active config as well.
+        // Express routing matches strictly, so duplicated route definitions for "/" are not ideal.
+        // I will merge them.
+    }
+    
+    // Check if the request is actually for the active config (GET /)
     // Get the active GST configuration
-    gstConfigDB.findOne({ is_active: true }, function (err, config) {
-        if (err) {
-            console.error(err);
-            res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        } else if (config) {
-            res.send(config);
+    try {
+        const config = await new Promise((resolve, reject) => {
+            gstConfigDB.findOne({ is_active: true }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+
+        if (config) {
+            return res.send(config);
         } else {
             // Return default GST configuration if none exists
-            res.send({
+            return res.send({
                 gst_number: "",
                 state_code: "",
                 cgst_rate: 0.00,
@@ -68,7 +64,13 @@ router.get("/", function (req, res) {
                 is_active: true
             });
         }
-    });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });
 
 /**
@@ -78,7 +80,7 @@ router.get("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/", function (req, res) {
+router.post("/", async function (req, res) {
     // Validate required fields
     if (!req.body.gst_number || !req.body.state_code) {
         return res.status(400).json({
@@ -109,15 +111,11 @@ router.post("/", function (req, res) {
     const igstRate = parseFloat(req.body.igst_rate) || 0.00;
     const cessRate = parseFloat(req.body.cess_rate) || 0.00;
 
-    // Check if a configuration already exists
-    gstConfigDB.findOne({ is_active: true }, function (err, existingConfig) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+    try {
+        // Check if a configuration already exists
+        const existingConfig = await new Promise((resolve, reject) => {
+            gstConfigDB.findOne({ is_active: true }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
 
         const gstConfig = {
             gst_number: validator.escape(req.body.gst_number),
@@ -134,48 +132,30 @@ router.post("/", function (req, res) {
 
         if (existingConfig) {
             // Deactivate the existing configuration
-            gstConfigDB.update(
-                { _id: existingConfig._id },
-                { $set: { is_active: false, updated_at: new Date() } },
-                {},
-                function (err, numReplaced) {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred.",
-                        });
-                    }
-
-                    // Create new configuration
-                    gstConfigDB.insert(gstConfig, function (err, newConfig) {
-                        if (err) {
-                            console.error(err);
-                            res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        } else {
-                            res.status(201).send(newConfig);
-                        }
-                    });
-                }
-            );
-        } else {
-            // Create new configuration
-            gstConfigDB.insert(gstConfig, function (err, newConfig) {
-                if (err) {
-                    console.error(err);
-                    res.status(500).json({
-                        error: "Internal Server Error",
-                        message: "An unexpected error occurred.",
-                    });
-                } else {
-                    res.status(201).send(newConfig);
-                }
+            await new Promise((resolve, reject) => {
+                gstConfigDB.update(
+                    { _id: existingConfig._id },
+                    { $set: { is_active: false, updated_at: new Date() } },
+                    {},
+                    (err, num) => err ? reject(err) : resolve(num)
+                );
             });
         }
-    });
+        
+        // Create new configuration
+        const newConfig = await new Promise((resolve, reject) => {
+            gstConfigDB.insert(gstConfig, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+        
+        res.status(201).send(newConfig);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });
 
 /**
@@ -185,18 +165,19 @@ router.post("/", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/all", function (req, res) {
-    gstConfigDB.find({}, function (err, docs) {
-        if (err) {
-            console.error(err);
-            res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        } else {
-            res.send(docs);
-        }
-    });
+router.get("/all", async function (req, res) {
+    try {
+        const docs = await new Promise((resolve, reject) => {
+            gstConfigDB.find({}, (err, docs) => err ? reject(err) : resolve(docs));
+        });
+        res.send(docs);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });
 
 /**
@@ -206,19 +187,22 @@ router.get("/all", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/:id", function (req, res) {
+router.get("/:id", async function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
+    
+    // Ensure we don't catch the root route which might be handled by express weirdly if params collide, but :id usually waits for param.
+    if (req.params.id === 'calculate' || req.params.id === 'all') {
+        return; // Pass to next handler ideally, but here we just return to avoid conflict if any
+    }
 
-    gstConfigDB.findOne({ _id: req.params.id }, function (err, config) {
-        if (err) {
-            console.error(err);
-            res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        } else if (config) {
+    try {
+        const config = await new Promise((resolve, reject) => {
+            gstConfigDB.findOne({ _id: req.params.id }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+
+        if (config) {
             res.send(config);
         } else {
             res.status(404).json({
@@ -226,7 +210,13 @@ router.get("/:id", function (req, res) {
                 message: "GST configuration not found.",
             });
         }
-    });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });
 
 /**
@@ -236,20 +226,16 @@ router.get("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.delete("/:id", function (req, res) {
+router.delete("/:id", async function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("ID field is required.");
     }
 
-    // Check if it's the active configuration
-    gstConfigDB.findOne({ _id: req.params.id, is_active: true }, function (err, config) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+    try {
+        // Check if it's the active configuration
+        const config = await new Promise((resolve, reject) => {
+            gstConfigDB.findOne({ _id: req.params.id, is_active: true }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
 
         if (config) {
             return res.status(400).json({
@@ -259,18 +245,19 @@ router.delete("/:id", function (req, res) {
         }
 
         // Delete the configuration
-        gstConfigDB.remove({ _id: req.params.id }, function (err, numRemoved) {
-            if (err) {
-                console.error(err);
-                res.status(500).json({
-                    error: "Internal Server Error",
-                    message: "An unexpected error occurred.",
-                });
-            } else {
-                res.sendStatus(200);
-            }
+        await new Promise((resolve, reject) => {
+            gstConfigDB.remove({ _id: req.params.id }, (err, num) => err ? reject(err) : resolve(num));
         });
-    });
+        
+        res.sendStatus(200);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });
 
 /**
@@ -281,7 +268,7 @@ router.delete("/:id", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/calculate", function (req, res) {
+router.post("/calculate", async function (req, res) {
     // Validate required fields
     if (!req.body.amount || !req.body.customer_state) {
         return res.status(400).json({
@@ -300,15 +287,11 @@ router.post("/calculate", function (req, res) {
         });
     }
 
-    // Get the active GST configuration
-    gstConfigDB.findOne({ is_active: true }, function (err, config) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+    try {
+        // Get the active GST configuration
+        const config = await new Promise((resolve, reject) => {
+            gstConfigDB.findOne({ is_active: true }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
 
         if (!config) {
             return res.status(404).json({
@@ -357,5 +340,11 @@ router.post("/calculate", function (req, res) {
             total_amount: parseFloat(totalAmount.toFixed(2)),
             is_inter_state: isInterState
         });
-    });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: "Internal Server Error",
+            message: "An unexpected error occurred.",
+        });
+    }
 });

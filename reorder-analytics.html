@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reorder Analytics - PharmaSpot</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .analytics-card {
@@ -19,48 +20,57 @@
             margin-bottom: 20px;
             transition: all 0.3s ease;
         }
+
         .analytics-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
+
         .analytics-card h3 {
             margin: 0 0 10px 0;
             font-size: 32px;
             font-weight: bold;
         }
+
         .analytics-card p {
             margin: 0;
             font-size: 16px;
             opacity: 0.9;
         }
+
         .chart-container {
             background-color: white;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
+
         .chart-title {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
             color: #333;
         }
+
         .filter-section {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         .performance-indicator {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
         }
+
         .performance-label {
             flex: 1;
             font-weight: 500;
         }
+
         .performance-bar {
             flex: 2;
             height: 20px;
@@ -68,16 +78,19 @@
             border-radius: 10px;
             overflow: hidden;
         }
+
         .performance-fill {
             height: 100%;
             border-radius: 10px;
             transition: width 0.5s ease;
         }
+
         .performance-value {
             flex: 0.5;
             text-align: right;
             font-weight: bold;
         }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -90,6 +103,7 @@
             align-items: center;
             z-index: 9999;
         }
+
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -98,65 +112,81 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .metric-card {
             background-color: white;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
+
         .metric-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
+
         .metric-title {
             font-size: 18px;
             font-weight: bold;
             color: #333;
         }
+
         .metric-value {
             font-size: 24px;
             font-weight: bold;
             color: #667eea;
         }
+
         .trend-indicator {
             font-size: 14px;
             padding: 2px 8px;
             border-radius: 12px;
         }
+
         .trend-up {
             background-color: #d4edda;
             color: #155724;
         }
+
         .trend-down {
             background-color: #f8d7da;
             color: #721c24;
         }
+
         .trend-neutral {
             background-color: #fff3cd;
             color: #856404;
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="topbar">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="navbar-header">
                 <a class="navbar-brand" href="index.html">
-                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                    <img src="./assets/images/logo.svg" alt="PharmaSpot" height="30">
                 </a>
             </div>
             <div class="navbar-collapse">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
                     <li class="nav-item"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
                     <li class="nav-item active"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
@@ -271,7 +301,7 @@
                         <canvas id="suggestionAccuracyChart" height="200"></canvas>
                     </div>
                 </div>
-                
+
                 <!-- Automation Efficiency Chart -->
                 <div class="col-md-6">
                     <div class="chart-container">
@@ -289,7 +319,7 @@
                         <canvas id="triggerPerformanceChart" height="200"></canvas>
                     </div>
                 </div>
-                
+
                 <!-- Supplier Performance Chart -->
                 <div class="col-md-6">
                     <div class="chart-container">
@@ -307,7 +337,7 @@
                         <canvas id="inventoryTurnoverChart" height="200"></canvas>
                     </div>
                 </div>
-                
+
                 <!-- Stock Out Analysis Chart -->
                 <div class="col-md-6">
                     <div class="chart-container">
@@ -330,7 +360,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="metric-card">
                         <div class="metric-header">
@@ -356,7 +386,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="metric-card">
                         <div class="metric-header">
@@ -378,82 +408,82 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             let charts = {};
-            
+
             // Initialize
             loadStores();
             loadSuppliers();
             loadAnalyticsData();
-            
+
             // Event handlers
-            $('#applyFilters').click(function() {
+            $('#applyFilters').click(function () {
                 loadAnalyticsData();
             });
-            
-            $('#resetFilters').click(function() {
+
+            $('#resetFilters').click(function () {
                 resetFilters();
             });
-            
-            $('#refreshData').click(function() {
+
+            $('#refreshData').click(function () {
                 loadAnalyticsData();
             });
-            
-            $('#generateReport').click(function() {
+
+            $('#generateReport').click(function () {
                 generateAnalyticsReport();
             });
-            
+
             // Functions
             function loadStores() {
                 $.ajax({
-                    url: '/api/stores',
+                    url: './api/stores',
                     type: 'GET',
-                    success: function(stores) {
+                    success: function (stores) {
                         const storeSelect = $('#storeFilter');
                         storeSelect.empty().append('<option value="">All Stores</option>');
-                        
-                        stores.forEach(function(store) {
+
+                        stores.forEach(function (store) {
                             storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load stores');
                     }
                 });
             }
-            
+
             function loadSuppliers() {
                 $.ajax({
-                    url: '/api/suppliers',
+                    url: './api/suppliers',
                     type: 'GET',
-                    success: function(suppliers) {
+                    success: function (suppliers) {
                         const supplierSelect = $('#supplierFilter');
                         supplierSelect.empty().append('<option value="">All Suppliers</option>');
-                        
-                        suppliers.forEach(function(supplier) {
+
+                        suppliers.forEach(function (supplier) {
                             supplierSelect.append(`<option value="${supplier._id}">${supplier.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load suppliers');
                     }
                 });
             }
-            
+
             function loadAnalyticsData() {
                 showLoading();
-                
+
                 const timePeriod = $('#timePeriod').val();
                 const storeId = $('#storeFilter').val();
                 const supplierId = $('#supplierFilter').val();
                 const metricType = $('#metricType').val();
-                
+
                 // Load dashboard analytics
                 $.ajax({
-                    url: '/api/reorder-analytics/dashboard',
+                    url: './api/reorder-analytics/dashboard',
                     type: 'GET',
                     data: {
                         timePeriod: timePeriod,
@@ -461,32 +491,32 @@
                         supplierId: supplierId || null,
                         metricType: metricType || null
                     },
-                    success: function(data) {
+                    success: function (data) {
                         updateKeyMetrics(data);
                         updateCharts(data);
                         updateDetailedMetrics(data);
                         hideLoading();
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load analytics data');
                         hideLoading();
                     }
                 });
             }
-            
+
             function updateKeyMetrics(data) {
                 $('#suggestionAccuracy').text((data.suggestionAccuracy || 0) + '%');
                 $('#automationEfficiency').text((data.automationEfficiency || 0) + '%');
                 $('#inventoryTurnover').text(data.inventoryTurnover || 0);
                 $('#stockOutRate').text((data.stockOutRate || 0) + '%');
             }
-            
+
             function updateCharts(data) {
                 // Destroy existing charts
                 Object.values(charts).forEach(chart => {
                     if (chart) chart.destroy();
                 });
-                
+
                 // Suggestion Accuracy Chart
                 const accuracyCtx = document.getElementById('suggestionAccuracyChart').getContext('2d');
                 charts.suggestionAccuracy = new Chart(accuracyCtx, {
@@ -512,7 +542,7 @@
                         }
                     }
                 });
-                
+
                 // Automation Efficiency Chart
                 const efficiencyCtx = document.getElementById('automationEfficiencyChart').getContext('2d');
                 charts.automationEfficiency = new Chart(efficiencyCtx, {
@@ -541,7 +571,7 @@
                         }
                     }
                 });
-                
+
                 // Trigger Performance Chart
                 const triggerCtx = document.getElementById('triggerPerformanceChart').getContext('2d');
                 charts.triggerPerformance = new Chart(triggerCtx, {
@@ -562,7 +592,7 @@
                         maintainAspectRatio: false
                     }
                 });
-                
+
                 // Supplier Performance Chart
                 const supplierCtx = document.getElementById('supplierPerformanceChart').getContext('2d');
                 charts.supplierPerformance = new Chart(supplierCtx, {
@@ -592,7 +622,7 @@
                         }
                     }
                 });
-                
+
                 // Inventory Turnover Chart
                 const turnoverCtx = document.getElementById('inventoryTurnoverChart').getContext('2d');
                 charts.inventoryTurnover = new Chart(turnoverCtx, {
@@ -612,7 +642,7 @@
                         maintainAspectRatio: false
                     }
                 });
-                
+
                 // Stock Out Chart
                 const stockOutCtx = document.getElementById('stockOutChart').getContext('2d');
                 charts.stockOut = new Chart(stockOutCtx, {
@@ -636,19 +666,19 @@
                     }
                 });
             }
-            
+
             function updateDetailedMetrics(data) {
                 // Update accuracy by type
                 $('#accuracyByType').text((data.overallAccuracy || 0) + '%');
-                
+
                 const accuracyContainer = $('#accuracyByTypeContainer');
                 accuracyContainer.empty();
-                
+
                 if (data.accuracyByType) {
-                    data.accuracyByType.forEach(function(item) {
+                    data.accuracyByType.forEach(function (item) {
                         const trendClass = item.trend > 0 ? 'trend-up' : (item.trend < 0 ? 'trend-down' : 'trend-neutral');
                         const trendSymbol = item.trend > 0 ? '↑' : (item.trend < 0 ? '↓' : '→');
-                        
+
                         const indicator = `
                             <div class="performance-indicator">
                                 <div class="performance-label">${item.type}</div>
@@ -658,19 +688,19 @@
                                 <div class="performance-value">${item.value}%</div>
                             </div>
                         `;
-                        
+
                         accuracyContainer.append(indicator);
                     });
                 }
-                
+
                 // Update automation success rate
                 $('#automationSuccessRate').text((data.automationSuccessRate || 0) + '%');
-                
+
                 const automationContainer = $('#automationSuccessContainer');
                 automationContainer.empty();
-                
+
                 if (data.automationByType) {
-                    data.automationByType.forEach(function(item) {
+                    data.automationByType.forEach(function (item) {
                         const indicator = `
                             <div class="performance-indicator">
                                 <div class="performance-label">${item.type}</div>
@@ -680,19 +710,19 @@
                                 <div class="performance-value">${item.value}%</div>
                             </div>
                         `;
-                        
+
                         automationContainer.append(indicator);
                     });
                 }
-                
+
                 // Update top suppliers
                 $('#topSupplierCount').text(data.topSuppliers ? data.topSuppliers.length : 0);
-                
+
                 const suppliersContainer = $('#topSuppliersContainer');
                 suppliersContainer.empty();
-                
+
                 if (data.topSuppliers) {
-                    data.topSuppliers.forEach(function(supplier, index) {
+                    data.topSuppliers.forEach(function (supplier, index) {
                         const supplierItem = `
                             <div class="performance-indicator">
                                 <div class="performance-label">${index + 1}. ${supplier.name}</div>
@@ -702,19 +732,19 @@
                                 <div class="performance-value">${supplier.score}</div>
                             </div>
                         `;
-                        
+
                         suppliersContainer.append(supplierItem);
                     });
                 }
-                
+
                 // Update critical stock items
                 $('#criticalStockCount').text(data.criticalStockItems ? data.criticalStockItems.length : 0);
-                
+
                 const criticalContainer = $('#criticalStockContainer');
                 criticalContainer.empty();
-                
+
                 if (data.criticalStockItems) {
-                    data.criticalStockItems.slice(0, 5).forEach(function(item) {
+                    data.criticalStockItems.slice(0, 5).forEach(function (item) {
                         const criticalItem = `
                             <div class="performance-indicator">
                                 <div class="performance-label">${item.productName}</div>
@@ -724,31 +754,31 @@
                                 <div class="performance-value">${item.currentStock}/${item.minStock}</div>
                             </div>
                         `;
-                        
+
                         criticalContainer.append(criticalItem);
                     });
                 }
             }
-            
+
             function resetFilters() {
                 $('#timePeriod').val('weekly');
                 $('#storeFilter').val('');
                 $('#supplierFilter').val('');
                 $('#metricType').val('');
-                
+
                 loadAnalyticsData();
             }
-            
+
             function generateAnalyticsReport() {
                 showLoading();
-                
+
                 const timePeriod = $('#timePeriod').val();
                 const storeId = $('#storeFilter').val();
                 const supplierId = $('#supplierFilter').val();
                 const metricType = $('#metricType').val();
-                
+
                 $.ajax({
-                    url: '/api/reorder-analytics/generate-report',
+                    url: './api/reorder-analytics/generate-report',
                     type: 'POST',
                     data: {
                         timePeriod: timePeriod,
@@ -757,32 +787,33 @@
                         metricType: metricType || null,
                         format: 'PDF'
                     },
-                    success: function(data) {
+                    success: function (data) {
                         hideLoading();
-                        
+
                         // Create download link
                         const downloadLink = document.createElement('a');
                         downloadLink.href = data.reportUrl || '#';
                         downloadLink.download = data.fileName || `reorder-analytics-report-${new Date().toISOString().split('T')[0]}.pdf`;
                         downloadLink.click();
-                        
+
                         alert('Analytics report generated successfully!');
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to generate analytics report. Please try again.');
                     }
                 });
             }
-            
+
             function showLoading() {
                 $('#loadingOverlay').show();
             }
-            
+
             function hideLoading() {
                 $('#loadingOverlay').hide();
             }
         });
     </script>
 </body>
+
 </html>

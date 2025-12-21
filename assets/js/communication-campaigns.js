@@ -8,7 +8,7 @@ let currentCampaignId = null;
 let templates = [];
 
 // Initialize page
-$(document).ready(function() {
+$(document).ready(function () {
     loadCampaigns();
     loadTemplates();
     updateCampaignStats();
@@ -20,22 +20,22 @@ $(document).ready(function() {
  */
 function setupEventListeners() {
     // Campaign form submission
-    $('#campaign-form').on('submit', function(e) {
+    $('#campaign-form').on('submit', function (e) {
         e.preventDefault();
         saveCampaign();
     });
-    
+
     // Filter change events
     $('#filter-status, #filter-type, #filter-date-range').on('change', filterCampaigns);
-    
+
     // Search functionality
-    $('#search-campaign').on('keyup', function() {
+    $('#search-campaign').on('keyup', function () {
         const searchTerm = $(this).val().toLowerCase();
         filterCampaignsBySearch(searchTerm);
     });
-    
+
     // Target segment change
-    $('#target-segment').on('change', function() {
+    $('#target-segment').on('change', function () {
         const segment = $(this).val();
         if (segment === 'custom') {
             // Show custom target selection UI
@@ -51,14 +51,14 @@ function setupEventListeners() {
  */
 function loadCampaigns() {
     $.ajax({
-        url: '/api/communication-campaigns/all',
+        url: './api/communication-campaigns/all',
         method: 'GET',
-        success: function(data) {
+        success: function (data) {
             campaigns = data.campaigns || [];
             populateCampaignsTable();
             updateCampaignStats();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading campaigns:', error);
             showNotification('Error loading campaigns', 'error');
         }
@@ -70,14 +70,14 @@ function loadCampaigns() {
  */
 function loadTemplates() {
     $.ajax({
-        url: '/api/communication-templates/all',
+        url: './api/communication-templates/all',
         method: 'GET',
         data: { approvalStatus: 'APPROVED' },
-        success: function(data) {
+        success: function (data) {
             templates = data.templates || [];
             populateTemplateSelect();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading templates:', error);
         }
     });
@@ -90,8 +90,8 @@ function populateTemplateSelect() {
     const templateSelect = $('#campaign-template');
     templateSelect.empty();
     templateSelect.append('<option value="">Select Template</option>');
-    
-    templates.forEach(function(template) {
+
+    templates.forEach(function (template) {
         templateSelect.append(`<option value="${template._id}">${template.name} (${template.type})</option>`);
     });
 }
@@ -102,18 +102,18 @@ function populateTemplateSelect() {
 function populateCampaignsTable() {
     const tbody = $('#campaigns-table-body');
     tbody.empty();
-    
+
     if (campaigns.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No campaigns found</td></tr>');
         return;
     }
-    
-    campaigns.forEach(function(campaign) {
+
+    campaigns.forEach(function (campaign) {
         const statusClass = getStatusClass(campaign.status);
         const statusText = formatStatus(campaign.status);
-        const progress = campaign.performance ? 
+        const progress = campaign.performance ?
             Math.round((campaign.performance.sentCount / campaign.performance.totalRecipients) * 100) : 0;
-        
+
         tbody.append(`
             <tr>
                 <td>${campaign.name}</td>
@@ -163,9 +163,9 @@ function updateCampaignStats() {
     let running = 0;
     let paused = 0;
     let completed = 0;
-    
+
     campaigns.forEach(campaign => {
-        switch(campaign.status) {
+        switch (campaign.status) {
             case 'RUNNING':
                 running++;
                 break;
@@ -177,7 +177,7 @@ function updateCampaignStats() {
                 break;
         }
     });
-    
+
     $('#total-campaigns').text(total);
     $('#running-campaigns').text(running);
     $('#paused-campaigns').text(paused);
@@ -189,10 +189,10 @@ function updateCampaignStats() {
  */
 function showCampaignModal(campaignId = null) {
     currentCampaignId = campaignId;
-    
+
     // Reset form
     $('#campaign-form')[0].reset();
-    
+
     if (campaignId) {
         // Load campaign data for editing
         const campaign = campaigns.find(c => c._id === campaignId);
@@ -204,13 +204,13 @@ function showCampaignModal(campaignId = null) {
             $('#campaign-schedule').val(campaign.schedule.type);
             $('#campaign-start-date').val(campaign.schedule.startDate);
             $('#campaign-end-date').val(campaign.schedule.endDate || '');
-            
+
             if (campaign.templateId) {
                 $('#campaign-template').val(campaign.templateId);
             }
         }
     }
-    
+
     $('#campaign-modal').modal('show');
 }
 
@@ -228,12 +228,12 @@ function saveCampaign() {
     const templateId = $('#campaign-template').val();
     const targetSegment = $('#target-segment').val();
     const targetChannel = $('#target-channel').val();
-    
+
     if (!name || !type || !startDate) {
         showNotification('Please fill in all required fields', 'warning');
         return;
     }
-    
+
     const campaignData = {
         name: name,
         description: description,
@@ -251,19 +251,19 @@ function saveCampaign() {
         },
         createdBy: 'current_user' // In a real implementation, this would come from authentication
     };
-    
-    const url = currentCampaignId ? 
-        `/api/communication-campaigns/campaign/${currentCampaignId}` : 
+
+    const url = currentCampaignId ?
+        `/api/communication-campaigns/campaign/${currentCampaignId}` :
         '/api/communication-campaigns/campaign';
-    
+
     const method = currentCampaignId ? 'PUT' : 'POST';
-    
+
     $.ajax({
         url: url,
         method: method,
         contentType: 'application/json',
         data: JSON.stringify(campaignData),
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification(`Campaign ${currentCampaignId ? 'updated' : 'created'} successfully`, 'success');
                 $('#campaign-modal').modal('hide');
@@ -272,7 +272,7 @@ function saveCampaign() {
                 showNotification(`Error ${currentCampaignId ? 'updating' : 'creating'} campaign`, 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error(`Error ${currentCampaignId ? 'updating' : 'creating'} campaign:`, error);
             showNotification(`Error ${currentCampaignId ? 'updating' : 'creating'} campaign`, 'error');
         }
@@ -285,11 +285,11 @@ function saveCampaign() {
 function viewCampaign(campaignId) {
     const campaign = campaigns.find(c => c._id === campaignId);
     if (!campaign) return;
-    
+
     const performance = campaign.performance || {};
-    const progress = performance.totalRecipients ? 
+    const progress = performance.totalRecipients ?
         Math.round((performance.sentCount / performance.totalRecipients) * 100) : 0;
-    
+
     const detailsHtml = `
         <div class="campaign-details">
             <h4>${campaign.name}</h4>
@@ -364,7 +364,7 @@ function viewCampaign(campaignId) {
             </div>
         </div>
     `;
-    
+
     $('#campaign-details-content').html(detailsHtml);
     $('#campaign-details-section').show();
 }
@@ -383,11 +383,11 @@ function startCampaign(campaignId) {
     if (!confirm('Are you sure you want to start this campaign?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/communication-campaigns/campaign/${campaignId}/start`,
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification('Campaign started successfully', 'success');
                 loadCampaigns();
@@ -395,7 +395,7 @@ function startCampaign(campaignId) {
                 showNotification('Error starting campaign', 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error starting campaign:', error);
             showNotification('Error starting campaign', 'error');
         }
@@ -409,11 +409,11 @@ function pauseCampaign(campaignId) {
     if (!confirm('Are you sure you want to pause this campaign?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/communication-campaigns/campaign/${campaignId}/pause`,
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification('Campaign paused successfully', 'success');
                 loadCampaigns();
@@ -421,7 +421,7 @@ function pauseCampaign(campaignId) {
                 showNotification('Error pausing campaign', 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error pausing campaign:', error);
             showNotification('Error pausing campaign', 'error');
         }
@@ -435,11 +435,11 @@ function cancelCampaign(campaignId) {
     if (!confirm('Are you sure you want to cancel this campaign? This action cannot be undone.')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/communication-campaigns/campaign/${campaignId}/cancel`,
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification('Campaign cancelled successfully', 'success');
                 loadCampaigns();
@@ -447,7 +447,7 @@ function cancelCampaign(campaignId) {
                 showNotification('Error cancelling campaign', 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error cancelling campaign:', error);
             showNotification('Error cancelling campaign', 'error');
         }
@@ -461,23 +461,23 @@ function filterCampaigns() {
     const status = $('#filter-status').val();
     const type = $('#filter-type').val();
     const dateRange = $('#filter-date-range').val();
-    
+
     $.ajax({
-        url: '/api/communication-campaigns/all',
+        url: './api/communication-campaigns/all',
         method: 'GET',
         data: {
             status: status,
             type: type
         },
-        success: function(data) {
+        success: function (data) {
             let filteredCampaigns = data.campaigns || [];
-            
+
             // Apply client-side filtering for date range
             if (dateRange) {
                 const now = new Date();
                 let filterDate;
-                
-                switch(dateRange) {
+
+                switch (dateRange) {
                     case 'today':
                         filterDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                         break;
@@ -491,7 +491,7 @@ function filterCampaigns() {
                         filterDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
                         break;
                 }
-                
+
                 if (filterDate) {
                     filteredCampaigns = filteredCampaigns.filter(campaign => {
                         const campaignDate = new Date(campaign.createdAt);
@@ -499,11 +499,11 @@ function filterCampaigns() {
                     });
                 }
             }
-            
+
             campaigns = filteredCampaigns;
             populateCampaignsTable();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error filtering campaigns:', error);
             showNotification('Error filtering campaigns', 'error');
         }
@@ -516,24 +516,24 @@ function filterCampaigns() {
 function filterCampaignsBySearch(searchTerm) {
     const filteredCampaigns = campaigns.filter(campaign => {
         return campaign.name.toLowerCase().includes(searchTerm) ||
-               campaign.description.toLowerCase().includes(searchTerm) ||
-               campaign.type.toLowerCase().includes(searchTerm);
+            campaign.description.toLowerCase().includes(searchTerm) ||
+            campaign.type.toLowerCase().includes(searchTerm);
     });
-    
+
     const tbody = $('#campaigns-table-body');
     tbody.empty();
-    
+
     if (filteredCampaigns.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No campaigns found matching your search</td></tr>');
         return;
     }
-    
-    filteredCampaigns.forEach(function(campaign) {
+
+    filteredCampaigns.forEach(function (campaign) {
         const statusClass = getStatusClass(campaign.status);
         const statusText = formatStatus(campaign.status);
-        const progress = campaign.performance ? 
+        const progress = campaign.performance ?
             Math.round((campaign.performance.sentCount / campaign.performance.totalRecipients) * 100) : 0;
-        
+
         tbody.append(`
             <tr>
                 <td>${campaign.name}</td>
@@ -609,7 +609,7 @@ function formatStatus(status) {
  */
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString();
 }
@@ -619,7 +619,7 @@ function formatDate(dateString) {
  */
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleString();
 }
@@ -628,21 +628,21 @@ function formatDateTime(dateString) {
  * Show notification
  */
 function showNotification(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                     type === 'error' ? 'alert-danger' : 'alert-warning';
-    
+    const alertClass = type === 'success' ? 'alert-success' :
+        type === 'error' ? 'alert-danger' : 'alert-warning';
+
     const notification = `
         <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             ${message}
         </div>
     `;
-    
+
     // Add notification to top of page
     $('.page-wrapper').prepend(notification);
-    
+
     // Auto-remove after 5 seconds
-    setTimeout(function() {
+    setTimeout(function () {
         $('.alert').fadeOut();
     }, 5000);
 }

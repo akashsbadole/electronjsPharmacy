@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Communication Templates - PharmaSoft</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
 </head>
+
 <body>
     <div class="page-wrapper">
         <!-- Top Navigation -->
@@ -25,7 +27,8 @@
                     <ul class="navbar-nav mr-auto mt-md-0">
                         <!-- Search -->
                         <li class="nav-item d-none d-md-block search-box">
-                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark"
+                                href="javascript:void(0)">
                                 <i class="ti-search"></i>
                             </a>
                             <form class="app-search d-none d-md-block">
@@ -36,7 +39,8 @@
                     <ul class="navbar-nav my-lg-0">
                         <!-- Notifications -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="ti-bell"></i>
                                 <span class="badge badge-xs badge-danger">3</span>
                             </a>
@@ -75,7 +79,8 @@
                         </li>
                         <!-- User Profile -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img src="assets/images/default.jpg" alt="user" class="profile-pic">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right user-dd animated">
@@ -175,7 +180,8 @@
                                 <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                                 <li class="breadcrumb-item active">Templates</li>
                             </ol>
-                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="showTemplateModal()">
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white"
+                                onclick="showTemplateModal()">
                                 <i class="fa fa-plus-circle"></i> Create New Template
                             </button>
                         </div>
@@ -189,7 +195,7 @@
                             <div class="card-body">
                                 <h4 class="card-title">Template Management</h4>
                                 <h6 class="card-subtitle">Manage communication templates for different channels</h6>
-                                
+
                                 <!-- Filters -->
                                 <div class="row margin-top-20">
                                     <div class="col-md-3">
@@ -208,7 +214,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filter-category">Filter by Category</label>
-                                            <select class="form-control" id="filter-category" onchange="filterTemplates()">
+                                            <select class="form-control" id="filter-category"
+                                                onchange="filterTemplates()">
                                                 <option value="">All Categories</option>
                                                 <option value="marketing">Marketing</option>
                                                 <option value="transactional">Transactional</option>
@@ -221,7 +228,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filter-status">Filter by Status</label>
-                                            <select class="form-control" id="filter-status" onchange="filterTemplates()">
+                                            <select class="form-control" id="filter-status"
+                                                onchange="filterTemplates()">
                                                 <option value="">All Statuses</option>
                                                 <option value="DRAFT">Draft</option>
                                                 <option value="PENDING_APPROVAL">Pending Approval</option>
@@ -233,7 +241,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filter-language">Filter by Language</label>
-                                            <select class="form-control" id="filter-language" onchange="filterTemplates()">
+                                            <select class="form-control" id="filter-language"
+                                                onchange="filterTemplates()">
                                                 <option value="">All Languages</option>
                                                 <option value="en">English</option>
                                                 <option value="hi">Hindi</option>
@@ -288,7 +297,8 @@
     </div>
 
     <!-- Template Modal -->
-    <div class="modal fade" id="template-modal" tabindex="-1" role="dialog" aria-labelledby="template-modal-label" aria-hidden="true">
+    <div class="modal fade" id="template-modal" tabindex="-1" role="dialog" aria-labelledby="template-modal-label"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -349,12 +359,15 @@
                         <div class="form-group">
                             <label for="template-content">Content</label>
                             <textarea class="form-control" id="template-content" rows="8" required></textarea>
-                            <small class="form-text text-muted">Use variables like {{customerName}}, {{prescriptionNumber}}, etc.</small>
+                            <small class="form-text text-muted">Use variables like {{customerName}},
+                                {{prescriptionNumber}}, etc.</small>
                         </div>
                         <div class="form-group">
                             <label for="template-variables">Variables (comma separated)</label>
-                            <input type="text" class="form-control" id="template-variables" placeholder="customerName, prescriptionNumber, pharmacyName">
-                            <small class="form-text text-muted">List of variables that can be used in this template</small>
+                            <input type="text" class="form-control" id="template-variables"
+                                placeholder="customerName, prescriptionNumber, pharmacyName">
+                            <small class="form-text text-muted">List of variables that can be used in this
+                                template</small>
                         </div>
                     </form>
                 </div>
@@ -368,17 +381,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app-style-switcher.js"></script>
-    <script src="assets/js/waves.js"></script>
-    <script src="assets/js/sidebarmenu.js"></script>
-    <script src="assets/js/custom.min.js"></script>
-    <script src="assets/js/customer-communication.js"></script>
-    <script src="assets/js/communication-templates.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="./assets/js/customer-communication.js"></script>
+    <script src="./assets/js/communication-templates.js"></script>
     <script>
         // Initialize page
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadTemplates();
         });
 
@@ -390,7 +399,7 @@
             const language = $('#filter-language').val();
 
             $.ajax({
-                url: '/api/communication-templates/all',
+                url: './api/communication-templates/all',
                 method: 'GET',
                 data: {
                     type: type,
@@ -398,11 +407,11 @@
                     approvalStatus: status,
                     language: language
                 },
-                success: function(data) {
+                success: function (data) {
                     templates = data.templates || [];
                     populateTemplatesTable();
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error filtering templates:', error);
                     showNotification('Error filtering templates', 'error');
                 }
@@ -449,4 +458,5 @@
         }
     </script>
 </body>
+
 </html>

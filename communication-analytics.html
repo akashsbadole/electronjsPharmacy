@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <link rel="stylesheet" href="assets/css/responsive.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="page-wrapper">
         <!-- Top Navigation -->
@@ -26,7 +28,8 @@
                     <ul class="navbar-nav mr-auto mt-md-0">
                         <!-- Search -->
                         <li class="nav-item d-none d-md-block search-box">
-                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark"
+                                href="javascript:void(0)">
                                 <i class="ti-search"></i>
                             </a>
                             <form class="app-search d-none d-md-block">
@@ -37,7 +40,8 @@
                     <ul class="navbar-nav my-lg-0">
                         <!-- Notifications -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="ti-bell"></i>
                                 <span class="badge badge-xs badge-danger">3</span>
                             </a>
@@ -76,7 +80,8 @@
                         </li>
                         <!-- User Profile -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img src="assets/images/default.jpg" alt="user" class="profile-pic">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right user-dd animated">
@@ -177,20 +182,23 @@
                                 <li class="breadcrumb-item active">Analytics</li>
                             </ol>
                             <div class="btn-group m-l-15">
-                                <button type="button" class="btn btn-info dropdown-toggle text-white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="btn btn-info dropdown-toggle text-white"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="fa fa-calendar"></i> Date Range
                                 </button>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="#" onclick="changeDateRange('today')">Today</a>
                                     <a class="dropdown-item" href="#" onclick="changeDateRange('week')">This Week</a>
                                     <a class="dropdown-item" href="#" onclick="changeDateRange('month')">This Month</a>
-                                    <a class="dropdown-item" href="#" onclick="changeDateRange('quarter')">This Quarter</a>
+                                    <a class="dropdown-item" href="#" onclick="changeDateRange('quarter')">This
+                                        Quarter</a>
                                     <a class="dropdown-item" href="#" onclick="changeDateRange('year')">This Year</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="#" onclick="showCustomDateRange()">Custom Range</a>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-success d-none d-lg-block m-l-15 text-white" onclick="exportAnalytics()">
+                            <button type="button" class="btn btn-success d-none d-lg-block m-l-15 text-white"
+                                onclick="exportAnalytics()">
                                 <i class="fa fa-download"></i> Export Report
                             </button>
                         </div>
@@ -270,9 +278,12 @@
                                 <div class="d-flex no-block align-items-center">
                                     <div class="ml-auto">
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('pie')">Pie</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('doughnut')">Doughnut</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateChannelChart('bar')">Bar</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateChannelChart('pie')">Pie</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateChannelChart('doughnut')">Doughnut</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateChannelChart('bar')">Bar</button>
                                         </div>
                                     </div>
                                 </div>
@@ -289,9 +300,12 @@
                                 <div class="d-flex no-block align-items-center">
                                     <div class="ml-auto">
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('pie')">Pie</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('doughnut')">Doughnut</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTypeChart('bar')">Bar</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTypeChart('pie')">Pie</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTypeChart('doughnut')">Doughnut</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTypeChart('bar')">Bar</button>
                                         </div>
                                     </div>
                                 </div>
@@ -312,10 +326,14 @@
                                 <div class="d-flex no-block align-items-center">
                                     <div class="ml-auto">
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('hour')">Hourly</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('day')">Daily</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('week')">Weekly</button>
-                                            <button type="button" class="btn btn-sm btn-light" onclick="updateTimelineChart('month')">Monthly</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTimelineChart('hour')">Hourly</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTimelineChart('day')">Daily</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTimelineChart('week')">Weekly</button>
+                                            <button type="button" class="btn btn-sm btn-light"
+                                                onclick="updateTimelineChart('month')">Monthly</button>
                                         </div>
                                     </div>
                                 </div>
@@ -433,7 +451,8 @@
     </div>
 
     <!-- Custom Date Range Modal -->
-    <div class="modal fade" id="custom-date-modal" tabindex="-1" role="dialog" aria-labelledby="custom-date-modal-label" aria-hidden="true">
+    <div class="modal fade" id="custom-date-modal" tabindex="-1" role="dialog" aria-labelledby="custom-date-modal-label"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -467,21 +486,17 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app-style-switcher.js"></script>
-    <script src="assets/js/waves.js"></script>
-    <script src="assets/js/sidebarmenu.js"></script>
-    <script src="assets/js/custom.min.js"></script>
-    <script src="assets/js/customer-communication.js"></script>
-    <script src="assets/js/communication-analytics.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="./assets/js/customer-communication.js"></script>
+    <script src="./assets/js/communication-analytics.js"></script>
     <script>
         // Global variables
         let channelChart, typeChart, timelineChart;
         let currentDateRange = 'month';
 
         // Initialize page
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadAnalytics();
             loadTopTemplates();
             loadRecentCommunications();
@@ -490,19 +505,19 @@
         // Load analytics data
         function loadAnalytics() {
             $.ajax({
-                url: '/api/customer-communication/analytics',
+                url: './api/customer-communication/analytics',
                 method: 'GET',
                 data: {
                     dateRange: currentDateRange
                 },
-                success: function(data) {
+                success: function (data) {
                     updateSummaryCards(data.summary);
                     updateChannelChart('pie', data.byChannel);
                     updateTypeChart('doughnut', data.byType);
                     updateTimelineChart('day', data.timeline);
                     updatePerformanceMetrics(data.performance);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading analytics:', error);
                     showNotification('Error loading analytics data', 'error');
                 }
@@ -520,11 +535,11 @@
         // Update channel chart
         function updateChannelChart(type, data) {
             const ctx = document.getElementById('channel-chart').getContext('2d');
-            
+
             if (channelChart) {
                 channelChart.destroy();
             }
-            
+
             if (!data) {
                 // Use sample data if no data provided
                 data = {
@@ -535,7 +550,7 @@
                     push: 50
                 };
             }
-            
+
             channelChart = new Chart(ctx, {
                 type: type || 'pie',
                 data: {
@@ -572,11 +587,11 @@
         // Update type chart
         function updateTypeChart(type, data) {
             const ctx = document.getElementById('type-chart').getContext('2d');
-            
+
             if (typeChart) {
                 typeChart.destroy();
             }
-            
+
             if (!data) {
                 // Use sample data if no data provided
                 data = {
@@ -587,7 +602,7 @@
                     promotional: 120
                 };
             }
-            
+
             typeChart = new Chart(ctx, {
                 type: type || 'doughnut',
                 data: {
@@ -618,11 +633,11 @@
         // Update timeline chart
         function updateTimelineChart(granularity, data) {
             const ctx = document.getElementById('timeline-chart').getContext('2d');
-            
+
             if (timelineChart) {
                 timelineChart.destroy();
             }
-            
+
             if (!data) {
                 // Use sample data if no data provided
                 data = {
@@ -652,7 +667,7 @@
                     ]
                 };
             }
-            
+
             timelineChart = new Chart(ctx, {
                 type: 'line',
                 data: data,
@@ -685,7 +700,7 @@
                     avgResponseTime: 45
                 };
             }
-            
+
             $('#delivery-rate').text(performance.deliveryRate + '%');
             $('#open-rate').text(performance.openRate + '%');
             $('#click-rate').text(performance.clickRate + '%');
@@ -696,14 +711,14 @@
         // Load top templates
         function loadTopTemplates() {
             $.ajax({
-                url: '/api/communication-templates/top-performing',
+                url: './api/communication-templates/top-performing',
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const templates = data.templates || [];
                     const tbody = $('#top-templates');
-                    
+
                     tbody.empty();
-                    
+
                     if (templates.length === 0) {
                         // Use sample data if no data provided
                         templates.push(
@@ -714,11 +729,11 @@
                             { name: 'Health Tip', type: 'SMS', performance: 72 }
                         );
                     }
-                    
-                    templates.forEach(function(template) {
-                        const performanceClass = template.performance >= 80 ? 'success' : 
-                                              template.performance >= 60 ? 'warning' : 'danger';
-                        
+
+                    templates.forEach(function (template) {
+                        const performanceClass = template.performance >= 80 ? 'success' :
+                            template.performance >= 60 ? 'warning' : 'danger';
+
                         tbody.append(`
                             <tr>
                                 <td>${template.name}</td>
@@ -734,7 +749,7 @@
                         `);
                     });
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading top templates:', error);
                 }
             });
@@ -743,17 +758,17 @@
         // Load recent communications
         function loadRecentCommunications() {
             $.ajax({
-                url: '/api/customer-communication/recent',
+                url: './api/customer-communication/recent',
                 method: 'GET',
                 data: {
                     limit: 20
                 },
-                success: function(data) {
+                success: function (data) {
                     const communications = data.communications || [];
                     const tbody = $('#recent-communications');
-                    
+
                     tbody.empty();
-                    
+
                     if (communications.length === 0) {
                         // Use sample data if no data provided
                         communications.push(
@@ -764,11 +779,11 @@
                             { date: new Date(Date.now() - 14400000), customer: 'Charlie Wilson', type: 'Appointment Reminder', channel: 'SMS', status: 'FAILED' }
                         );
                     }
-                    
-                    communications.forEach(function(comm) {
+
+                    communications.forEach(function (comm) {
                         const statusClass = getStatusClass(comm.status);
                         const channelIcon = getChannelIcon(comm.channel);
-                        
+
                         tbody.append(`
                             <tr>
                                 <td>${new Date(comm.date).toLocaleString()}</td>
@@ -783,7 +798,7 @@
                         `);
                     });
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading recent communications:', error);
                 }
             });
@@ -805,33 +820,33 @@
         function applyCustomDateRange() {
             const startDate = $('#start-date').val();
             const endDate = $('#end-date').val();
-            
+
             if (!startDate || !endDate) {
                 showNotification('Please select both start and end dates', 'warning');
                 return;
             }
-            
+
             currentDateRange = 'custom';
-            
+
             $.ajax({
-                url: '/api/customer-communication/analytics',
+                url: './api/customer-communication/analytics',
                 method: 'GET',
                 data: {
                     dateRange: 'custom',
                     startDate: startDate,
                     endDate: endDate
                 },
-                success: function(data) {
+                success: function (data) {
                     updateSummaryCards(data.summary);
                     updateChannelChart('pie', data.byChannel);
                     updateTypeChart('doughnut', data.byType);
                     updateTimelineChart('day', data.timeline);
                     updatePerformanceMetrics(data.performance);
-                    
+
                     $('#custom-date-modal').modal('hide');
                     showNotification('Custom date range applied', 'success');
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error applying custom date range:', error);
                     showNotification('Error applying custom date range', 'error');
                 }
@@ -841,12 +856,12 @@
         // Export analytics
         function exportAnalytics() {
             $.ajax({
-                url: '/api/customer-communication/analytics/export',
+                url: './api/customer-communication/analytics/export',
                 method: 'GET',
                 data: {
                     dateRange: currentDateRange
                 },
-                success: function(data) {
+                success: function (data) {
                     // Create a download link for the CSV
                     const csvContent = data.csv;
                     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -858,10 +873,10 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    
+
                     showNotification('Analytics exported successfully', 'success');
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error exporting analytics:', error);
                     showNotification('Error exporting analytics', 'error');
                 }
@@ -875,4 +890,5 @@
         }
     </script>
 </body>
+
 </html>

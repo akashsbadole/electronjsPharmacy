@@ -1,43 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reorder Automation - PharmaSpot</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
     <style>
         .automation-card {
             transition: all 0.3s ease;
             border-left: 4px solid #ddd;
             margin-bottom: 15px;
         }
+
         .automation-card.active {
             border-left-color: #4caf50;
         }
+
         .automation-card.paused {
             border-left-color: #ff9800;
         }
+
         .automation-card.error {
             border-left-color: #f44336;
         }
+
         .automation-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .automation-type-badge {
             font-size: 0.8em;
             padding: 3px 8px;
             border-radius: 12px;
         }
+
         .automation-frequency-badge {
             font-size: 0.8em;
             padding: 3px 8px;
             border-radius: 12px;
         }
+
         .status-indicator {
             width: 12px;
             height: 12px;
@@ -45,30 +53,37 @@
             display: inline-block;
             margin-right: 8px;
         }
+
         .status-active {
             background-color: #4caf50;
         }
+
         .status-paused {
             background-color: #ff9800;
         }
+
         .status-error {
             background-color: #f44336;
         }
+
         .status-completed {
             background-color: #2196f3;
         }
+
         .filter-section {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         .form-section {
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         .condition-row {
             border: 1px solid #ddd;
             padding: 15px;
@@ -76,6 +91,7 @@
             margin-bottom: 10px;
             background-color: white;
         }
+
         .action-row {
             border: 1px solid #ddd;
             padding: 15px;
@@ -83,6 +99,7 @@
             margin-bottom: 10px;
             background-color: white;
         }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -95,6 +112,7 @@
             align-items: center;
             z-index: 9999;
         }
+
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -103,15 +121,23 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .automation-stats {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
         }
+
         .stat-item {
             text-align: center;
             padding: 10px;
@@ -120,48 +146,57 @@
             flex: 1;
             margin: 0 5px;
         }
+
         .stat-value {
             font-size: 1.2em;
             font-weight: bold;
         }
+
         .stat-label {
             font-size: 0.8em;
             color: #666;
         }
+
         .execution-history {
             max-height: 200px;
             overflow-y: auto;
         }
+
         .execution-item {
             padding: 8px;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
         }
+
         .execution-success {
             border-left: 3px solid #4caf50;
         }
+
         .execution-failed {
             border-left: 3px solid #f44336;
         }
+
         .execution-pending {
             border-left: 3px solid #ff9800;
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="topbar">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="navbar-header">
                 <a class="navbar-brand" href="index.html">
-                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                    <img src="./assets/images/logo.svg" alt="PharmaSpot" height="30">
                 </a>
             </div>
             <div class="navbar-collapse">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
                     <li class="nav-item active"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
                     <li class="nav-item"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
@@ -255,15 +290,18 @@
                             </div>
                             <div class="col-md-3">
                                 <label for="searchInput">Search</label>
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search automations...">
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Search automations...">
                             </div>
                         </div>
                         <div class="row mt-3">
                             <div class="col-12">
                                 <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
                                 <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
-                                <button class="btn btn-success float-right" id="createNewAutomation">Create New Automation</button>
-                                <button class="btn btn-warning float-right mr-2" id="executeAllAutomations">Execute All</button>
+                                <button class="btn btn-success float-right" id="createNewAutomation">Create New
+                                    Automation</button>
+                                <button class="btn btn-warning float-right mr-2" id="executeAllAutomations">Execute
+                                    All</button>
                             </div>
                         </div>
                     </div>
@@ -311,7 +349,8 @@
     </section>
 
     <!-- Create/Edit Automation Modal -->
-    <div class="modal fade" id="automationModal" tabindex="-1" role="dialog" aria-labelledby="automationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="automationModal" tabindex="-1" role="dialog" aria-labelledby="automationModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -342,7 +381,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -365,29 +404,32 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="description">Description</label>
-                                    <textarea class="form-control" id="description" rows="3" placeholder="Enter automation description"></textarea>
+                                    <textarea class="form-control" id="description" rows="3"
+                                        placeholder="Enter automation description"></textarea>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-section">
                             <h5>Automation Parameters</h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="minStockThreshold">Min Stock Threshold</label>
-                                        <input type="number" class="form-control" id="minStockThreshold" placeholder="Enter minimum stock threshold">
+                                        <input type="number" class="form-control" id="minStockThreshold"
+                                            placeholder="Enter minimum stock threshold">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="maxOrderValue">Max Order Value</label>
-                                        <input type="number" class="form-control" id="maxOrderValue" placeholder="Enter maximum order value">
+                                        <input type="number" class="form-control" id="maxOrderValue"
+                                            placeholder="Enter maximum order value">
                                     </div>
                                 </div>
                             </div>
@@ -422,7 +464,8 @@
     </div>
 
     <!-- Automation Details Modal -->
-    <div class="modal fade" id="automationDetailsModal" tabindex="-1" role="dialog" aria-labelledby="automationDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="automationDetailsModal" tabindex="-1" role="dialog"
+        aria-labelledby="automationDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -447,169 +490,169 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             let allAutomations = [];
             let filteredAutomations = [];
             let currentAutomationId = null;
-            
+
             // Initialize
             loadStores();
             loadSuppliers();
             loadAutomations();
-            
+
             // Event handlers
-            $('#applyFilters').click(function() {
+            $('#applyFilters').click(function () {
                 applyFilters();
             });
-            
-            $('#resetFilters').click(function() {
+
+            $('#resetFilters').click(function () {
                 resetFilters();
             });
-            
-            $('#createNewAutomation').click(function() {
+
+            $('#createNewAutomation').click(function () {
                 openCreateAutomationModal();
             });
-            
-            $('#executeAllAutomations').click(function() {
+
+            $('#executeAllAutomations').click(function () {
                 executeAllAutomations();
             });
-            
-            $('#refreshData').click(function() {
+
+            $('#refreshData').click(function () {
                 loadAutomations();
             });
-            
-            $('#saveAutomation').click(function() {
+
+            $('#saveAutomation').click(function () {
                 saveAutomation();
             });
-            
-            $('#searchInput').on('input', function() {
+
+            $('#searchInput').on('input', function () {
                 applyFilters();
             });
-            
+
             // Functions
             function loadStores() {
                 $.ajax({
-                    url: '/api/stores',
+                    url: './api/stores',
                     type: 'GET',
-                    success: function(stores) {
+                    success: function (stores) {
                         const storeSelect = $('#storeId');
                         const storeFilter = $('#storeFilter');
-                        
+
                         storeSelect.empty().append('<option value="">All Stores</option>');
                         storeFilter.empty().append('<option value="">All Stores</option>');
-                        
-                        stores.forEach(function(store) {
+
+                        stores.forEach(function (store) {
                             storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
                             storeFilter.append(`<option value="${store._id}">${store.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load stores');
                     }
                 });
             }
-            
+
             function loadSuppliers() {
                 $.ajax({
-                    url: '/api/suppliers',
+                    url: './api/suppliers',
                     type: 'GET',
-                    success: function(suppliers) {
+                    success: function (suppliers) {
                         const supplierSelect = $('#preferredSupplier');
-                        
+
                         supplierSelect.empty().append('<option value="">Auto Select</option>');
-                        
-                        suppliers.forEach(function(supplier) {
+
+                        suppliers.forEach(function (supplier) {
                             supplierSelect.append(`<option value="${supplier._id}">${supplier.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load suppliers');
                     }
                 });
             }
-            
+
             function loadAutomations() {
                 showLoading();
-                
+
                 $.ajax({
-                    url: '/api/reorder-automation',
+                    url: './api/reorder-automation',
                     type: 'GET',
-                    success: function(data) {
+                    success: function (data) {
                         allAutomations = data.automations || [];
                         filteredAutomations = [...allAutomations];
                         renderAutomations();
                         updateSummaryCards();
                         hideLoading();
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load automations');
                         hideLoading();
                     }
                 });
             }
-            
+
             function applyFilters() {
                 const storeFilter = $('#storeFilter').val();
                 const automationTypeFilter = $('#automationTypeFilter').val();
                 const statusFilter = $('#statusFilter').val();
                 const searchTerm = $('#searchInput').val().toLowerCase();
-                
-                filteredAutomations = allAutomations.filter(function(automation) {
+
+                filteredAutomations = allAutomations.filter(function (automation) {
                     let matches = true;
-                    
+
                     if (storeFilter && automation.storeId != storeFilter) {
                         matches = false;
                     }
-                    
+
                     if (automationTypeFilter && automation.automationType !== automationTypeFilter) {
                         matches = false;
                     }
-                    
+
                     if (statusFilter && automation.status !== statusFilter) {
                         matches = false;
                     }
-                    
+
                     if (searchTerm && automation.name.toLowerCase().indexOf(searchTerm) === -1) {
                         matches = false;
                     }
-                    
+
                     return matches;
                 });
-                
+
                 renderAutomations();
             }
-            
+
             function resetFilters() {
                 $('#storeFilter').val('');
                 $('#automationTypeFilter').val('');
                 $('#statusFilter').val('');
                 $('#searchInput').val('');
-                
+
                 filteredAutomations = [...allAutomations];
                 renderAutomations();
             }
-            
+
             function renderAutomations() {
                 const tbody = $('#automationsTableBody');
                 tbody.empty();
-                
+
                 if (filteredAutomations.length === 0) {
                     $('#noDataMessage').show();
                     $('#automationsTable').hide();
                     return;
                 }
-                
+
                 $('#noDataMessage').hide();
                 $('#automationsTable').show();
-                
-                filteredAutomations.forEach(function(automation) {
+
+                filteredAutomations.forEach(function (automation) {
                     const statusClass = getStatusClass(automation.status);
                     const statusText = automation.status;
                     const automationTypeClass = getAutomationTypeClass(automation.automationType);
-                    
+
                     const row = `
                         <tr class="automation-card ${automation.status.toLowerCase()}">
                             <td>
@@ -635,37 +678,37 @@
                             </td>
                         </tr>
                     `;
-                    
+
                     tbody.append(row);
                 });
-                
+
                 // Add event handlers to new buttons
-                $('.view-automation').click(function() {
+                $('.view-automation').click(function () {
                     const automationId = $(this).data('id');
                     viewAutomationDetails(automationId);
                 });
-                
-                $('.edit-automation').click(function() {
+
+                $('.edit-automation').click(function () {
                     const automationId = $(this).data('id');
                     editAutomation(automationId);
                 });
-                
-                $('.toggle-automation').click(function() {
+
+                $('.toggle-automation').click(function () {
                     const automationId = $(this).data('id');
                     toggleAutomation(automationId);
                 });
-                
-                $('.execute-automation').click(function() {
+
+                $('.execute-automation').click(function () {
                     const automationId = $(this).data('id');
                     executeAutomation(automationId);
                 });
-                
-                $('.delete-automation').click(function() {
+
+                $('.delete-automation').click(function () {
                     const automationId = $(this).data('id');
                     deleteAutomation(automationId);
                 });
             }
-            
+
             function updateSummaryCards() {
                 const totalAutomations = filteredAutomations.length;
                 const activeAutomations = filteredAutomations.filter(a => a.status === 'ACTIVE').length;
@@ -675,17 +718,17 @@
                     const today = new Date();
                     return lastExecuted.toDateString() === today.toDateString();
                 }).length;
-                
+
                 // Calculate average success rate
-                const successRate = totalAutomations > 0 ? 
+                const successRate = totalAutomations > 0 ?
                     Math.round(filteredAutomations.reduce((sum, a) => sum + (a.successRate || 0), 0) / totalAutomations) : 0;
-                
+
                 $('#totalAutomations').text(totalAutomations);
                 $('#activeAutomations').text(activeAutomations);
                 $('#executedToday').text(executedToday);
                 $('#successRate').text(successRate + '%');
             }
-            
+
             function getStatusClass(status) {
                 switch (status) {
                     case 'ACTIVE': return 'status-active';
@@ -695,7 +738,7 @@
                     default: return 'status-inactive';
                 }
             }
-            
+
             function getAutomationTypeClass(automationType) {
                 switch (automationType) {
                     case 'STOCK_LEVEL': return 'badge-primary';
@@ -705,28 +748,28 @@
                     default: return 'badge-secondary';
                 }
             }
-            
+
             function getStoreName(storeId) {
                 // This would normally fetch from a stores cache
                 return storeId ? `Store ${storeId}` : 'All Stores';
             }
-            
+
             function openCreateAutomationModal() {
                 currentAutomationId = null;
                 $('#automationModalLabel').text('Create New Automation');
                 $('#automationForm')[0].reset();
-                
+
                 $('#automationModal').modal('show');
             }
-            
+
             function editAutomation(automationId) {
                 currentAutomationId = automationId;
                 const automation = allAutomations.find(a => a._id == automationId);
-                
+
                 if (!automation) return;
-                
+
                 $('#automationModalLabel').text('Edit Automation');
-                
+
                 // Populate form fields
                 $('#automationName').val(automation.name);
                 $('#automationType').val(automation.automationType);
@@ -737,10 +780,10 @@
                 $('#maxOrderValue').val(automation.maxOrderValue || '');
                 $('#preferredSupplier').val(automation.preferredSupplierId || '');
                 $('#approvalRequired').val(automation.approvalRequired !== undefined ? automation.approvalRequired.toString() : 'true');
-                
+
                 $('#automationModal').modal('show');
             }
-            
+
             function saveAutomation() {
                 const automationData = {
                     name: $('#automationName').val(),
@@ -753,127 +796,127 @@
                     preferredSupplierId: $('#preferredSupplier').val() || null,
                     approvalRequired: $('#approvalRequired').val() === 'true'
                 };
-                
+
                 if (!automationData.name || !automationData.automationType || !automationData.frequency) {
                     alert('Please fill in all required fields.');
                     return;
                 }
-                
+
                 showLoading();
-                
-                const url = currentAutomationId ? 
-                    `/api/reorder-automation/${currentAutomationId}` : 
+
+                const url = currentAutomationId ?
+                    `/api/reorder-automation/${currentAutomationId}` :
                     '/api/reorder-automation';
                 const method = currentAutomationId ? 'PUT' : 'POST';
-                
+
                 $.ajax({
                     url: url,
                     type: method,
                     data: automationData,
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         $('#automationModal').modal('hide');
                         loadAutomations(); // Refresh list
-                        
-                        const message = currentAutomationId ? 
-                            'Automation updated successfully!' : 
+
+                        const message = currentAutomationId ?
+                            'Automation updated successfully!' :
                             'Automation created successfully!';
                         alert(message);
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to save automation. Please try again.');
                     }
                 });
             }
-            
+
             function toggleAutomation(automationId) {
                 showLoading();
-                
+
                 $.ajax({
                     url: `/api/reorder-automation/${automationId}/toggle`,
                     type: 'POST',
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         loadAutomations(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to toggle automation. Please try again.');
                     }
                 });
             }
-            
+
             function executeAutomation(automationId) {
                 if (!confirm('Are you sure you want to execute this automation?')) {
                     return;
                 }
-                
+
                 showLoading();
-                
+
                 $.ajax({
                     url: `/api/reorder-automation/${automationId}/execute`,
                     type: 'POST',
-                    success: function(data) {
+                    success: function (data) {
                         hideLoading();
                         alert(`Automation executed successfully! ${data.purchaseOrdersCreated || 0} purchase orders created.`);
                         loadAutomations(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to execute automation. Please try again.');
                     }
                 });
             }
-            
+
             function executeAllAutomations() {
                 if (!confirm('Are you sure you want to execute all active automations?')) {
                     return;
                 }
-                
+
                 showLoading();
-                
+
                 $.ajax({
-                    url: '/api/reorder-automation/execute-all',
+                    url: './api/reorder-automation/execute-all',
                     type: 'POST',
-                    success: function(data) {
+                    success: function (data) {
                         hideLoading();
                         alert(`All automations executed successfully! ${data.purchaseOrdersCreated || 0} purchase orders created.`);
                         loadAutomations(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to execute automations. Please try again.');
                     }
                 });
             }
-            
+
             function deleteAutomation(automationId) {
                 if (!confirm('Are you sure you want to delete this automation?')) {
                     return;
                 }
-                
+
                 showLoading();
-                
+
                 $.ajax({
                     url: `/api/reorder-automation/${automationId}`,
                     type: 'DELETE',
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         loadAutomations(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to delete automation. Please try again.');
                     }
                 });
             }
-            
+
             function viewAutomationDetails(automationId) {
                 const automation = allAutomations.find(a => a._id == automationId);
-                
+
                 if (!automation) return;
-                
+
                 const detailsHtml = `
                     <div class="row">
                         <div class="col-md-6">
@@ -911,30 +954,31 @@
                         <div class="col-12">
                             <h6>Recent Execution History</h6>
                             <div class="execution-history">
-                                ${automation.executionHistory ? automation.executionHistory.slice(0, 10).map(execution => 
-                                    `<div class="execution-item execution-${execution.status.toLowerCase()}">
+                                ${automation.executionHistory ? automation.executionHistory.slice(0, 10).map(execution =>
+                    `<div class="execution-item execution-${execution.status.toLowerCase()}">
                                         <span>${new Date(execution.executedAt).toLocaleString()}</span>
                                         <span>${execution.status}</span>
                                         <span>${execution.result || ''}</span>
                                     </div>`
-                                ).join('') : 'No execution history available.'}
+                ).join('') : 'No execution history available.'}
                             </div>
                         </div>
                     </div>
                 `;
-                
+
                 $('#automationDetailsContent').html(detailsHtml);
                 $('#automationDetailsModal').modal('show');
             }
-            
+
             function showLoading() {
                 $('#loadingOverlay').show();
             }
-            
+
             function hideLoading() {
                 $('#loadingOverlay').hide();
             }
         });
     </script>
 </body>
+
 </html>

@@ -8,7 +8,7 @@ let currentDateRange = 'month';
 let analyticsData = {};
 
 // Initialize page
-$(document).ready(function() {
+$(document).ready(function () {
     loadAnalytics();
     loadTopTemplates();
     loadRecentCommunications();
@@ -20,43 +20,43 @@ $(document).ready(function() {
  */
 function setupEventListeners() {
     // Date range change
-    $('#date-range-selector').on('change', function() {
+    $('#date-range-selector').on('change', function () {
         currentDateRange = $(this).val();
         loadAnalytics();
     });
-    
+
     // Custom date range
-    $('#apply-custom-range').on('click', function() {
+    $('#apply-custom-range').on('click', function () {
         const startDate = $('#start-date').val();
         const endDate = $('#end-date').val();
-        
+
         if (!startDate || !endDate) {
             showNotification('Please select both start and end dates', 'warning');
             return;
         }
-        
+
         loadAnalyticsWithCustomRange(startDate, endDate);
     });
-    
+
     // Export button
-    $('#export-analytics').on('click', function() {
+    $('#export-analytics').on('click', function () {
         exportAnalytics();
     });
-    
+
     // Chart type buttons
-    $('.chart-type-btn').on('click', function() {
+    $('.chart-type-btn').on('click', function () {
         const chartType = $(this).data('chart');
         const targetChart = $(this).data('target');
-        
+
         if (targetChart === 'channel') {
             updateChannelChart(chartType);
         } else if (targetChart === 'type') {
             updateTypeChart(chartType);
         }
     });
-    
+
     // Timeline granularity buttons
-    $('.timeline-granularity-btn').on('click', function() {
+    $('.timeline-granularity-btn').on('click', function () {
         const granularity = $(this).data('granularity');
         updateTimelineChart(granularity);
     });
@@ -67,12 +67,12 @@ function setupEventListeners() {
  */
 function loadAnalytics() {
     $.ajax({
-        url: '/api/customer-communication/analytics',
+        url: './api/customer-communication/analytics',
         method: 'GET',
         data: {
             dateRange: currentDateRange
         },
-        success: function(data) {
+        success: function (data) {
             analyticsData = data;
             updateSummaryCards(data.summary);
             updateChannelChart('pie', data.byChannel);
@@ -80,7 +80,7 @@ function loadAnalytics() {
             updateTimelineChart('day', data.timeline);
             updatePerformanceMetrics(data.performance);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading analytics:', error);
             showNotification('Error loading analytics data', 'error');
         }
@@ -92,24 +92,24 @@ function loadAnalytics() {
  */
 function loadAnalyticsWithCustomRange(startDate, endDate) {
     $.ajax({
-        url: '/api/customer-communication/analytics',
+        url: './api/customer-communication/analytics',
         method: 'GET',
         data: {
             dateRange: 'custom',
             startDate: startDate,
             endDate: endDate
         },
-        success: function(data) {
+        success: function (data) {
             analyticsData = data;
             updateSummaryCards(data.summary);
             updateChannelChart('pie', data.byChannel);
             updateTypeChart('doughnut', data.byType);
             updateTimelineChart('day', data.timeline);
             updatePerformanceMetrics(data.performance);
-            
+
             showNotification('Custom date range applied', 'success');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading analytics with custom range:', error);
             showNotification('Error applying custom date range', 'error');
         }
@@ -124,12 +124,12 @@ function updateSummaryCards(summary) {
     $('#total-delivered').text(summary.delivered || 0);
     $('#total-read').text(summary.read || 0);
     $('#total-failed').text(summary.failed || 0);
-    
+
     // Calculate rates
     const deliveryRate = summary.total > 0 ? (summary.delivered / summary.total * 100).toFixed(1) : 0;
     const readRate = summary.delivered > 0 ? (summary.read / summary.delivered * 100).toFixed(1) : 0;
     const failureRate = summary.total > 0 ? (summary.failed / summary.total * 100).toFixed(1) : 0;
-    
+
     $('#delivery-rate').text(deliveryRate + '%');
     $('#read-rate').text(readRate + '%');
     $('#failure-rate').text(failureRate + '%');
@@ -140,15 +140,15 @@ function updateSummaryCards(summary) {
  */
 function updateChannelChart(type, data) {
     const ctx = document.getElementById('channel-chart').getContext('2d');
-    
+
     if (channelChart) {
         channelChart.destroy();
     }
-    
+
     if (!data) {
         data = analyticsData.byChannel || {};
     }
-    
+
     channelChart = new Chart(ctx, {
         type: type || 'pie',
         data: {
@@ -187,15 +187,15 @@ function updateChannelChart(type, data) {
  */
 function updateTypeChart(type, data) {
     const ctx = document.getElementById('type-chart').getContext('2d');
-    
+
     if (typeChart) {
         typeChart.destroy();
     }
-    
+
     if (!data) {
         data = analyticsData.byType || {};
     }
-    
+
     typeChart = new Chart(ctx, {
         type: type || 'doughnut',
         data: {
@@ -228,15 +228,15 @@ function updateTypeChart(type, data) {
  */
 function updateTimelineChart(granularity, data) {
     const ctx = document.getElementById('timeline-chart').getContext('2d');
-    
+
     if (timelineChart) {
         timelineChart.destroy();
     }
-    
+
     if (!data) {
         data = generateTimelineData(granularity || 'day');
     }
-    
+
     timelineChart = new Chart(ctx, {
         type: 'line',
         data: data,
@@ -265,7 +265,7 @@ function generateTimelineData(granularity) {
     const sentData = [];
     const deliveredData = [];
     const readData = [];
-    
+
     // Generate appropriate labels based on granularity
     if (granularity === 'hour') {
         for (let i = 0; i < 24; i++) {
@@ -298,7 +298,7 @@ function generateTimelineData(granularity) {
             readData.push(Math.floor(Math.random() * 1800) + 300);
         }
     }
-    
+
     return {
         labels: labels,
         datasets: [
@@ -340,7 +340,7 @@ function updatePerformanceMetrics(performance) {
             avgResponseTime: 45
         };
     }
-    
+
     $('#delivery-rate').text(performance.deliveryRate + '%');
     $('#open-rate').text(performance.openRate + '%');
     $('#click-rate').text(performance.clickRate + '%');
@@ -353,13 +353,13 @@ function updatePerformanceMetrics(performance) {
  */
 function loadTopTemplates() {
     $.ajax({
-        url: '/api/communication-templates/top-performing',
+        url: './api/communication-templates/top-performing',
         method: 'GET',
-        success: function(data) {
+        success: function (data) {
             const templates = data.templates || [];
             populateTopTemplatesTable(templates);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading top templates:', error);
             // Use sample data if API fails
             const sampleTemplates = [
@@ -380,16 +380,16 @@ function loadTopTemplates() {
 function populateTopTemplatesTable(templates) {
     const tbody = $('#top-templates');
     tbody.empty();
-    
+
     if (templates.length === 0) {
         tbody.append('<tr><td colspan="3" class="text-center">No template data available</td></tr>');
         return;
     }
-    
-    templates.forEach(function(template) {
-        const performanceClass = template.performance >= 80 ? 'success' : 
-                              template.performance >= 60 ? 'warning' : 'danger';
-        
+
+    templates.forEach(function (template) {
+        const performanceClass = template.performance >= 80 ? 'success' :
+            template.performance >= 60 ? 'warning' : 'danger';
+
         tbody.append(`
             <tr>
                 <td>${template.name}</td>
@@ -411,16 +411,16 @@ function populateTopTemplatesTable(templates) {
  */
 function loadRecentCommunications() {
     $.ajax({
-        url: '/api/customer-communication/recent',
+        url: './api/customer-communication/recent',
         method: 'GET',
         data: {
             limit: 20
         },
-        success: function(data) {
+        success: function (data) {
             const communications = data.communications || [];
             populateRecentCommunicationsTable(communications);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading recent communications:', error);
             // Use sample data if API fails
             const sampleCommunications = [
@@ -441,16 +441,16 @@ function loadRecentCommunications() {
 function populateRecentCommunicationsTable(communications) {
     const tbody = $('#recent-communications');
     tbody.empty();
-    
+
     if (communications.length === 0) {
         tbody.append('<tr><td colspan="6" class="text-center">No recent communications</td></tr>');
         return;
     }
-    
-    communications.forEach(function(comm) {
+
+    communications.forEach(function (comm) {
         const statusClass = getStatusClass(comm.status);
         const channelIcon = getChannelIcon(comm.channel);
-        
+
         tbody.append(`
             <tr>
                 <td>${formatDateTime(comm.date)}</td>
@@ -475,17 +475,17 @@ function exportAnalytics() {
     const params = {
         dateRange: currentDateRange
     };
-    
+
     if (currentDateRange === 'custom') {
         params.startDate = $('#start-date').val();
         params.endDate = $('#end-date').val();
     }
-    
+
     $.ajax({
-        url: '/api/customer-communication/analytics/export',
+        url: './api/customer-communication/analytics/export',
         method: 'GET',
         data: params,
-        success: function(data) {
+        success: function (data) {
             // Create a download link for CSV
             const csvContent = data.csv;
             const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -497,10 +497,10 @@ function exportAnalytics() {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            
+
             showNotification('Analytics exported successfully', 'success');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error exporting analytics:', error);
             showNotification('Error exporting analytics', 'error');
         }
@@ -558,7 +558,7 @@ function getChannelIcon(channel) {
  */
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleString();
 }
@@ -567,21 +567,21 @@ function formatDateTime(dateString) {
  * Show notification
  */
 function showNotification(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                     type === 'error' ? 'alert-danger' : 'alert-warning';
-    
+    const alertClass = type === 'success' ? 'alert-success' :
+        type === 'error' ? 'alert-danger' : 'alert-warning';
+
     const notification = `
         <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             ${message}
         </div>
     `;
-    
+
     // Add notification to top of page
     $('.page-wrapper').prepend(notification);
-    
+
     // Auto-remove after 5 seconds
-    setTimeout(function() {
+    setTimeout(function () {
         $('.alert').fadeOut();
     }, 5000);
 }

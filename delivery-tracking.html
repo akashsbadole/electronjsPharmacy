@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Delivery Tracking - PharmaSpot</title>
@@ -11,36 +12,43 @@
         body {
             background-color: #f5f5f5;
         }
+
         .tracking-container {
             padding: 20px;
         }
+
         .tracking-header {
             background: white;
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
+
         .tracking-map {
             height: 500px;
             border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
+
         .tracking-info {
             background: white;
             padding: 20px;
             border-radius: 5px;
             margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
+
         .timeline {
             position: relative;
             padding-left: 30px;
         }
+
         .timeline-item {
             position: relative;
             padding-bottom: 20px;
         }
+
         .timeline-marker {
             position: absolute;
             left: -30px;
@@ -51,67 +59,82 @@
             border: 2px solid white;
             box-shadow: 0 0 0 2px #ccc;
         }
+
         .timeline-marker.pending {
             background-color: #f0ad4e;
             box-shadow: 0 0 0 2px #f0ad4e;
         }
+
         .timeline-marker.assigned {
             background-color: #5bc0de;
             box-shadow: 0 0 0 2px #5bc0de;
         }
+
         .timeline-marker.in_transit {
             background-color: #5cb85c;
             box-shadow: 0 0 0 2px #5cb85c;
         }
+
         .timeline-marker.delivered {
             background-color: #5cb85c;
             box-shadow: 0 0 0 2px #5cb85c;
         }
+
         .timeline-marker.cancelled {
             background-color: #d9534f;
             box-shadow: 0 0 0 2px #d9534f;
         }
+
         .timeline-content {
             background: #f9f9f9;
             padding: 15px;
             border-radius: 5px;
             border-left: 3px solid #ccc;
         }
+
         .status-badge {
             padding: 4px 8px;
             border-radius: 3px;
             font-size: 12px;
             font-weight: bold;
         }
+
         .status-pending {
             background-color: #f0ad4e;
             color: white;
         }
+
         .status-assigned {
             background-color: #5bc0de;
             color: white;
         }
+
         .status-in_progress {
             background-color: #5bc85c;
             color: white;
         }
+
         .status-delivered {
             background-color: #5cb85c;
             color: white;
         }
+
         .status-cancelled {
             background-color: #d9534f;
             color: white;
         }
+
         .progress-bar {
             height: 25px;
             line-height: 25px;
         }
+
         .back-button {
             margin-bottom: 20px;
         }
     </style>
 </head>
+
 <body>
     <div class="tracking-container">
         <div class="back-button">
@@ -119,7 +142,7 @@
                 <i class="glyphicon glyphicon-arrow-left"></i> Back to Main
             </a>
         </div>
-        
+
         <div class="tracking-header">
             <div class="row">
                 <div class="col-md-8">
@@ -130,7 +153,8 @@
                     <div class="form-group">
                         <label for="trackingOrderId">Enter Delivery Order ID</label>
                         <div class="input-group">
-                            <input type="text" id="trackingOrderId" class="form-control" placeholder="Enter order ID to track">
+                            <input type="text" id="trackingOrderId" class="form-control"
+                                placeholder="Enter order ID to track">
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-primary" onclick="trackDelivery()">Track</button>
                             </span>
@@ -139,7 +163,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="trackingResults" style="display: none;">
             <div class="row">
                 <div class="col-md-8">
@@ -151,13 +175,13 @@
                         <div id="deliveryDetails">
                             <!-- Delivery details will be loaded here -->
                         </div>
-                        
+
                         <hr>
-                        
+
                         <h4>Delivery Progress</h4>
                         <div class="progress">
-                            <div id="deliveryProgressBar" class="progress-bar progress-bar-success" role="progressbar" 
-                                 style="width: 0%">
+                            <div id="deliveryProgressBar" class="progress-bar progress-bar-success" role="progressbar"
+                                style="width: 0%">
                                 0%
                             </div>
                         </div>
@@ -171,16 +195,16 @@
                                 <span id="estimatedArrival">N/A</span>
                             </div>
                         </div>
-                        
+
                         <hr>
-                        
+
                         <h4>Driver Information</h4>
                         <div id="driverInfo">
                             <!-- Driver information will be loaded here -->
                         </div>
-                        
+
                         <hr>
-                        
+
                         <div class="text-center">
                             <button type="button" class="btn btn-info" onclick="refreshTracking()">
                                 <i class="glyphicon glyphicon-refresh"></i> Refresh
@@ -192,7 +216,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row m-t-20">
                 <div class="col-md-12">
                     <div class="tracking-info">
@@ -204,7 +228,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="noResults" style="display: none;" class="tracking-info text-center">
             <h3>No delivery found</h3>
             <p>Please check the order ID and try again.</p>
@@ -213,17 +237,17 @@
 
     <script src="assets/dist/js/bundle.min.js"></script>
     <!-- Leaflet JS for maps -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="assets/dist/js/leaflet.js"></script>
     <script>
         let trackingMap = null;
         let currentTrackingData = null;
         let refreshInterval = null;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             initTrackingMap();
-            
+
             // Allow Enter key to trigger tracking
-            $('#trackingOrderId').on('keypress', function(e) {
+            $('#trackingOrderId').on('keypress', function (e) {
                 if (e.which === 13) {
                     trackDelivery();
                 }
@@ -233,7 +257,7 @@
         function initTrackingMap() {
             // Initialize map
             trackingMap = L.map('trackingMap').setView([20.5937, 78.9629], 5); // Center on India
-            
+
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
@@ -242,29 +266,29 @@
 
         function trackDelivery() {
             const orderId = $('#trackingOrderId').val().trim();
-            
+
             if (!orderId) {
                 notiflix.Report.warning('Warning', 'Please enter a delivery order ID', 'OK');
                 return;
             }
-            
+
             // Clear any existing refresh interval
             if (refreshInterval) {
                 clearInterval(refreshInterval);
                 refreshInterval = null;
             }
-            
+
             $.ajax({
                 url: `/api/delivery/tracking/${orderId}`,
                 type: 'GET',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         currentTrackingData = response.tracking;
                         showTrackingResults(response.tracking);
-                        
+
                         // Set up auto-refresh for active deliveries
-                        if (response.tracking.status === 'assigned' || 
-                            response.tracking.status === 'picked_up' || 
+                        if (response.tracking.status === 'assigned' ||
+                            response.tracking.status === 'picked_up' ||
                             response.tracking.status === 'in_transit') {
                             refreshInterval = setInterval(refreshTracking, 30000); // Refresh every 30 seconds
                         }
@@ -272,7 +296,7 @@
                         showNoResults();
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     showNoResults();
                 }
             });
@@ -281,16 +305,16 @@
         function showTrackingResults(tracking) {
             $('#trackingResults').show();
             $('#noResults').hide();
-            
+
             // Clear existing markers and layers
             if (trackingMap) {
-                trackingMap.eachLayer(function(layer) {
+                trackingMap.eachLayer(function (layer) {
                     if (layer instanceof L.Marker || layer instanceof L.Polyline) {
                         trackingMap.removeLayer(layer);
                     }
                 });
             }
-            
+
             // Add markers for delivery locations
             if (tracking.currentLocation) {
                 const driverIcon = L.divIcon({
@@ -298,37 +322,37 @@
                     iconSize: [30, 30],
                     className: 'driver-marker'
                 });
-                
-                const driverMarker = L.marker([tracking.currentLocation.lat, tracking.currentLocation.lng], {icon: driverIcon})
+
+                const driverMarker = L.marker([tracking.currentLocation.lat, tracking.currentLocation.lng], { icon: driverIcon })
                     .addTo(trackingMap)
                     .bindPopup(`<b>Driver Current Location</b><br>${tracking.driverName}`);
-                
+
                 // Center map on driver location
                 trackingMap.setView([tracking.currentLocation.lat, tracking.currentLocation.lng], 13);
             }
-            
+
             if (tracking.deliveryLocation) {
                 const deliveryIcon = L.divIcon({
                     html: '<i class="glyphicon glyphicon-home" style="color: #5cb85c; font-size: 24px;"></i>',
                     iconSize: [30, 30],
                     className: 'delivery-marker'
                 });
-                
-                const deliveryMarker = L.marker([tracking.deliveryLocation.lat, tracking.deliveryLocation.lng], {icon: deliveryIcon})
+
+                const deliveryMarker = L.marker([tracking.deliveryLocation.lat, tracking.deliveryLocation.lng], { icon: deliveryIcon })
                     .addTo(trackingMap)
                     .bindPopup(`<b>Delivery Address</b><br>${tracking.deliveryAddress}`);
             }
-            
+
             // Draw route if available
             if (tracking.route && tracking.route.length > 0) {
                 const routeCoordinates = tracking.route.map(point => [point.lat, point.lng]);
-                const routeLine = L.polyline(routeCoordinates, {color: '#5bc0de', weight: 4, opacity: 0.7})
+                const routeLine = L.polyline(routeCoordinates, { color: '#5bc0de', weight: 4, opacity: 0.7 })
                     .addTo(trackingMap);
             }
-            
+
             // Update delivery details
             updateDeliveryDetails(tracking);
-            
+
             // Update status timeline
             updateStatusTimeline(tracking.statusHistory);
         }
@@ -352,32 +376,32 @@
                     </div>
                 </div>
             `;
-            
+
             $('#deliveryDetails').html(details);
-            
+
             // Update progress bar
             const progress = tracking.progress || 0;
             $('#deliveryProgressBar').css('width', progress + '%').text(progress + '%');
-            
+
             // Update remaining info
             $('#distanceRemaining').text(tracking.distanceRemaining || 'N/A');
             $('#estimatedArrival').text(tracking.eta ? new Date(tracking.eta).toLocaleString() : 'N/A');
-            
+
             // Update driver info
             const driverInfo = `
                 <strong>Name:</strong> ${tracking.driverName}<br>
                 <strong>Phone:</strong> ${tracking.driverPhone}<br>
                 <strong>Vehicle:</strong> ${tracking.vehicleType} - ${tracking.vehicleNumber}
             `;
-            
+
             $('#driverInfo').html(driverInfo);
         }
 
         function updateStatusTimeline(statusHistory) {
             const timeline = $('#statusTimeline');
             timeline.empty();
-            
-            statusHistory.forEach(function(status, index) {
+
+            statusHistory.forEach(function (status, index) {
                 const timelineItem = `
                     <div class="timeline-item">
                         <div class="timeline-marker ${status.status}"></div>
@@ -408,17 +432,17 @@
 
         function refreshTracking() {
             if (!currentTrackingData) return;
-            
+
             $.ajax({
                 url: `/api/delivery/tracking/${currentTrackingData.orderNumber}`,
                 type: 'GET',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         currentTrackingData = response.tracking;
                         showTrackingResults(response.tracking);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Failed to refresh tracking data:', error);
                 }
             });
@@ -429,23 +453,23 @@
                 notiflix.Report.warning('Warning', 'No delivery selected', 'OK');
                 return;
             }
-            
+
             notiflix.Confirm.show(
                 'Send Notification',
                 'Do you want to send a delivery status notification to the customer?',
                 'Yes', 'No',
-                function() {
+                function () {
                     $.ajax({
                         url: `/api/delivery/tracking/${currentTrackingData.orderNumber}/notify`,
                         type: 'POST',
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 notiflix.Report.success('Success', 'Notification sent successfully', 'OK');
                             } else {
                                 notiflix.Report.failure('Error', response.message, 'OK');
                             }
                         },
-                        error: function(xhr, status, error) {
+                        error: function (xhr, status, error) {
                             notiflix.Report.failure('Error', 'Failed to send notification', 'OK');
                         }
                     });
@@ -456,7 +480,7 @@
         function showNoResults() {
             $('#trackingResults').hide();
             $('#noResults').show();
-            
+
             // Clear any existing refresh interval
             if (refreshInterval) {
                 clearInterval(refreshInterval);
@@ -465,11 +489,12 @@
         }
 
         // Clean up refresh interval when page is unloaded
-        $(window).on('beforeunload', function() {
+        $(window).on('beforeunload', function () {
             if (refreshInterval) {
                 clearInterval(refreshInterval);
             }
         });
     </script>
 </body>
+
 </html>

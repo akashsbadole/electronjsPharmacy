@@ -7,7 +7,7 @@ let templates = [];
 let currentTemplateId = null;
 
 // Initialize page
-$(document).ready(function() {
+$(document).ready(function () {
     loadTemplates();
     setupEventListeners();
 });
@@ -17,16 +17,16 @@ $(document).ready(function() {
  */
 function setupEventListeners() {
     // Template form submission
-    $('#template-form').on('submit', function(e) {
+    $('#template-form').on('submit', function (e) {
         e.preventDefault();
         saveTemplate();
     });
-    
+
     // Filter change events
     $('#filter-type, #filter-category, #filter-status, #filter-language').on('change', filterTemplates);
-    
+
     // Search functionality
-    $('#search-template').on('keyup', function() {
+    $('#search-template').on('keyup', function () {
         const searchTerm = $(this).val().toLowerCase();
         filterTemplatesBySearch(searchTerm);
     });
@@ -37,13 +37,13 @@ function setupEventListeners() {
  */
 function loadTemplates() {
     $.ajax({
-        url: '/api/communication-templates/all',
+        url: './api/communication-templates/all',
         method: 'GET',
-        success: function(data) {
+        success: function (data) {
             templates = data.templates || [];
             populateTemplatesTable();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading templates:', error);
             showNotification('Error loading templates', 'error');
         }
@@ -56,16 +56,16 @@ function loadTemplates() {
 function populateTemplatesTable() {
     const tbody = $('#templates-table-body');
     tbody.empty();
-    
+
     if (templates.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No templates found</td></tr>');
         return;
     }
-    
-    templates.forEach(function(template) {
+
+    templates.forEach(function (template) {
         const statusClass = getStatusClass(template.approvalStatus);
         const statusText = formatApprovalStatus(template.approvalStatus);
-        
+
         tbody.append(`
             <tr>
                 <td>${template.name}</td>
@@ -101,10 +101,10 @@ function populateTemplatesTable() {
  */
 function showTemplateModal(templateId = null) {
     currentTemplateId = templateId;
-    
+
     // Reset form
     $('#template-form')[0].reset();
-    
+
     if (templateId) {
         // Load template data for editing
         const template = templates.find(t => t._id === templateId);
@@ -113,7 +113,7 @@ function showTemplateModal(templateId = null) {
             $('#template-type').val(template.type);
             $('#template-category').val(template.category);
             $('#template-language').val(template.language || 'en');
-            
+
             // Set content based on type
             if (template.type === 'EMAIL' && template.content.email) {
                 $('#template-content').val(template.content.email.htmlBody || '');
@@ -122,14 +122,14 @@ function showTemplateModal(templateId = null) {
             } else {
                 $('#template-content').val(template.content.text || '');
             }
-            
+
             // Set variables
             if (template.variables && template.variables.length > 0) {
                 $('#template-variables').val(template.variables.map(v => v.name).join(', '));
             }
         }
     }
-    
+
     $('#template-modal').modal('show');
 }
 
@@ -143,12 +143,12 @@ function saveTemplate() {
     const language = $('#template-language').val();
     const content = $('#template-content').val().trim();
     const variables = $('#template-variables').val().trim();
-    
+
     if (!name || !type || !category || !content) {
         showNotification('Please fill in all required fields', 'warning');
         return;
     }
-    
+
     const templateData = {
         name: name,
         type: type,
@@ -157,7 +157,7 @@ function saveTemplate() {
         content: {},
         variables: variables ? variables.split(',').map(v => v.trim()).filter(v => v) : []
     };
-    
+
     // Set content based on type
     if (type === 'EMAIL') {
         templateData.content.email = {
@@ -168,19 +168,19 @@ function saveTemplate() {
     } else {
         templateData.content[type.toLowerCase()] = content;
     }
-    
-    const url = currentTemplateId ? 
-        `/api/communication-templates/template/${currentTemplateId}` : 
+
+    const url = currentTemplateId ?
+        `/api/communication-templates/template/${currentTemplateId}` :
         '/api/communication-templates/template';
-    
+
     const method = currentTemplateId ? 'PUT' : 'POST';
-    
+
     $.ajax({
         url: url,
         method: method,
         contentType: 'application/json',
         data: JSON.stringify(templateData),
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification(`Template ${currentTemplateId ? 'updated' : 'created'} successfully`, 'success');
                 $('#template-modal').modal('hide');
@@ -189,7 +189,7 @@ function saveTemplate() {
                 showNotification(`Error ${currentTemplateId ? 'updating' : 'creating'} template`, 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error(`Error ${currentTemplateId ? 'updating' : 'creating'} template:`, error);
             showNotification(`Error ${currentTemplateId ? 'updating' : 'creating'} template`, 'error');
         }
@@ -202,9 +202,9 @@ function saveTemplate() {
 function viewTemplate(templateId) {
     const template = templates.find(t => t._id === templateId);
     if (!template) return;
-    
+
     let contentHtml = '';
-    
+
     if (template.type === 'EMAIL' && template.content.email) {
         contentHtml = `
             <h5>Subject: ${template.content.email.subject}</h5>
@@ -220,10 +220,10 @@ function viewTemplate(templateId) {
             </div>
         `;
     }
-    
-    const variablesHtml = template.variables && template.variables.length > 0 ? 
+
+    const variablesHtml = template.variables && template.variables.length > 0 ?
         `<p><strong>Variables:</strong> ${template.variables.map(v => `{{${v.name}}}`).join(', ')}</p>` : '';
-    
+
     const templateHtml = `
         <div class="template-view">
             <h4>${template.name}</h4>
@@ -236,7 +236,7 @@ function viewTemplate(templateId) {
             ${contentHtml}
         </div>
     `;
-    
+
     $('#template-preview-content').html(templateHtml);
     $('#template-preview-section').show();
 }
@@ -255,11 +255,11 @@ function approveTemplate(templateId) {
     if (!confirm('Are you sure you want to approve this template?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/communication-templates/template/${templateId}/approve`,
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification('Template approved successfully', 'success');
                 loadTemplates();
@@ -267,7 +267,7 @@ function approveTemplate(templateId) {
                 showNotification('Error approving template', 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error approving template:', error);
             showNotification('Error approving template', 'error');
         }
@@ -281,11 +281,11 @@ function deleteTemplate(templateId) {
     if (!confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/communication-templates/template/${templateId}`,
         method: 'DELETE',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showNotification('Template deleted successfully', 'success');
                 loadTemplates();
@@ -293,7 +293,7 @@ function deleteTemplate(templateId) {
                 showNotification('Error deleting template', 'error');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error deleting template:', error);
             showNotification('Error deleting template', 'error');
         }
@@ -308,9 +308,9 @@ function filterTemplates() {
     const category = $('#filter-category').val();
     const status = $('#filter-status').val();
     const language = $('#filter-language').val();
-    
+
     $.ajax({
-        url: '/api/communication-templates/all',
+        url: './api/communication-templates/all',
         method: 'GET',
         data: {
             type: type,
@@ -318,11 +318,11 @@ function filterTemplates() {
             approvalStatus: status,
             language: language
         },
-        success: function(data) {
+        success: function (data) {
             templates = data.templates || [];
             populateTemplatesTable();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error filtering templates:', error);
             showNotification('Error filtering templates', 'error');
         }
@@ -335,23 +335,23 @@ function filterTemplates() {
 function filterTemplatesBySearch(searchTerm) {
     const filteredTemplates = templates.filter(template => {
         return template.name.toLowerCase().includes(searchTerm) ||
-               template.category.toLowerCase().includes(searchTerm) ||
-               (template.content.text && template.content.text.toLowerCase().includes(searchTerm)) ||
-               (template.content.email && template.content.email.htmlBody && template.content.email.htmlBody.toLowerCase().includes(searchTerm));
+            template.category.toLowerCase().includes(searchTerm) ||
+            (template.content.text && template.content.text.toLowerCase().includes(searchTerm)) ||
+            (template.content.email && template.content.email.htmlBody && template.content.email.htmlBody.toLowerCase().includes(searchTerm));
     });
-    
+
     const tbody = $('#templates-table-body');
     tbody.empty();
-    
+
     if (filteredTemplates.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No templates found matching your search</td></tr>');
         return;
     }
-    
-    filteredTemplates.forEach(function(template) {
+
+    filteredTemplates.forEach(function (template) {
         const statusClass = getStatusClass(template.approvalStatus);
         const statusText = formatApprovalStatus(template.approvalStatus);
-        
+
         tbody.append(`
             <tr>
                 <td>${template.name}</td>
@@ -412,7 +412,7 @@ function formatApprovalStatus(status) {
  */
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString();
 }
@@ -421,21 +421,21 @@ function formatDate(dateString) {
  * Show notification
  */
 function showNotification(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                     type === 'error' ? 'alert-danger' : 'alert-warning';
-    
+    const alertClass = type === 'success' ? 'alert-success' :
+        type === 'error' ? 'alert-danger' : 'alert-warning';
+
     const notification = `
         <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             ${message}
         </div>
     `;
-    
+
     // Add notification to top of page
     $('.page-wrapper').prepend(notification);
-    
+
     // Auto-remove after 5 seconds
-    setTimeout(function() {
+    setTimeout(function () {
         $('.alert').fadeOut();
     }, 5000);
 }

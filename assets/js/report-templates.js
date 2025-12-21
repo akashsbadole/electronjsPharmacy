@@ -3,24 +3,24 @@
  * Handles report template management and gallery functionality
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize report templates when template gallery tab is shown
-    $('a[href="#templateGalleryTab"]').on('shown.bs.tab', function() {
+    $('a[href="#templateGalleryTab"]').on('shown.bs.tab', function () {
         loadReportTemplates();
     });
-    
+
     // Handle template search
-    $('#templateSearch').on('input', function() {
+    $('#templateSearch').on('input', function () {
         const searchTerm = $(this).val().toLowerCase();
         filterTemplates(searchTerm);
     });
-    
+
     // Handle category filter
-    $('#templateCategoryFilter').on('change', function() {
+    $('#templateCategoryFilter').on('change', function () {
         const category = $(this).val();
         filterTemplatesByCategory(category);
     });
-    
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 });
@@ -30,19 +30,19 @@ $(document).ready(function() {
  */
 function loadReportTemplates() {
     $.ajax({
-        url: '/api/report-templates/templates',
+        url: './api/report-templates/templates',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             // Store templates globally
             window.reportTemplates = response.templates;
-            
+
             // Populate template gallery
             renderTemplateGallery(response.templates);
-            
+
             // Populate category filter
             populateCategoryFilter(response.templates);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading report templates:', error);
             showNotification('Error loading report templates', 'error');
         }
@@ -55,12 +55,12 @@ function loadReportTemplates() {
 function renderTemplateGallery(templates) {
     const galleryContainer = $('#templateGalleryContent');
     galleryContainer.empty();
-    
+
     if (templates.length === 0) {
         galleryContainer.html('<p class="text-muted">No templates available</p>');
         return;
     }
-    
+
     // Group templates by category
     const templatesByCategory = {};
     templates.forEach(template => {
@@ -69,20 +69,20 @@ function renderTemplateGallery(templates) {
         }
         templatesByCategory[template.category].push(template);
     });
-    
+
     let galleryHtml = '';
-    
+
     Object.keys(templatesByCategory).sort().forEach(category => {
         galleryHtml += `
             <div class="mb-4">
                 <h4 class="mb-3">${category}</h4>
                 <div class="row">
         `;
-        
+
         templatesByCategory[category].forEach(template => {
             const isSystem = template.isSystem ? '<span class="badge badge-info">System</span>' : '';
             const chartIcon = template.chartConfig ? '<i class="fa fa-chart-bar text-success"></i>' : '';
-            
+
             galleryHtml += `
                 <div class="col-md-4 mb-3">
                     <div class="template-card" onclick="selectTemplateFromGallery('${template._id}')" data-template-id="${template._id}">
@@ -118,15 +118,15 @@ function renderTemplateGallery(templates) {
                 </div>
             `;
         });
-        
+
         galleryHtml += `
                 </div>
             </div>
         `;
     });
-    
+
     galleryContainer.html(galleryHtml);
-    
+
     // Re-initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 }
@@ -137,10 +137,10 @@ function renderTemplateGallery(templates) {
 function populateCategoryFilter(templates) {
     const categories = [...new Set(templates.map(template => template.category))];
     const categoryFilter = $('#templateCategoryFilter');
-    
+
     categoryFilter.empty();
     categoryFilter.append('<option value="">All Categories</option>');
-    
+
     categories.sort().forEach(category => {
         categoryFilter.append(`<option value="${category}">${category}</option>`);
     });
@@ -150,17 +150,17 @@ function populateCategoryFilter(templates) {
  * Filter templates by search term
  */
 function filterTemplates(searchTerm) {
-    $('.template-card').each(function() {
+    $('.template-card').each(function () {
         const templateId = $(this).data('template-id');
         const template = window.reportTemplates.find(t => t._id === templateId);
-        
+
         if (!template) return;
-        
-        const matchesSearch = !searchTerm || 
+
+        const matchesSearch = !searchTerm ||
             template.name.toLowerCase().includes(searchTerm) ||
             template.description.toLowerCase().includes(searchTerm) ||
             template.category.toLowerCase().includes(searchTerm);
-        
+
         $(this).toggle(matchesSearch);
     });
 }
@@ -169,12 +169,12 @@ function filterTemplates(searchTerm) {
  * Filter templates by category
  */
 function filterTemplatesByCategory(category) {
-    $('.template-card').each(function() {
+    $('.template-card').each(function () {
         const templateId = $(this).data('template-id');
         const template = window.reportTemplates.find(t => t._id === templateId);
-        
+
         if (!template) return;
-        
+
         const matchesCategory = !category || template.category === category;
         $(this).toggle(matchesCategory);
     });
@@ -188,17 +188,17 @@ function selectTemplateFromGallery(templateId) {
     if (!template) {
         return;
     }
-    
+
     // Highlight selected template
     $('.template-card').removeClass('selected');
     $(`.template-card[data-template-id="${templateId}"]`).addClass('selected');
-    
+
     // Set template in dropdown
     $('#reportTemplate').val(templateId);
-    
+
     // Load template configuration
     loadTemplateConfiguration(templateId);
-    
+
     // Hide gallery and show wizard after a short delay
     setTimeout(() => {
         hideTemplateGallery();
@@ -212,19 +212,19 @@ function loadTemplateConfiguration(templateId) {
     $.ajax({
         url: `/api/report-templates/templates/${templateId}`,
         method: 'GET',
-        success: function(template) {
+        success: function (template) {
             // Populate form with template data
             $('#reportName').val(template.name);
             $('#reportDescription').val(template.description);
             $('#dataSource').val(template.dataSource).trigger('change');
-            
+
             // Wait for fields to load, then select template fields
             setTimeout(() => {
                 template.fields.forEach(field => {
                     $(`#field_${field.key}`).prop('checked', true);
                 });
                 updateSelectedFields();
-                
+
                 // Set field formats
                 template.fields.forEach(field => {
                     if (field.format) {
@@ -232,12 +232,12 @@ function loadTemplateConfiguration(templateId) {
                     }
                 });
             }, 500);
-            
+
             // Set filters
             if (template.filters) {
                 populateFilters(template.filters);
             }
-            
+
             // Set grouping
             if (template.groupBy && template.groupBy.length > 0) {
                 $('#enableGrouping').prop('checked', true);
@@ -246,13 +246,13 @@ function loadTemplateConfiguration(templateId) {
                     $(`#groupBy option[value="${field}"]`).prop('selected', true);
                 });
             }
-            
+
             // Set sorting
             if (template.sortBy) {
                 $('#sortBy').val(template.sortBy.field);
                 $('#sortDirection').val(template.sortBy.direction);
             }
-            
+
             // Set chart configuration
             if (template.chartConfig) {
                 $('#chartType').val(template.chartConfig.type);
@@ -260,7 +260,7 @@ function loadTemplateConfiguration(templateId) {
                 $('#chartYAxis').val(template.chartConfig.yAxis);
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading template:', error);
             showNotification('Error loading template configuration', 'error');
         }
@@ -296,12 +296,12 @@ function createReportFromTemplate(templateId) {
     if (!template) {
         return;
     }
-    
+
     const reportName = prompt('Enter a name for the new report:', `${template.name} (Copy)`);
     if (!reportName) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/report-templates/templates/${templateId}/create-report`,
         method: 'POST',
@@ -310,14 +310,14 @@ function createReportFromTemplate(templateId) {
             createdBy: 'current_user' // This should come from authentication
         }),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             showNotification('Report created from template successfully', 'success');
             loadExistingReports();
-            
+
             // Switch to "My Reports" tab
             $('a[href="#myReportsTab"]').tab('show');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error creating report from template:', error);
             showNotification('Error creating report: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -340,19 +340,19 @@ function deleteTemplate(templateId) {
     if (!template) {
         return;
     }
-    
+
     if (!confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/report-templates/templates/${templateId}`,
         method: 'DELETE',
-        success: function(response) {
+        success: function (response) {
             showNotification('Template deleted successfully', 'success');
             loadReportTemplates();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error deleting template:', error);
             showNotification('Error deleting template: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -364,16 +364,16 @@ function deleteTemplate(templateId) {
  */
 function initializeSystemTemplates() {
     $.ajax({
-        url: '/api/report-templates/initialize-system-templates',
+        url: './api/report-templates/initialize-system-templates',
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             showNotification(`System templates initialized: ${response.inserted} templates added`, 'success');
             if (response.errors && response.errors.length > 0) {
                 console.warn('Template initialization errors:', response.errors);
             }
             loadReportTemplates();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error initializing system templates:', error);
             showNotification('Error initializing system templates: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -387,7 +387,7 @@ function showTemplateGallery() {
     // Hide wizard and show gallery
     $('.wizard-container').hide();
     $('#templateGallery').show();
-    
+
     if (!window.reportTemplates || window.reportTemplates.length === 0) {
         loadReportTemplates();
     } else {
@@ -423,21 +423,21 @@ window.filterTemplates = filterTemplates;
 function filterTemplates() {
     const category = $('#templateCategory').val().toLowerCase();
     const searchTerm = $('#templateSearch').val().toLowerCase();
-    
+
     if (!window.reportTemplates || window.reportTemplates.length === 0) {
         return;
     }
-    
+
     // Filter templates based on category and search term
     const filteredTemplates = window.reportTemplates.filter(template => {
         const matchesCategory = !category || template.category.toLowerCase() === category;
         const matchesSearch = !searchTerm ||
             template.name.toLowerCase().includes(searchTerm) ||
             template.description.toLowerCase().includes(searchTerm);
-        
+
         return matchesCategory && matchesSearch;
     });
-    
+
     // Re-render gallery with filtered templates
     renderTemplateGallery(filteredTemplates);
 }
@@ -450,7 +450,7 @@ function renderTemplateGallery(templates) {
         $('#templateGalleryContent').html('<p class="text-muted">No templates found matching your criteria.</p>');
         return;
     }
-    
+
     // Group templates by category
     const templatesByCategory = {};
     templates.forEach(template => {
@@ -459,16 +459,16 @@ function renderTemplateGallery(templates) {
         }
         templatesByCategory[template.category].push(template);
     });
-    
+
     let galleryHtml = '';
-    
+
     Object.keys(templatesByCategory).sort().forEach(category => {
         galleryHtml += `
             <div class="mb-4">
                 <h4 class="mb-3">${category}</h4>
                 <div class="row">
         `;
-        
+
         templatesByCategory[category].forEach(template => {
             galleryHtml += `
                 <div class="col-md-4 mb-3">
@@ -488,12 +488,12 @@ function renderTemplateGallery(templates) {
                 </div>
             `;
         });
-        
+
         galleryHtml += `
                 </div>
             </div>
         `;
     });
-    
+
     $('#templateGalleryContent').html(galleryHtml);
 }

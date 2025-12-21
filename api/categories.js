@@ -1,29 +1,25 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore =  require('@seald-io/nedb');
-const async = require("async");
-const path = require("path");
-const appName = process.env.APPNAME || 'PharmaSoft';
-const appData = process.env.APPDATA || (process.platform === 'win32' ? process.env.USERPROFILE + '/AppData/Roaming' : process.env.HOME + '/.config');
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "categories.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let categoryDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let categoryDB;
 
-categoryDB.ensureIndex({ fieldName: "_id", unique: true });
+// Initialize database when module loads
+(async function() {
+    try {
+        categoryDB = await dbManager.getDatabase("categories.db");
+        categoryDB.ensureIndex({ fieldName: "_id", unique: true });
+        console.log("Categories database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize categories database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get the welcome message for the Category API.

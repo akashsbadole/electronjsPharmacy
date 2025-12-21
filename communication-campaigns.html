@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Communication Campaigns - PharmaSoft</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
 </head>
+
 <body>
     <div class="page-wrapper">
         <!-- Top Navigation -->
@@ -25,7 +27,8 @@
                     <ul class="navbar-nav mr-auto mt-md-0">
                         <!-- Search -->
                         <li class="nav-item d-none d-md-block search-box">
-                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark"
+                                href="javascript:void(0)">
                                 <i class="ti-search"></i>
                             </a>
                             <form class="app-search d-none d-md-block">
@@ -36,7 +39,8 @@
                     <ul class="navbar-nav my-lg-0">
                         <!-- Notifications -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="ti-bell"></i>
                                 <span class="badge badge-xs badge-danger">3</span>
                             </a>
@@ -75,7 +79,8 @@
                         </li>
                         <!-- User Profile -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img src="assets/images/default.jpg" alt="user" class="profile-pic">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right user-dd animated">
@@ -175,7 +180,8 @@
                                 <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                                 <li class="breadcrumb-item active">Campaigns</li>
                             </ol>
-                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="showCampaignModal()">
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white"
+                                onclick="showCampaignModal()">
                                 <i class="fa fa-plus-circle"></i> Create New Campaign
                             </button>
                         </div>
@@ -253,13 +259,14 @@
                             <div class="card-body">
                                 <h4 class="card-title">Campaign Management</h4>
                                 <h6 class="card-subtitle">Manage and monitor communication campaigns</h6>
-                                
+
                                 <!-- Filters -->
                                 <div class="row margin-top-20">
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filter-status">Filter by Status</label>
-                                            <select class="form-control" id="filter-status" onchange="filterCampaigns()">
+                                            <select class="form-control" id="filter-status"
+                                                onchange="filterCampaigns()">
                                                 <option value="">All Statuses</option>
                                                 <option value="DRAFT">Draft</option>
                                                 <option value="SCHEDULED">Scheduled</option>
@@ -286,7 +293,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filter-date-range">Date Range</label>
-                                            <select class="form-control" id="filter-date-range" onchange="filterCampaigns()">
+                                            <select class="form-control" id="filter-date-range"
+                                                onchange="filterCampaigns()">
                                                 <option value="">All Time</option>
                                                 <option value="today">Today</option>
                                                 <option value="week">This Week</option>
@@ -298,7 +306,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="search-campaign">Search</label>
-                                            <input type="text" class="form-control" id="search-campaign" placeholder="Search campaigns..." onkeyup="filterCampaigns()">
+                                            <input type="text" class="form-control" id="search-campaign"
+                                                placeholder="Search campaigns..." onkeyup="filterCampaigns()">
                                         </div>
                                     </div>
                                 </div>
@@ -347,7 +356,8 @@
     </div>
 
     <!-- Campaign Modal -->
-    <div class="modal fade" id="campaign-modal" tabindex="-1" role="dialog" aria-labelledby="campaign-modal-label" aria-hidden="true">
+    <div class="modal fade" id="campaign-modal" tabindex="-1" role="dialog" aria-labelledby="campaign-modal-label"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -428,7 +438,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Target Audience Section -->
                         <div class="border-top pt-3 mt-3">
                             <h5>Target Audience</h5>
@@ -470,17 +480,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app-style-switcher.js"></script>
-    <script src="assets/js/waves.js"></script>
-    <script src="assets/js/sidebarmenu.js"></script>
-    <script src="assets/js/custom.min.js"></script>
-    <script src="assets/js/customer-communication.js"></script>
-    <script src="assets/js/communication-campaigns.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="./assets/js/customer-communication.js"></script>
+    <script src="./assets/js/communication-campaigns.js"></script>
     <script>
         // Initialize page
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadCampaigns();
             loadTemplates();
             updateCampaignStats();
@@ -489,18 +495,18 @@
         // Update campaign statistics
         function updateCampaignStats() {
             $.ajax({
-                url: '/api/communication-campaigns/all',
+                url: './api/communication-campaigns/all',
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const campaigns = data.campaigns || [];
-                    
+
                     let total = campaigns.length;
                     let running = 0;
                     let paused = 0;
                     let completed = 0;
-                    
+
                     campaigns.forEach(campaign => {
-                        switch(campaign.status) {
+                        switch (campaign.status) {
                             case 'RUNNING':
                                 running++;
                                 break;
@@ -512,13 +518,13 @@
                                 break;
                         }
                     });
-                    
+
                     $('#total-campaigns').text(total);
                     $('#running-campaigns').text(running);
                     $('#paused-campaigns').text(paused);
                     $('#completed-campaigns').text(completed);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading campaign stats:', error);
                 }
             });
@@ -532,21 +538,21 @@
             const searchTerm = $('#search-campaign').val();
 
             $.ajax({
-                url: '/api/communication-campaigns/all',
+                url: './api/communication-campaigns/all',
                 method: 'GET',
                 data: {
                     status: status,
                     type: type
                 },
-                success: function(data) {
+                success: function (data) {
                     let campaigns = data.campaigns || [];
-                    
+
                     // Apply client-side filtering for date range and search term
                     if (dateRange) {
                         const now = new Date();
                         let filterDate;
-                        
-                        switch(dateRange) {
+
+                        switch (dateRange) {
                             case 'today':
                                 filterDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                                 break;
@@ -560,7 +566,7 @@
                                 filterDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
                                 break;
                         }
-                        
+
                         if (filterDate) {
                             campaigns = campaigns.filter(campaign => {
                                 const campaignDate = new Date(campaign.createdAt);
@@ -568,18 +574,18 @@
                             });
                         }
                     }
-                    
+
                     if (searchTerm) {
                         const term = searchTerm.toLowerCase();
                         campaigns = campaigns.filter(campaign => {
                             return campaign.name.toLowerCase().includes(term) ||
-                                   campaign.description.toLowerCase().includes(term);
+                                campaign.description.toLowerCase().includes(term);
                         });
                     }
-                    
+
                     populateCampaignsTable(campaigns);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error filtering campaigns:', error);
                     showNotification('Error filtering campaigns', 'error');
                 }
@@ -589,22 +595,22 @@
         // Load templates for campaign modal
         function loadTemplates() {
             $.ajax({
-                url: '/api/communication-templates/all',
+                url: './api/communication-templates/all',
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const templates = data.templates || [];
                     const templateSelect = $('#campaign-template');
-                    
+
                     templateSelect.empty();
                     templateSelect.append('<option value="">Select Template</option>');
-                    
-                    templates.forEach(function(template) {
+
+                    templates.forEach(function (template) {
                         if (template.approvalStatus === 'APPROVED') {
                             templateSelect.append(`<option value="${template._id}">${template.name}</option>`);
                         }
                     });
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading templates:', error);
                 }
             });
@@ -658,7 +664,7 @@
         function viewCampaign(campaignId) {
             const campaign = campaigns.find(c => c._id === campaignId);
             if (!campaign) return;
-            
+
             const detailsHtml = `
                 <div class="campaign-details">
                     <h5>${campaign.name}</h5>
@@ -701,4 +707,5 @@
         }
     </script>
 </body>
+
 </html>

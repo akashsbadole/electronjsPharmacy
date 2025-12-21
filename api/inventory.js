@@ -16,6 +16,7 @@ const validFileTypes = [
 const maxFileSize = 2097152 //2MB = 2*1024*1024
 const validator = require("validator");
 const dbUtils = require('./db-utils');
+const dbManager = require('./db-manager');
 const dbPath = dbUtils.getDatabasePath("inventory.db");
 
 const storage = multer.diskStorage({
@@ -36,29 +37,45 @@ router.use(bodyParser.json());
 
 module.exports = router;
 
-let inventoryDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Database instances - will be initialized asynchronously
+let inventoryDB, storeInventoryDB, storesDB;
 
-inventoryDB.ensureIndex({ fieldName: "_id", unique: true });
+/**
+ * Initialize databases asynchronously
+ */
+async function initializeDatabases() {
+    try {
+        console.log("Initializing inventory API databases...");
+        inventoryDB = await dbManager.getDatabase("inventory.db");
+        storeInventoryDB = await dbManager.getDatabase("store-inventory.db");
+        storesDB = await dbManager.getDatabase("stores.db");
+        
+        // Ensure indexes are created
+        inventoryDB.ensureIndex({ fieldName: "_id", unique: true });
+        storeInventoryDB.ensureIndex({ fieldName: ["storeId", "productId"], unique: true });
+        
+        // Set initial currentStoreId from main store
+        storesDB.findOne({ isMainStore: true, isActive: true }, (err, mainStore) => {
+            if (!err && mainStore) {
+                currentStoreId = mainStore._id;
+                console.log(`Initial currentStoreId set to main store: ${currentStoreId}`);
+            } else {
+                currentStoreId = 1; // Fallback
+                console.log(`Initial currentStoreId set to fallback: ${currentStoreId}`);
+            }
+        });
+        
+        console.log("Inventory API databases initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize inventory API databases:", error);
+        throw error;
+    }
+}
 
-// Initialize store inventory database
-const storeInventoryDBPath = dbUtils.getDatabasePath("store-inventory.db");
 
-const storeInventoryDB = new Datastore({
-    filename: storeInventoryDBPath,
-    autoload: true,
-});
-
-storeInventoryDB.ensureIndex({ fieldName: ["storeId", "productId"], unique: true });
-
-// Initialize stores database
-const storesDBPath = dbUtils.getDatabasePath("stores.db");
-
-const storesDB = new Datastore({
-    filename: storesDBPath,
-    autoload: true,
+// Initialize databases immediately
+initializeDatabases().catch(err => {
+    console.error("Database initialization failed in inventory module:", err);
 });
 
 // Global variable to track current store context
@@ -69,19 +86,9 @@ let currentStoreId = null;
  * @returns {number} store ID
  */
 function getCurrentStoreId() {
-    if (currentStoreId) {
-        return currentStoreId;
-    }
-    
-    // Get main store as default
-    try {
-        const mainStore = storesDB.findOne({ isMainStore: true, isActive: true });
-        return mainStore ? mainStore._id : 1; // Fallback to store ID 1
-    } catch (err) {
-        console.error("Error getting main store:", err);
-        return 1; // Fallback to store ID 1
-    }
+    return currentStoreId || 1; // Use cached value or fallback
 }
+
 
 /**
  * Helper function to set current store context
@@ -323,8 +330,8 @@ router.post("/product", function (req, res) {
     if (validator.escape(req.body.remove) === "1") {
             try {
                 let imgPath = path.join(
-                appData,
-                appName,
+                process.env.APPDATA,
+                process.env.APPNAME,
                 "uploads",
                 image,
                 );
@@ -496,24 +503,13 @@ router.post("/product/sku", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/product/:productId/batches", function (req, res) {
+router.get("/product/:productId/batches", async function (req, res) {
     if (!req.params.productId) {
         return res.status(500).send("Product ID field is required.");
-    } else {
-        const Datastore = require("@seald-io/nedb");
-        const path = require("path");
-        const batchesDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "batches.db",
-        );
-        
-        const batchesDB = new Datastore({
-            filename: batchesDbPath,
-            autoload: true,
-        });
+    }
+    
+    try {
+        const batchesDB = await dbManager.getDatabase("batches.db");
         
         batchesDB.find({
             productId: parseInt(req.params.productId),
@@ -528,6 +524,12 @@ router.get("/product/:productId/batches", function (req, res) {
             }
             
             res.json(batches);
+        });
+    } catch (error) {
+        console.error("Error accessing batches database:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to access batches database.",
         });
     }
 });
@@ -755,51 +757,41 @@ router.decrementInventory = function (products, options = {}) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const batchesDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "batches.db",
-    );
-    
-    const batchesDB = new Datastore({
-        filename: batchesDbPath,
-        autoload: true,
-    });
-    
-    batchesDB.findOne({ _id: batchId }, function (err, batch) {
-        if (err) {
-            return callback(err);
-        }
+async function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
+    try {
+        const batchesDB = await dbManager.getDatabase("batches.db");
         
-        if (!batch) {
-            return callback(new Error("Batch not found"));
-        }
-        
-        const newQuantity = batch.currentQuantity + adjustmentQuantity;
-        
-        if (newQuantity < 0) {
-            return callback(new Error("Insufficient batch quantity"));
-        }
-        
-        batchesDB.update(
-            { _id: batchId },
-            { $set: { currentQuantity: newQuantity } },
-            {},
-            function (err, numReplaced) {
-                if (err) {
-                    return callback(err);
-                }
-                
-                callback(null);
+        batchesDB.findOne({ _id: batchId }, function (err, batch) {
+            if (err) {
+                return callback(err);
             }
-        );
-    });
+            
+            if (!batch) {
+                return callback(new Error("Batch not found"));
+            }
+            
+            const newQuantity = batch.currentQuantity + adjustmentQuantity;
+            
+            if (newQuantity < 0) {
+                return callback(new Error("Insufficient batch quantity"));
+            }
+            
+            batchesDB.update(
+                { _id: batchId },
+                { $set: { currentQuantity: newQuantity } },
+                {},
+                function (err, numReplaced) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    
+                    callback(null);
+                }
+            );
+        });
+    } catch (error) {
+        callback(error);
+    }
 }
 
 /**
@@ -919,7 +911,7 @@ router.get("/current-store", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/stock-count/:sessionId", function (req, res) {
+router.get("/stock-count/:sessionId", async function (req, res) {
     if (!req.params.sessionId) {
         return res.status(400).json({
             error: "Bad Request",
@@ -927,63 +919,13 @@ router.get("/stock-count/:sessionId", function (req, res) {
         });
     }
     
-    const sessionId = parseInt(req.params.sessionId);
-    const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
-    
-    // Get stock count session details to apply scope filters
-    const stockCountingDBPath = path.join(
-        appData,
-        appName,
-        "server",
-        "databases",
-        "stock-counting.db",
-    );
-    
-    const stockCountingDB = new Datastore({
-        filename: stockCountingDBPath,
-        autoload: true,
-    });
-    
-    stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+    try {
+        const sessionId = parseInt(req.params.sessionId);
+        const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
         
-        if (!stockCount) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Stock count session not found.",
-            });
-        }
+        const stockCountingDB = await dbManager.getDatabase("stock-counting.db");
         
-        // Build query based on count scope
-        let query = {};
-        
-        // Apply scope filters if specified
-        if (stockCount.countScope && Object.keys(stockCount.countScope).length > 0) {
-            const scope = stockCount.countScope;
-            
-            if (scope.categories && scope.categories.length > 0) {
-                query.category = { $in: scope.categories };
-            }
-            
-            if (scope.valueRange) {
-                query.quantity = {
-                    $gte: scope.valueRange.min || 0,
-                    $lte: scope.valueRange.max || Number.MAX_SAFE_INTEGER
-                };
-            }
-            
-            if (scope.suppliers && scope.suppliers.length > 0) {
-                // This would require joining with batches - for now, return all and filter later
-            }
-        }
-        
-        inventoryDB.find(query, function (err, products) {
+        stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -992,87 +934,121 @@ router.get("/stock-count/:sessionId", function (req, res) {
                 });
             }
             
-            // Get store inventory for all products
-            const productIds = products.map(function(product) {
-                return product._id;
-            });
+            if (!stockCount) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Stock count session not found.",
+                });
+            }
             
-            storeInventoryDB.find({
-                productId: { $in: productIds },
-                storeId: storeId
-            }, function(err, storeInventories) {
+            // Build query based on count scope
+            let query = {};
+            
+            // Apply scope filters if specified
+            if (stockCount.countScope && Object.keys(stockCount.countScope).length > 0) {
+                const scope = stockCount.countScope;
+                
+                if (scope.categories && scope.categories.length > 0) {
+                    query.category = { $in: scope.categories };
+                }
+                
+                if (scope.valueRange) {
+                    query.quantity = {
+                        $gte: scope.valueRange.min || 0,
+                        $lte: scope.valueRange.max || Number.MAX_SAFE_INTEGER
+                    };
+                }
+                
+                if (scope.suppliers && scope.suppliers.length > 0) {
+                    // This would require joining with batches - for now, return all and filter later
+                }
+            }
+            
+            inventoryDB.find(query, function (err, products) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
                         error: "Internal Server Error",
-                        message: "Failed to load store inventory.",
+                        message: "An unexpected error occurred.",
                     });
                 }
                 
-                // Merge store inventory data with products
-                const productsWithStoreData = products.map(function(product) {
-                    const storeInventory = storeInventories.find(function(si) {
-                        return si.productId === product._id;
-                    });
-                    
-                    const result = {
-                        ...product,
-                        storeQuantity: storeInventory ? storeInventory.quantity : product.quantity || 0,
-                        minStock: storeInventory ? storeInventory.minStock : product.minStock,
-                        maxStock: storeInventory ? storeInventory.maxStock : product.maxStock,
-                        reorderQuantity: storeInventory ? storeInventory.reorderQuantity : product.reorderQuantity,
-                        locationRack: storeInventory ? storeInventory.rackLocation : product.rackLocation,
-                        locationShelf: storeInventory ? storeInventory.shelfLocation : product.shelfLocation
-                    };
-                    
-                    // Apply supplier filter if specified in scope
-                    if (stockCount.countScope && stockCount.countScope.suppliers &&
-                        stockCount.countScope.suppliers.length > 0) {
-                        // Get batches for this product to check suppliers
-                        const batchesDbPath = path.join(
-                            appData,
-                            appName,
-                            "server",
-                            "databases",
-                            "batches.db",
-                        );
-                        
-                        const batchesDB = new Datastore({
-                            filename: batchesDbPath,
-                            autoload: true,
-                        });
-                        
-                        batchesDB.find({
-                            productId: product._id,
-                            supplierId: { $in: stockCount.countScope.suppliers }
-                        }, function(err, batches) {
-                            if (err || batches.length === 0) {
-                                result.includeInCount = false;
-                            } else {
-                                result.includeInCount = true;
-                                result.batches = batches;
-                            }
-                        });
-                    } else {
-                        result.includeInCount = true;
-                    }
-                    
-                    return result;
+                // Get store inventory for all products
+                const productIds = products.map(function(product) {
+                    return product._id;
                 });
                 
-                // Filter products that should be included in count
-                const filteredProducts = productsWithStoreData.filter(p => p.includeInCount !== false);
-                
-                res.json({
-                    products: filteredProducts,
-                    sessionId: sessionId,
-                    storeId: storeId,
-                    countType: stockCount.countType,
-                    countScope: stockCount.countScope
+                storeInventoryDB.find({
+                    productId: { $in: productIds },
+                    storeId: storeId
+                }, function(err, storeInventories) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "Failed to load store inventory.",
+                        });
+                    }
+                    
+                    // Merge store inventory data with products
+                    const productsWithStoreData = products.map(function(product) {
+                        const storeInventory = storeInventories.find(function(si) {
+                            return si.productId === product._id;
+                        });
+                        
+                        const result = {
+                            ...product,
+                            storeQuantity: storeInventory ? storeInventory.quantity : product.quantity || 0,
+                            minStock: storeInventory ? storeInventory.minStock : product.minStock,
+                            maxStock: storeInventory ? storeInventory.maxStock : product.maxStock,
+                            reorderQuantity: storeInventory ? storeInventory.reorderQuantity : product.reorderQuantity,
+                            locationRack: storeInventory ? storeInventory.rackLocation : product.rackLocation,
+                            locationShelf: storeInventory ? storeInventory.shelfLocation : product.shelfLocation
+                        };
+                        
+                        // Apply supplier filter if specified in scope
+                        if (stockCount.countScope && stockCount.countScope.suppliers &&
+                            stockCount.countScope.suppliers.length > 0) {
+                            const batchesDB = dbManager.getDatabase("batches.db");
+                            
+                            batchesDB.find({
+                                productId: product._id,
+                                supplierId: { $in: stockCount.countScope.suppliers }
+                            }, function(err, batches) {
+                                if (err || batches.length === 0) {
+                                    result.includeInCount = false;
+                                } else {
+                                    result.includeInCount = true;
+                                    result.batches = batches;
+                                }
+                            });
+                        } else {
+                            result.includeInCount = true;
+                        }
+                        
+                        return result;
+                    });
+                    
+                    // Filter products that should be included in count
+                    const filteredProducts = productsWithStoreData.filter(p => p.includeInCount !== false);
+                    
+                    res.json({
+                        products: filteredProducts,
+                        sessionId: sessionId,
+                        storeId: storeId,
+                        countType: stockCount.countType,
+                        countScope: stockCount.countScope
+                    });
                 });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error in stock-count endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to process stock count request.",
+        });
+    }
 });
 
 /**
@@ -1159,55 +1135,25 @@ router.get("/low-stock-priority", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/expiring-items", function (req, res) {
-    const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
-    const days = parseInt(req.query.days) || 30; // Default to 30 days
-    
-    const today = new Date();
-    const expiryDate = new Date();
-    expiryDate.setDate(today.getDate() + days);
-    
-    // Get batches that are expiring soon
-    const batchesDbPath = path.join(
-        appData,
-        appName,
-        "server",
-        "databases",
-        "batches.db",
-    );
-    
-    const batchesDB = new Datastore({
-        filename: batchesDbPath,
-        autoload: true,
-    });
-    
-    batchesDB.find({
-        expiryDate: {
-            $gte: today.toISOString().split('T')[0],
-            $lte: expiryDate.toISOString().split('T')[0]
-        },
-        currentQuantity: { $gt: 0 },
-        isActive: true
-    }).sort({ expiryDate: 1 }).exec(function (err, batches) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+router.get("/expiring-items", async function (req, res) {
+    try {
+        const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
+        const days = parseInt(req.query.days) || 30; // Default to 30 days
         
-        if (batches.length === 0) {
-            return res.json({
-                expiringItems: [],
-                message: `No items expiring within ${days} days.`
-            });
-        }
+        const today = new Date();
+        const expiryDate = new Date();
+        expiryDate.setDate(today.getDate() + days);
         
-        // Get product details for expiring batches
-        const productIds = batches.map(batch => batch.productId);
+        const batchesDB = await dbManager.getDatabase("batches.db");
         
-        inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
+        batchesDB.find({
+            expiryDate: {
+                $gte: today.toISOString().split('T')[0],
+                $lte: expiryDate.toISOString().split('T')[0]
+            },
+            currentQuantity: { $gt: 0 },
+            isActive: true
+        }).sort({ expiryDate: 1 }).exec(function (err, batches) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -1216,49 +1162,75 @@ router.get("/expiring-items", function (req, res) {
                 });
             }
             
-            // Get store inventory quantities
-            storeInventoryDB.find({
-                productId: { $in: productIds },
-                storeId: storeId
-            }, function(err, storeInventories) {
+            if (batches.length === 0) {
+                return res.json({
+                    expiringItems: [],
+                    message: `No items expiring within ${days} days.`
+                });
+            }
+            
+            // Get product details for expiring batches
+            const productIds = batches.map(batch => batch.productId);
+            
+            inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
                         error: "Internal Server Error",
-                        message: "Failed to load store inventory.",
+                        message: "An unexpected error occurred.",
                     });
                 }
                 
-                // Merge product and store inventory data with batches
-                const expiringItems = batches.map(batch => {
-                    const product = products.find(p => p._id === batch.productId);
-                    const storeInventory = storeInventories.find(si => si.productId === batch.productId);
+                // Get store inventory quantities
+                storeInventoryDB.find({
+                    productId: { $in: productIds },
+                    storeId: storeId
+                }, function(err, storeInventories) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "Failed to load store inventory.",
+                        });
+                    }
                     
-                    if (!product) return null;
+                    // Merge product and store inventory data with batches
+                    const expiringItems = batches.map(batch => {
+                        const product = products.find(p => p._id === batch.productId);
+                        const storeInventory = storeInventories.find(si => si.productId === batch.productId);
+                        
+                        if (!product) return null;
+                        
+                        const daysUntilExpiry = Math.ceil((new Date(batch.expiryDate) - today) / (1000 * 60 * 60 * 24));
+                        const urgencyLevel = daysUntilExpiry <= 7 ? 'CRITICAL' :
+                                         daysUntilExpiry <= 15 ? 'HIGH' : 'MEDIUM';
+                        
+                        return {
+                            product: product,
+                            batch: batch,
+                            storeQuantity: storeInventory ? storeInventory.quantity : 0,
+                            daysUntilExpiry: daysUntilExpiry,
+                            urgencyLevel: urgencyLevel,
+                            totalValue: batch.currentQuantity * (product.price || 0)
+                        };
+                    }).filter(item => item !== null).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
                     
-                    const daysUntilExpiry = Math.ceil((new Date(batch.expiryDate) - today) / (1000 * 60 * 60 * 24));
-                    const urgencyLevel = daysUntilExpiry <= 7 ? 'CRITICAL' :
-                                     daysUntilExpiry <= 15 ? 'HIGH' : 'MEDIUM';
-                    
-                    return {
-                        product: product,
-                        batch: batch,
-                        storeQuantity: storeInventory ? storeInventory.quantity : 0,
-                        daysUntilExpiry: daysUntilExpiry,
-                        urgencyLevel: urgencyLevel,
-                        totalValue: batch.currentQuantity * (product.price || 0)
-                    };
-                }).filter(item => item !== null).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
-                
-                res.json({
-                    expiringItems: expiringItems,
-                    totalItems: expiringItems.length,
-                    totalValue: expiringItems.reduce((sum, item) => sum + item.totalValue, 0),
-                    daysThreshold: days
+                    res.json({
+                        expiringItems: expiringItems,
+                        totalItems: expiringItems.length,
+                        totalValue: expiringItems.reduce((sum, item) => sum + item.totalValue, 0),
+                        daysThreshold: days
+                    });
                 });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error in expiring-items endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to get expiring items.",
+        });
+    }
 });
 
 /**
@@ -1268,110 +1240,106 @@ router.get("/expiring-items", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/update-from-stock-count", function (req, res) {
-    if (!req.body.sessionId || !req.body.items) {
-        return res.status(400).json({
-            error: "Bad Request",
-            message: "Session ID and items array are required.",
-        });
-    }
-    
-    const sessionId = parseInt(req.body.sessionId);
-    const items = req.body.items;
-    const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
-    
-    // Verify stock count session is completed and approved
-    const stockCountingDBPath = path.join(
-        appData,
-        appName,
-        "server",
-        "databases",
-        "stock-counting.db",
-    );
-    
-    const stockCountingDB = new Datastore({
-        filename: stockCountingDBPath,
-        autoload: true,
-    });
-    
-    stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
-        
-        if (!stockCount) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Stock count session not found.",
-            });
-        }
-        
-        if (stockCount.countStatus !== 'COMPLETED') {
+router.post("/update-from-stock-count", async function (req, res) {
+    try {
+        if (!req.body.sessionId || !req.body.items) {
             return res.status(400).json({
                 error: "Bad Request",
-                message: "Inventory can only be updated from completed stock counts.",
+                message: "Session ID and items array are required.",
             });
         }
         
-        // Process each item update
-        const updatePromises = items.map(itemData => {
-            return new Promise((resolve, reject) => {
-                const productId = parseInt(itemData.productId);
-                const newQuantity = parseInt(itemData.countedQuantity);
-                
-                // Update store inventory
-                updateStoreInventory(productId, newQuantity, storeId, function(err) {
-                    if (err) {
-                        return reject(err);
-                    }
-                    
-                    // Also update main inventory for backward compatibility
-                    inventoryDB.update(
-                        { _id: productId },
-                        { $set: { quantity: newQuantity, lastStockCount: new Date() } },
-                        {},
-                        function(err) {
-                            if (err) {
-                                return reject(err);
-                            }
-                            
-                            // Update batch quantity if specified
-                            if (itemData.batchId) {
-                                updateBatchQuantity(itemData.batchId, newQuantity, function(err) {
-                                    if (err) {
-                                        return reject(err);
-                                    }
-                                    resolve({ productId, newQuantity, batchId: itemData.batchId });
-                                });
-                            } else {
-                                resolve({ productId, newQuantity });
-                            }
-                        }
-                    );
-                });
-            });
-        });
+        const sessionId = parseInt(req.body.sessionId);
+        const items = req.body.items;
+        const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
         
-        Promise.all(updatePromises)
-            .then(results => {
-                res.json({
-                    message: "Inventory updated successfully from stock count.",
-                    updatedItems: results,
-                    sessionId: sessionId
-                });
-            })
-            .catch(err => {
+        const stockCountingDB = await dbManager.getDatabase("stock-counting.db");
+        
+        stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
+            if (err) {
                 console.error(err);
-                res.status(500).json({
+                return res.status(500).json({
                     error: "Internal Server Error",
-                    message: "Failed to update inventory from stock count.",
+                    message: "An unexpected error occurred.",
+                });
+            }
+            
+            if (!stockCount) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Stock count session not found.",
+                });
+            }
+            
+            if (stockCount.countStatus !== 'COMPLETED') {
+                return res.status(400).json({
+                    error: "Bad Request",
+                    message: "Inventory can only be updated from completed stock counts.",
+                });
+            }
+            
+            // Process each item update
+            const updatePromises = items.map(itemData => {
+                return new Promise((resolve, reject) => {
+                    const productId = parseInt(itemData.productId);
+                    const newQuantity = parseInt(itemData.countedQuantity);
+                    
+                    // Update store inventory
+                    updateStoreInventory(productId, newQuantity, storeId, function(err) {
+                        if (err) {
+                            return reject(err);
+                        }
+                        
+                        // Also update main inventory for backward compatibility
+                        inventoryDB.update(
+                            { _id: productId },
+                            { $set: { quantity: newQuantity, lastStockCount: new Date() } },
+                            {},
+                            function(err) {
+                                if (err) {
+                                    return reject(err);
+                                }
+                                
+                                // Update batch quantity if specified
+                                if (itemData.batchId) {
+                                    updateBatchQuantity(itemData.batchId, newQuantity, function(err) {
+                                        if (err) {
+                                            return reject(err);
+                                        }
+                                        resolve({ productId, newQuantity, batchId: itemData.batchId });
+                                    });
+                                } else {
+                                    resolve({ productId, newQuantity });
+                                }
+                            }
+                        );
+                    });
                 });
             });
-    });
+            
+            Promise.all(updatePromises)
+                .then(results => {
+                    res.json({
+                        message: "Inventory updated successfully from stock count.",
+                        updatedItems: results,
+                        sessionId: sessionId
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "Failed to update inventory from stock count.",
+                    });
+                });
+        });
+    } catch (error) {
+        console.error("Error in update-from-stock-count endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to update inventory from stock count.",
+        });
+    }
 });
 
 /**
@@ -1381,145 +1349,20 @@ router.post("/update-from-stock-count", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/check-reorder-triggers", function (req, res) {
-    const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
-    const productId = req.body.productId ? parseInt(req.body.productId) : null;
-    
-    // Get reorder triggers
-    const reorderTriggersDbPath = path.join(
-        appData,
-        appName,
-        "server",
-        "databases",
-        "reorder-triggers.db",
-    );
-    
-    const reorderTriggersDB = new Datastore({
-        filename: reorderTriggersDbPath,
-        autoload: true,
-    });
-    
-    // Build query for triggers
-    let triggerQuery = { isActive: true };
-    if (storeId) {
-        triggerQuery.storeId = storeId;
-    }
-    if (productId) {
-        triggerQuery.productId = productId;
-    }
-    
-    reorderTriggersDB.find(triggerQuery, function (err, triggers) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+router.post("/check-reorder-triggers", async function (req, res) {
+    try {
+        const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
+        const productId = req.body.productId ? parseInt(req.body.productId) : null;
         
-        const triggeredItems = [];
-        
-        // Check each trigger condition
-        async.eachSeries(triggers, function (trigger, callback) {
-            checkTriggerCondition(trigger, function(err, shouldTrigger, data) {
-                if (err) {
-                    console.error(err);
-                    return callback();
-                }
-                
-                if (shouldTrigger) {
-                    // Update trigger with last triggered info
-                    reorderTriggersDB.update(
-                        { _id: trigger._id },
-                        {
-                            $set: {
-                                lastTriggered: new Date(),
-                                triggerCount: (trigger.triggerCount || 0) + 1
-                            }
-                        },
-                        {},
-                        function(err) {
-                            if (err) {
-                                console.error(err);
-                            }
-                        }
-                    );
-                    
-                    // Create reorder suggestion
-                    createReorderSuggestionFromTrigger(trigger, data, function(err, suggestion) {
-                        if (err) {
-                            console.error(err);
-                        } else if (suggestion) {
-                            triggeredItems.push({
-                                trigger: trigger,
-                                suggestion: suggestion,
-                                triggeredAt: new Date(),
-                                data: data
-                            });
-                        }
-                        callback();
-                    });
-                } else {
-                    callback();
-                }
-            });
-        }, function (err) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({
-                    error: "Internal Server Error",
-                    message: "An unexpected error occurred while checking triggers.",
-                });
-            }
-            
-            res.json({
-                message: "Reorder trigger check completed.",
-                totalTriggers: triggers.length,
-                triggeredItems: triggeredItems,
-                triggeredCount: triggeredItems.length
-            });
-        });
-    });
-});
-
-/**
- * GET endpoint: Get products with active reorder triggers.
- *
- * @param {Object} req request object.
- * @param {Object} res response object.
- * @returns {void}
- */
-router.get("/with-triggers", function (req, res) {
-    const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
-    
-    // Get all products
-    inventoryDB.find({}, function (err, products) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
-        
-        // Get reorder triggers
-        const reorderTriggersDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "reorder-triggers.db",
-        );
-        
-        const reorderTriggersDB = new Datastore({
-            filename: reorderTriggersDbPath,
-            autoload: true,
-        });
+        const reorderTriggersDB = await dbManager.getDatabase("reorder-triggers.db");
         
         // Build query for triggers
         let triggerQuery = { isActive: true };
         if (storeId) {
             triggerQuery.storeId = storeId;
+        }
+        if (productId) {
+            triggerQuery.productId = productId;
         }
         
         reorderTriggersDB.find(triggerQuery, function (err, triggers) {
@@ -1531,25 +1374,148 @@ router.get("/with-triggers", function (req, res) {
                 });
             }
             
-            // Map triggers to products
-            const productsWithTriggers = products.map(function(product) {
-                const productTriggers = triggers.filter(t => t.productId === product._id);
-                
-                return {
-                    ...product,
-                    triggers: productTriggers,
-                    hasActiveTriggers: productTriggers.length > 0
-                };
-            });
+            const triggeredItems = [];
             
-            res.json({
-                products: productsWithTriggers,
-                totalProducts: products.length,
-                productsWithTriggers: productsWithTriggers.filter(p => p.hasActiveTriggers).length,
-                totalActiveTriggers: triggers.length
+            // Check each trigger condition
+            async.eachSeries(triggers, function (trigger, callback) {
+                checkTriggerCondition(trigger, function(err, shouldTrigger, data) {
+                    if (err) {
+                        console.error(err);
+                        return callback();
+                    }
+                    
+                    if (shouldTrigger) {
+                        // Update trigger with last triggered info
+                        reorderTriggersDB.update(
+                            { _id: trigger._id },
+                            {
+                                $set: {
+                                    lastTriggered: new Date(),
+                                    triggerCount: (trigger.triggerCount || 0) + 1
+                                }
+                            },
+                            {},
+                            function(err) {
+                                if (err) {
+                                    console.error(err);
+                                }
+                            }
+                        );
+                        
+                        // Create reorder suggestion
+                        createReorderSuggestionFromTrigger(trigger, data, function(err, suggestion) {
+                            if (err) {
+                                console.error(err);
+                            } else if (suggestion) {
+                                triggeredItems.push({
+                                    trigger: trigger,
+                                    suggestion: suggestion,
+                                    triggeredAt: new Date(),
+                                    data: data
+                                });
+                            }
+                            callback();
+                        });
+                    } else {
+                        callback();
+                    }
+                });
+            }, function (err) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "An unexpected error occurred while checking triggers.",
+                    });
+                }
+                
+                res.json({
+                    message: "Reorder trigger check completed.",
+                    totalTriggers: triggers.length,
+                    triggeredItems: triggeredItems,
+                    triggeredCount: triggeredItems.length
+                });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error in check-reorder-triggers endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to check reorder triggers.",
+        });
+    }
+});
+
+/**
+ * GET endpoint: Get products with active reorder triggers.
+ *
+ * @param {Object} req request object.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.get("/with-triggers", async function (req, res) {
+    try {
+        const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
+        
+        // Get all products
+        inventoryDB.find({}, function (err, products) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "An unexpected error occurred.",
+                });
+            }
+            
+            dbManager.getDatabase("reorder-triggers.db").then(reorderTriggersDB => {
+                // Build query for triggers
+                let triggerQuery = { isActive: true };
+                if (storeId) {
+                    triggerQuery.storeId = storeId;
+                }
+                
+                reorderTriggersDB.find(triggerQuery, function (err, triggers) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+                    
+                    // Map triggers to products
+                    const productsWithTriggers = products.map(function(product) {
+                        const productTriggers = triggers.filter(t => t.productId === product._id);
+                        
+                        return {
+                            ...product,
+                            triggers: productTriggers,
+                            hasActiveTriggers: productTriggers.length > 0
+                        };
+                    });
+                    
+                    res.json({
+                        products: productsWithTriggers,
+                        totalProducts: products.length,
+                        productsWithTriggers: productsWithTriggers.filter(p => p.hasActiveTriggers).length,
+                        totalActiveTriggers: triggers.length
+                    });
+                });
+            }).catch(error => {
+                console.error("Error accessing reorder-triggers database:", error);
+                res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "Failed to access reorder triggers database.",
+                });
+            });
+        });
+    } catch (error) {
+        console.error("Error in with-triggers endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to get products with triggers.",
+        });
+    }
 });
 
 /**
@@ -1559,36 +1525,20 @@ router.get("/with-triggers", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/product/:productId/reorder-alerts", function (req, res) {
-    if (!req.params.productId) {
-        return res.status(400).json({
-            error: "Bad Request",
-            message: "Product ID is required.",
-        });
-    }
-    
-    const productId = parseInt(req.params.productId);
-    const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
-    
-    // Get product details
-    inventoryDB.findOne({ _id: productId }, function (err, product) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
+router.get("/product/:productId/reorder-alerts", async function (req, res) {
+    try {
+        if (!req.params.productId) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Product ID is required.",
             });
         }
         
-        if (!product) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Product not found.",
-            });
-        }
+        const productId = parseInt(req.params.productId);
+        const storeId = req.query.storeId ? parseInt(req.query.storeId) : getCurrentStoreId();
         
-        // Get store-specific inventory
-        getStoreInventory(productId, storeId, function(err, storeInventory) {
+        // Get product details
+        inventoryDB.findOne({ _id: productId }, function (err, product) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -1597,29 +1547,15 @@ router.get("/product/:productId/reorder-alerts", function (req, res) {
                 });
             }
             
-            const currentQuantity = storeInventory ? parseInt(storeInventory.quantity) || 0 : parseInt(product.quantity) || 0;
-            const minStock = storeInventory ? parseInt(storeInventory.minStock) || 0 : parseInt(product.minStock) || 0;
-            
-            // Get reorder triggers for this product
-            const reorderTriggersDbPath = path.join(
-                appData,
-                appName,
-                "server",
-                "databases",
-                "reorder-triggers.db",
-            );
-            
-            const reorderTriggersDB = new Datastore({
-                filename: reorderTriggersDbPath,
-                autoload: true,
-            });
-            
-            let triggerQuery = { productId: productId, isActive: true };
-            if (storeId) {
-                triggerQuery.storeId = storeId;
+            if (!product) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Product not found.",
+                });
             }
             
-            reorderTriggersDB.find(triggerQuery, function (err, triggers) {
+            // Get store-specific inventory
+            getStoreInventory(productId, storeId, function(err, storeInventory) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
@@ -1628,53 +1564,85 @@ router.get("/product/:productId/reorder-alerts", function (req, res) {
                     });
                 }
                 
-                // Check each trigger condition
-                const activeAlerts = [];
+                const currentQuantity = storeInventory ? parseInt(storeInventory.quantity) || 0 : parseInt(product.quantity) || 0;
+                const minStock = storeInventory ? parseInt(storeInventory.minStock) || 0 : parseInt(product.minStock) || 0;
                 
-                async.eachSeries(triggers, function (trigger, callback) {
-                    checkTriggerCondition(trigger, function(err, shouldTrigger, data) {
+                dbManager.getDatabase("reorder-triggers.db").then(reorderTriggersDB => {
+                    let triggerQuery = { productId: productId, isActive: true };
+                    if (storeId) {
+                        triggerQuery.storeId = storeId;
+                    }
+                    
+                    reorderTriggersDB.find(triggerQuery, function (err, triggers) {
                         if (err) {
                             console.error(err);
-                            return callback();
-                        }
-                        
-                        if (shouldTrigger) {
-                            activeAlerts.push({
-                                trigger: trigger,
-                                alertType: trigger.triggerType,
-                                severity: getAlertSeverity(currentQuantity, minStock, trigger),
-                                message: getAlertMessage(currentQuantity, minStock, trigger, data),
-                                triggeredAt: new Date(),
-                                data: data
+                            return res.status(500).json({
+                                error: "Internal Server Error",
+                                message: "An unexpected error occurred.",
                             });
                         }
                         
-                        callback();
-                    });
-                }, function (err) {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred while checking triggers.",
+                        // Check each trigger condition
+                        const activeAlerts = [];
+                        
+                        async.eachSeries(triggers, function (trigger, callback) {
+                            checkTriggerCondition(trigger, function(err, shouldTrigger, data) {
+                                if (err) {
+                                    console.error(err);
+                                    return callback();
+                                }
+                                
+                                if (shouldTrigger) {
+                                    activeAlerts.push({
+                                        trigger: trigger,
+                                        alertType: trigger.triggerType,
+                                        severity: getAlertSeverity(currentQuantity, minStock, trigger),
+                                        message: getAlertMessage(currentQuantity, minStock, trigger, data),
+                                        triggeredAt: new Date(),
+                                        data: data
+                                    });
+                                }
+                                
+                                callback();
+                            });
+                        }, function (err) {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).json({
+                                    error: "Internal Server Error",
+                                    message: "An unexpected error occurred while checking triggers.",
+                                });
+                            }
+                            
+                            res.json({
+                                product: {
+                                    ...product,
+                                    currentQuantity: currentQuantity,
+                                    minStock: minStock,
+                                    stockStatus: getStockStatus(currentQuantity, minStock)
+                                },
+                                triggers: triggers,
+                                activeAlerts: activeAlerts,
+                                totalActiveAlerts: activeAlerts.length
+                            });
                         });
-                    }
-                    
-                    res.json({
-                        product: {
-                            ...product,
-                            currentQuantity: currentQuantity,
-                            minStock: minStock,
-                            stockStatus: getStockStatus(currentQuantity, minStock)
-                        },
-                        triggers: triggers,
-                        activeAlerts: activeAlerts,
-                        totalActiveAlerts: activeAlerts.length
+                    });
+                }).catch(error => {
+                    console.error("Error accessing reorder-triggers database:", error);
+                    res.status(500).json({
+                        error: "Internal Server Error",
+                        message: "Failed to access reorder triggers database.",
                     });
                 });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error in product/:productId/reorder-alerts endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to get reorder alerts for product.",
+        });
+    }
 });
 
 /**
@@ -1684,66 +1652,28 @@ router.get("/product/:productId/reorder-alerts", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/product/:productId/setup-monitoring", function (req, res) {
-    if (!req.params.productId) {
-        return res.status(400).json({
-            error: "Bad Request",
-            message: "Product ID is required.",
-        });
-    }
-    
-    const productId = parseInt(req.params.productId);
-    const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
-    
-    // Validate required fields
-    if (req.body.minStock === undefined || req.body.maxStock === undefined) {
-        return res.status(400).json({
-            error: "Bad Request",
-            message: "Min stock and max stock levels are required.",
-        });
-    }
-    
-    // Check if product exists
-    inventoryDB.findOne({ _id: productId }, function (err, product) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
+router.post("/product/:productId/setup-monitoring", async function (req, res) {
+    try {
+        if (!req.params.productId) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Product ID is required.",
             });
         }
         
-        if (!product) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Product not found.",
+        const productId = parseInt(req.params.productId);
+        const storeId = req.body.storeId ? parseInt(req.body.storeId) : getCurrentStoreId();
+        
+        // Validate required fields
+        if (req.body.minStock === undefined || req.body.maxStock === undefined) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Min stock and max stock levels are required.",
             });
         }
         
-        // Create or update stock level trigger
-        const reorderTriggersDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "reorder-triggers.db",
-        );
-        
-        const reorderTriggersDB = new Datastore({
-            filename: reorderTriggersDbPath,
-            autoload: true,
-        });
-        
-        // Check if trigger already exists
-        let triggerQuery = {
-            productId: productId,
-            triggerType: 'STOCK_LEVEL'
-        };
-        if (storeId) {
-            triggerQuery.storeId = storeId;
-        }
-        
-        reorderTriggersDB.findOne(triggerQuery, function (err, existingTrigger) {
+        // Check if product exists
+        inventoryDB.findOne({ _id: productId }, function (err, product) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -1752,63 +1682,25 @@ router.post("/product/:productId/setup-monitoring", function (req, res) {
                 });
             }
             
-            const triggerData = {
-                minStockLevel: parseInt(req.body.minStock),
-                maxStockLevel: parseInt(req.body.maxStock),
-                autoCreatePO: req.body.autoCreatePO === true,
-                notificationEmail: req.body.notificationEmail ? validator.escape(req.body.notificationEmail) : null
-            };
+            if (!product) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Product not found.",
+                });
+            }
             
-            if (existingTrigger) {
-                // Update existing trigger
-                reorderTriggersDB.update(
-                    { _id: existingTrigger._id },
-                    {
-                        $set: {
-                            conditions: triggerData,
-                            isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-                            updatedAt: new Date()
-                        }
-                    },
-                    {},
-                    function (err, numReplaced) {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        }
-                        
-                        res.json({
-                            message: "Reorder monitoring updated successfully.",
-                            trigger: {
-                                ...existingTrigger,
-                                ...triggerData,
-                                isActive: req.body.isActive !== undefined ? req.body.isActive : true
-                            }
-                        });
-                    }
-                );
-            } else {
-                // Create new trigger
-                const newTrigger = {
-                    _id: Math.floor(Date.now() / 1000),
+            // Create or update stock level trigger
+            dbManager.getDatabase("reorder-triggers.db").then(reorderTriggersDB => {
+                // Check if trigger already exists
+                let triggerQuery = {
                     productId: productId,
-                    productName: product.name,
-                    storeId: storeId,
-                    triggerType: 'STOCK_LEVEL',
-                    frequency: 'REAL_TIME',
-                    conditions: triggerData,
-                    isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-                    lastTriggered: null,
-                    triggerCount: 0,
-                    createdBy: req.body.createdBy ? parseInt(req.body.createdBy) : null,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    triggerType: 'STOCK_LEVEL'
                 };
+                if (storeId) {
+                    triggerQuery.storeId = storeId;
+                }
                 
-                reorderTriggersDB.insert(newTrigger, function (err, trigger) {
+                reorderTriggersDB.findOne(triggerQuery, function (err, existingTrigger) {
                     if (err) {
                         console.error(err);
                         return res.status(500).json({
@@ -1817,14 +1709,93 @@ router.post("/product/:productId/setup-monitoring", function (req, res) {
                         });
                     }
                     
-                    res.status(201).json({
-                        message: "Reorder monitoring set up successfully.",
-                        trigger: trigger
-                    });
+                    const triggerData = {
+                        minStockLevel: parseInt(req.body.minStock),
+                        maxStockLevel: parseInt(req.body.maxStock),
+                        autoCreatePO: req.body.autoCreatePO === true,
+                        notificationEmail: req.body.notificationEmail ? validator.escape(req.body.notificationEmail) : null
+                    };
+                    
+                    if (existingTrigger) {
+                        // Update existing trigger
+                        reorderTriggersDB.update(
+                            { _id: existingTrigger._id },
+                            {
+                                $set: {
+                                    conditions: triggerData,
+                                    isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+                                    updatedAt: new Date()
+                                }
+                            },
+                            {},
+                            function (err, numReplaced) {
+                                if (err) {
+                                    console.error(err);
+                                    return res.status(500).json({
+                                        error: "Internal Server Error",
+                                        message: "An unexpected error occurred.",
+                                    });
+                                }
+                                
+                                res.json({
+                                    message: "Reorder monitoring updated successfully.",
+                                    trigger: {
+                                        ...existingTrigger,
+                                        ...triggerData,
+                                        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+                                    }
+                                });
+                            }
+                        );
+                    } else {
+                        // Create new trigger
+                        const newTrigger = {
+                            _id: Math.floor(Date.now() / 1000),
+                            productId: productId,
+                            productName: product.name,
+                            storeId: storeId,
+                            triggerType: 'STOCK_LEVEL',
+                            frequency: 'REAL_TIME',
+                            conditions: triggerData,
+                            isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+                            lastTriggered: null,
+                            triggerCount: 0,
+                            createdBy: req.body.createdBy ? parseInt(req.body.createdBy) : null,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        };
+                        
+                        reorderTriggersDB.insert(newTrigger, function (err, trigger) {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).json({
+                                    error: "Internal Server Error",
+                                    message: "An unexpected error occurred.",
+                                });
+                            }
+                            
+                            res.status(201).json({
+                                message: "Reorder monitoring set up successfully.",
+                                trigger: trigger
+                            });
+                        });
+                    }
                 });
-            }
+            }).catch(error => {
+                console.error("Error accessing reorder-triggers database:", error);
+                res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "Failed to access reorder triggers database.",
+                });
+            });
         });
-    });
+    } catch (error) {
+        console.error("Error in setup-monitoring endpoint:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to set up reorder monitoring.",
+        });
+    }
 });
 
 /**
@@ -1841,8 +1812,8 @@ function checkTriggerCondition(trigger, callback) {
     if (trigger.triggerType === 'STOCK_LEVEL') {
         // Check stock level
         const inventoryDbPath = path.join(
-            appData,
-            appName,
+            process.env.APPDATA,
+            process.env.APPNAME,
             "server",
             "databases",
             "inventory.db",
@@ -1856,8 +1827,8 @@ function checkTriggerCondition(trigger, callback) {
         if (trigger.storeId) {
             // Check store inventory
             const storeInventoryDbPath = path.join(
-                appData,
-                appName,
+                process.env.APPDATA,
+                process.env.APPNAME,
                 "server",
                 "databases",
                 "store-inventory.db",
@@ -1919,8 +1890,8 @@ function createReorderSuggestionFromTrigger(trigger, data, callback) {
     
     // Get product details
     const inventoryDbPath = path.join(
-        appData,
-        appName,
+        process.env.APPDATA,
+        process.env.APPNAME,
         "server",
         "databases",
         "inventory.db",
@@ -1969,8 +1940,8 @@ function createReorderSuggestionFromTrigger(trigger, data, callback) {
             
             // Create reorder suggestion
             const reorderSuggestionsDbPath = path.join(
-                appData,
-                appName,
+                process.env.APPDATA,
+                process.env.APPNAME,
                 "server",
                 "databases",
                 "reorder-suggestions.db",
@@ -2027,8 +1998,8 @@ function getPreferredSupplier(productId, callback) {
     
     // Check batches for supplier information
     const batchesDbPath = path.join(
-        appData,
-        appName,
+        process.env.APPDATA,
+        process.env.APPNAME,
         "server",
         "databases",
         "batches.db",
@@ -2047,8 +2018,8 @@ function getPreferredSupplier(productId, callback) {
         if (batch && batch.supplierId) {
             // Get supplier details
             const suppliersDbPath = path.join(
-                appData,
-                appName,
+                process.env.APPDATA,
+                process.env.APPNAME,
                 "server",
                 "databases",
                 "suppliers.db",

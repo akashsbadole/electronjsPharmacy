@@ -3,19 +3,19 @@
  * Handles report generation, viewing, and downloading
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize reports when reports tab is shown
-    $('a[href="#reportsTab"]').on('shown.bs.tab', function() {
+    $('a[href="#reportsTab"]').on('shown.bs.tab', function () {
         loadStoresForReports();
     });
-    
+
     // Handle report type change
-    $('#reportType').on('change', function() {
+    $('#reportType').on('change', function () {
         updateReportFormFields();
     });
-    
+
     // Handle date range changes
-    $('#reportStartDate, #reportEndDate').on('change', function() {
+    $('#reportStartDate, #reportEndDate').on('change', function () {
         validateDateRange();
     });
 });
@@ -25,18 +25,18 @@ $(document).ready(function() {
  */
 function loadStoresForReports() {
     $.ajax({
-        url: '/api/stores',
+        url: './api/stores',
         method: 'GET',
-        success: function(stores) {
+        success: function (stores) {
             const storeSelect = $('#reportStore');
             storeSelect.empty();
             storeSelect.append('<option value="">All Stores</option>');
-            
+
             stores.forEach(store => {
                 storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading stores:', error);
         }
     });
@@ -49,7 +49,7 @@ function updateReportFormFields() {
     const reportType = $('#reportType').val();
     const startDateField = $('#reportStartDate');
     const endDateField = $('#reportEndDate');
-    
+
     // Show/hide date fields based on report type
     if (reportType === 'inventory') {
         startDateField.parent().parent().hide();
@@ -58,12 +58,12 @@ function updateReportFormFields() {
         startDateField.parent().parent().show();
         endDateField.parent().parent().show();
     }
-    
+
     // Set default date range for other reports
     if (reportType !== 'inventory') {
         const today = new Date();
         const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-        
+
         startDateField.val(lastMonth.toISOString().split('T')[0]);
         endDateField.val(today.toISOString().split('T')[0]);
     }
@@ -75,7 +75,7 @@ function updateReportFormFields() {
 function validateDateRange() {
     const startDate = new Date($('#reportStartDate').val());
     const endDate = new Date($('#reportEndDate').val());
-    
+
     if (startDate && endDate && startDate > endDate) {
         showNotification('Start date cannot be after end date', 'error');
         $('#reportEndDate').val('');
@@ -90,22 +90,22 @@ function generateReport() {
     const storeId = $('#reportStore').val();
     const startDate = $('#reportStartDate').val();
     const endDate = $('#reportEndDate').val();
-    
+
     // Validate required fields
     if (reportType !== 'inventory' && (!startDate || !endDate)) {
         showNotification('Please select start and end dates', 'error');
         return;
     }
-    
+
     // Show loading state
     const generateBtn = $('button[onclick="generateReport()"]');
     const originalText = generateBtn.text();
     generateBtn.html('<i class="fa fa-spinner fa-spin"></i> Generating...').prop('disabled', true);
-    
+
     // Determine API endpoint based on report type
     let apiUrl = '/api/reports/';
     let requestData = { storeId, reportType };
-    
+
     switch (reportType) {
         case 'sales':
             apiUrl += 'sales';
@@ -130,18 +130,18 @@ function generateReport() {
             generateBtn.text(originalText).prop('disabled', false);
             return;
     }
-    
+
     $.ajax({
         url: apiUrl,
         method: 'POST',
         data: JSON.stringify(requestData),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             displayReportResults(response);
             $('#downloadReportBtn').show();
             generateBtn.text(originalText).prop('disabled', false);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error generating report:', error);
             showNotification('Error generating report: ' + (xhr.responseJSON?.message || error), 'error');
             generateBtn.text(originalText).prop('disabled', false);
@@ -155,12 +155,12 @@ function generateReport() {
 function displayReportResults(reportData) {
     const reportResults = $('#reportResults');
     const reportContent = $('#reportContent');
-    
+
     reportResults.show();
-    
+
     // Generate report HTML based on report type
     let reportHtml = '';
-    
+
     switch (reportData.reportType) {
         case 'Sales Report':
             reportHtml = generateSalesReportHtml(reportData);
@@ -177,9 +177,9 @@ function displayReportResults(reportData) {
         default:
             reportHtml = '<p>Unknown report type</p>';
     }
-    
+
     reportContent.html(reportHtml);
-    
+
     // Store report data for download
     window.currentReportData = reportData;
 }
@@ -189,7 +189,7 @@ function displayReportResults(reportData) {
  */
 function generateSalesReportHtml(reportData) {
     const summary = reportData.summary;
-    
+
     return `
         <div class="report-header">
             <h3>${reportData.reportType}</h3>
@@ -226,9 +226,9 @@ function generateSalesReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${Object.entries(reportData.paymentMethods).map(([method, amount]) => 
-                            `<tr><td>${method}</td><td>${formatCurrency(amount)}</td></tr>`
-                        ).join('')}
+                        ${Object.entries(reportData.paymentMethods).map(([method, amount]) =>
+        `<tr><td>${method}</td><td>${formatCurrency(amount)}</td></tr>`
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -246,13 +246,13 @@ function generateSalesReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${reportData.topProducts.slice(0, 10).map(product => 
-                            `<tr>
+                        ${reportData.topProducts.slice(0, 10).map(product =>
+        `<tr>
                                 <td>${product.name}</td>
                                 <td>${product.quantity}</td>
                                 <td>${formatCurrency(product.revenue)}</td>
                             </tr>`
-                        ).join('')}
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -265,7 +265,7 @@ function generateSalesReportHtml(reportData) {
  */
 function generateInventoryReportHtml(reportData) {
     const summary = reportData.summary;
-    
+
     return `
         <div class="report-header">
             <h3>${reportData.reportType}</h3>
@@ -305,14 +305,14 @@ function generateInventoryReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${reportData.expiredItems.map(item => 
-                            `<tr>
+                        ${reportData.expiredItems.map(item =>
+        `<tr>
                                 <td>${item.productName}</td>
                                 <td>${item.batchNumber}</td>
                                 <td>${new Date(item.expiryDate).toLocaleDateString()}</td>
                                 <td>${item.batchQuantity}</td>
                             </tr>`
-                        ).join('')}
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -333,14 +333,14 @@ function generateInventoryReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${reportData.expiringSoonItems.map(item => 
-                            `<tr>
+                        ${reportData.expiringSoonItems.map(item =>
+        `<tr>
                                 <td>${item.productName}</td>
                                 <td>${item.batchNumber}</td>
                                 <td>${new Date(item.expiryDate).toLocaleDateString()}</td>
                                 <td>${item.batchQuantity}</td>
                             </tr>`
-                        ).join('')}
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -354,7 +354,7 @@ function generateInventoryReportHtml(reportData) {
  */
 function generateCustomerReportHtml(reportData) {
     const summary = reportData.summary;
-    
+
     return `
         <div class="report-header">
             <h3>${reportData.reportType}</h3>
@@ -393,14 +393,14 @@ function generateCustomerReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${reportData.topCustomers.slice(0, 10).map(customer => 
-                            `<tr>
+                        ${reportData.topCustomers.slice(0, 10).map(customer =>
+        `<tr>
                                 <td>${customer.customerId}</td>
                                 <td>${customer.transactionCount}</td>
                                 <td>${formatCurrency(customer.totalSpent)}</td>
                                 <td>${formatCurrency(customer.averageTransactionValue)}</td>
                             </tr>`
-                        ).join('')}
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -453,9 +453,9 @@ function generateFinancialReportHtml(reportData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${Object.entries(reportData.costOfGoodsSold.byCategory).map(([category, cost]) => 
-                            `<tr><td>${category}</td><td>${formatCurrency(cost)}</td></tr>`
-                        ).join('')}
+                        ${Object.entries(reportData.costOfGoodsSold.byCategory).map(([category, cost]) =>
+        `<tr><td>${category}</td><td>${formatCurrency(cost)}</td></tr>`
+    ).join('')}
                     </tbody>
                 </table>
             </div>
@@ -471,17 +471,17 @@ function downloadReport() {
         showNotification('No report data available for download', 'error');
         return;
     }
-    
+
     const reportData = window.currentReportData;
     const reportType = reportData.reportType.replace(/\s+/g, '_').toLowerCase();
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `${reportType}_report_${timestamp}.json`;
-    
+
     // Create and download JSON file
     const dataStr = JSON.stringify(reportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -489,7 +489,7 @@ function downloadReport() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     showNotification('Report downloaded successfully', 'success');
 }
 
@@ -514,9 +514,9 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
+
     $('body').prepend(notification);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
         notification.alert('close');

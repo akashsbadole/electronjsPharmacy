@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Communication Preferences - PharmaSoft</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
 </head>
+
 <body>
     <div class="page-wrapper">
         <!-- Top Navigation -->
@@ -18,14 +20,15 @@
             <nav class="navbar top-navbar navbar-expand-md navbar-light">
                 <div class="navbar-header">
                     <a class="navbar-brand" href="index.html">
-                        <img src="assets/images/logo.svg" alt="PharmaSoft" class="logo">
+                        <img src="./assets/images/logo.svg" alt="PharmaSoft" class="logo">
                     </a>
                 </div>
                 <div class="navbar-collapse">
                     <ul class="navbar-nav mr-auto mt-md-0">
                         <!-- Search -->
                         <li class="nav-item d-none d-md-block search-box">
-                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark" href="javascript:void(0)">
+                            <a class="nav-link d-none d-md-block text-muted waves-effect waves-dark"
+                                href="javascript:void(0)">
                                 <i class="ti-search"></i>
                             </a>
                             <form class="app-search d-none d-md-block">
@@ -36,7 +39,8 @@
                     <ul class="navbar-nav my-lg-0">
                         <!-- Notifications -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle text-muted text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="ti-bell"></i>
                                 <span class="badge badge-xs badge-danger">3</span>
                             </a>
@@ -75,8 +79,9 @@
                         </li>
                         <!-- User Profile -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <img src="assets/images/default.jpg" alt="user" class="profile-pic">
+                            <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href=""
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="./assets/images/default.jpg" alt="user" class="profile-pic">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right user-dd animated">
                                 <a class="dropdown-item" href="#"><i class="ti-user m-r-5 m-l-5"></i> My Profile</a>
@@ -128,7 +133,8 @@
                                 <span class="hide-menu">Customers</span>
                             </a>
                             <ul aria-expanded="false" class="collapse">
-                                <li class="active"><a href="customer-communication-preferences.html">Communication Preferences</a></li>
+                                <li class="active"><a href="customer-communication-preferences.html">Communication
+                                        Preferences</a></li>
                                 <li><a href="#">Customer List</a></li>
                             </ul>
                         </li>
@@ -175,7 +181,8 @@
                                 <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                                 <li class="breadcrumb-item active">Customer Preferences</li>
                             </ol>
-                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white" onclick="exportPreferences()">
+                            <button type="button" class="btn btn-info d-none d-lg-block m-l-15 text-white"
+                                onclick="exportPreferences()">
                                 <i class="fa fa-download"></i> Export Preferences
                             </button>
                         </div>
@@ -256,7 +263,8 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="customer-select">Select Customer</label>
-                                            <select class="form-control" id="customer-select" onchange="loadCustomerPreferences()">
+                                            <select class="form-control" id="customer-select"
+                                                onchange="loadCustomerPreferences()">
                                                 <option value="">Select Customer</option>
                                             </select>
                                         </div>
@@ -264,7 +272,8 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="search-customer">Search Customer</label>
-                                            <input type="text" class="form-control" id="search-customer" placeholder="Search by name or phone..." onkeyup="searchCustomers()">
+                                            <input type="text" class="form-control" id="search-customer"
+                                                placeholder="Search by name or phone..." onkeyup="searchCustomers()">
                                         </div>
                                     </div>
                                 </div>
@@ -280,7 +289,7 @@
                             <div class="card-body">
                                 <h4 class="card-title">Communication Preferences</h4>
                                 <p class="card-subtitle">Manage customer communication preferences and consent</p>
-                                
+
                                 <form id="preferences-form" style="display: none;">
                                     <!-- SMS Preferences -->
                                     <div class="border-bottom pb-3 mb-3">
@@ -288,20 +297,26 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="sms-enabled">
-                                                    <label class="custom-control-label" for="sms-enabled">Enable SMS</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="sms-enabled">
+                                                    <label class="custom-control-label" for="sms-enabled">Enable
+                                                        SMS</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="sms-marketing">
-                                                    <label class="custom-control-label" for="sms-marketing">Marketing Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="sms-marketing">
+                                                    <label class="custom-control-label" for="sms-marketing">Marketing
+                                                        Messages</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="sms-transactional">
-                                                    <label class="custom-control-label" for="sms-transactional">Transactional Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="sms-transactional">
+                                                    <label class="custom-control-label"
+                                                        for="sms-transactional">Transactional Messages</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -313,20 +328,26 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="email-enabled">
-                                                    <label class="custom-control-label" for="email-enabled">Enable Email</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="email-enabled">
+                                                    <label class="custom-control-label" for="email-enabled">Enable
+                                                        Email</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="email-marketing">
-                                                    <label class="custom-control-label" for="email-marketing">Marketing Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="email-marketing">
+                                                    <label class="custom-control-label" for="email-marketing">Marketing
+                                                        Messages</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="email-transactional">
-                                                    <label class="custom-control-label" for="email-transactional">Transactional Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="email-transactional">
+                                                    <label class="custom-control-label"
+                                                        for="email-transactional">Transactional Messages</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -338,20 +359,26 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-enabled">
-                                                    <label class="custom-control-label" for="whatsapp-enabled">Enable WhatsApp</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="whatsapp-enabled">
+                                                    <label class="custom-control-label" for="whatsapp-enabled">Enable
+                                                        WhatsApp</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-marketing">
-                                                    <label class="custom-control-label" for="whatsapp-marketing">Marketing Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="whatsapp-marketing">
+                                                    <label class="custom-control-label"
+                                                        for="whatsapp-marketing">Marketing Messages</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="whatsapp-transactional">
-                                                    <label class="custom-control-label" for="whatsapp-transactional">Transactional Messages</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="whatsapp-transactional">
+                                                    <label class="custom-control-label"
+                                                        for="whatsapp-transactional">Transactional Messages</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -363,8 +390,10 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="quiet-hours-enabled">
-                                                    <label class="custom-control-label" for="quiet-hours-enabled">Enable Quiet Hours</label>
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="quiet-hours-enabled">
+                                                    <label class="custom-control-label" for="quiet-hours-enabled">Enable
+                                                        Quiet Hours</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -372,33 +401,38 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="quiet-hours-start">Quiet Hours Start</label>
-                                                    <input type="time" class="form-control" id="quiet-hours-start" value="22:00">
+                                                    <input type="time" class="form-control" id="quiet-hours-start"
+                                                        value="22:00">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="quiet-hours-end">Quiet Hours End</label>
-                                                    <input type="time" class="form-control" id="quiet-hours-end" value="08:00">
+                                                    <input type="time" class="form-control" id="quiet-hours-end"
+                                                        value="08:00">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <button type="button" class="btn btn-primary" onclick="saveCustomerPreferences()">Save Preferences</button>
-                                        <button type="button" class="btn btn-secondary" onclick="resetPreferences()">Reset</button>
+                                        <button type="button" class="btn btn-primary"
+                                            onclick="saveCustomerPreferences()">Save Preferences</button>
+                                        <button type="button" class="btn btn-secondary"
+                                            onclick="resetPreferences()">Reset</button>
                                     </div>
                                 </form>
-                                
+
                                 <div id="no-customer-selected" class="text-center py-5">
                                     <i class="mdi mdi-account-multiple font-80 text-muted"></i>
                                     <h4 class="mt-3 text-muted">No Customer Selected</h4>
-                                    <p class="text-muted">Please select a customer to view and manage their communication preferences</p>
+                                    <p class="text-muted">Please select a customer to view and manage their
+                                        communication preferences</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-4">
                         <div class="card">
                             <div class="card-body">
@@ -411,7 +445,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">Communication History</h4>
@@ -433,7 +467,7 @@
                             <div class="card-body">
                                 <h4 class="card-title">Bulk Preferences Management</h4>
                                 <p class="card-subtitle">Update preferences for multiple customers at once</p>
-                                
+
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-group">
@@ -462,7 +496,8 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>&nbsp;</label>
-                                            <button type="button" class="btn btn-primary form-control" onclick="applyBulkPreferences()">Apply to Segment</button>
+                                            <button type="button" class="btn btn-primary form-control"
+                                                onclick="applyBulkPreferences()">Apply to Segment</button>
                                         </div>
                                     </div>
                                 </div>
@@ -475,24 +510,20 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app-style-switcher.js"></script>
-    <script src="assets/js/waves.js"></script>
-    <script src="assets/js/sidebarmenu.js"></script>
-    <script src="assets/js/custom.min.js"></script>
-    <script src="assets/js/customer-communication.js"></script>
-    <script src="assets/js/communication-templates.js"></script>
-    <script src="assets/js/communication-campaigns.js"></script>
-    <script src="assets/js/communication-analytics.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="./assets/js/customer-communication.js"></script>
+    <script src="./assets/js/communication-templates.js"></script>
+    <script src="./assets/js/communication-campaigns.js"></script>
+    <script src="./assets/js/communication-analytics.js"></script>
     <script>
         // Initialize page
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadCustomers();
             updatePreferencesStats();
-            
+
             // Set up event listeners
-            $('#quiet-hours-enabled').on('change', function() {
+            $('#quiet-hours-enabled').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('#quiet-hours-settings').show();
                 } else {
@@ -504,28 +535,28 @@
         // Update preferences statistics
         function updatePreferencesStats() {
             $.ajax({
-                url: '/api/customer-communication-preferences/all',
+                url: './api/customer-communication-preferences/all',
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const preferences = data.preferences || [];
-                    
+
                     let totalCustomers = preferences.length;
                     let smsEnabled = 0;
                     let emailEnabled = 0;
                     let whatsappEnabled = 0;
-                    
+
                     preferences.forEach(pref => {
                         if (pref.channels && pref.channels.sms && pref.channels.sms.enabled) smsEnabled++;
                         if (pref.channels && pref.channels.email && pref.channels.email.enabled) emailEnabled++;
                         if (pref.channels && pref.channels.whatsapp && pref.channels.whatsapp.enabled) whatsappEnabled++;
                     });
-                    
+
                     $('#total-customers').text(totalCustomers);
                     $('#sms-enabled').text(smsEnabled);
                     $('#email-enabled').text(emailEnabled);
                     $('#whatsapp-enabled').text(whatsappEnabled);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading preferences stats:', error);
                 }
             });
@@ -535,29 +566,29 @@
         function loadCustomerPreferences() {
             const customerId = $('#customer-select').val();
             if (!customerId) return;
-            
+
             // Load customer information
             $.ajax({
                 url: `/api/customers/${customerId}`,
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const customer = data.customer || data;
                     displayCustomerInfo(customer);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading customer info:', error);
                 }
             });
-            
+
             // Load communication preferences
             $.ajax({
                 url: `/api/customer-communication-preferences/customer/${customerId}`,
                 method: 'GET',
-                success: function(preferences) {
+                success: function (preferences) {
                     displayCustomerPreferences(preferences);
                     loadCommunicationHistory(customerId);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading customer preferences:', error);
                     showNotification('Error loading customer preferences', 'error');
                 }
@@ -568,7 +599,7 @@
         function displayCustomerInfo(customer) {
             const customerInfoHtml = `
                 <div class="text-center">
-                    <img src="assets/images/default.jpg" alt="${customer.name}" class="rounded-circle mb-3" width="80">
+                    <img src="./assets/images/default.jpg" alt="${customer.name}" class="rounded-circle mb-3" width="80">
                     <h5>${customer.name}</h5>
                     <p class="text-muted">${customer.phone}</p>
                     <p class="text-muted">${customer.email || 'No email'}</p>
@@ -577,7 +608,7 @@
                     </div>
                 </div>
             `;
-            
+
             $('#customer-info').html(customerInfoHtml);
         }
 
@@ -585,25 +616,25 @@
         function displayCustomerPreferences(preferences) {
             $('#preferences-form').show();
             $('#no-customer-selected').hide();
-            
+
             // Set channel preferences
             $('#sms-enabled').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.enabled);
             $('#sms-marketing').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.consent && preferences.channels.sms.consent.marketing);
             $('#sms-transactional').prop('checked', preferences.channels && preferences.channels.sms && preferences.channels.sms.consent && preferences.channels.sms.consent.transactional);
-            
+
             $('#email-enabled').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.enabled);
             $('#email-marketing').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.consent && preferences.channels.email.consent.marketing);
             $('#email-transactional').prop('checked', preferences.channels && preferences.channels.email && preferences.channels.email.consent && preferences.channels.email.consent.transactional);
-            
+
             $('#whatsapp-enabled').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.enabled);
             $('#whatsapp-marketing').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.consent && preferences.channels.whatsapp.consent.marketing);
             $('#whatsapp-transactional').prop('checked', preferences.channels && preferences.channels.whatsapp && preferences.channels.whatsapp.consent && preferences.channels.whatsapp.consent.transactional);
-            
+
             // Set global preferences
             $('#quiet-hours-enabled').prop('checked', preferences.global && preferences.global.quietHours && preferences.global.quietHours.enabled);
             $('#quiet-hours-start').val(preferences.global && preferences.global.quietHours ? preferences.global.quietHours.start : '22:00');
             $('#quiet-hours-end').val(preferences.global && preferences.global.quietHours ? preferences.global.quietHours.end : '08:00');
-            
+
             // Show/hide quiet hours settings
             if (preferences.global && preferences.global.quietHours && preferences.global.quietHours.enabled) {
                 $('#quiet-hours-settings').show();
@@ -617,11 +648,11 @@
             $.ajax({
                 url: `/api/customer-communication/customer/${customerId}`,
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     const communications = data.communications || [];
                     displayCommunicationHistory(communications);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error loading communication history:', error);
                 }
             });
@@ -637,13 +668,13 @@
                 `);
                 return;
             }
-            
+
             let historyHtml = '<div class="timeline">';
-            
-            communications.slice(0, 5).forEach(function(comm) {
+
+            communications.slice(0, 5).forEach(function (comm) {
                 const statusClass = getStatusClass(comm.status);
                 const channelIcon = getChannelIcon(comm.channel);
-                
+
                 historyHtml += `
                     <div class="timeline-item">
                         <div class="timeline-point ${statusClass}">
@@ -660,9 +691,9 @@
                     </div>
                 `;
             });
-            
+
             historyHtml += '</div>';
-            
+
             $('#communication-history').html(historyHtml);
         }
 
@@ -687,28 +718,28 @@
         // Search customers
         function searchCustomers() {
             const searchTerm = $('#search-customer').val().toLowerCase();
-            
+
             if (!searchTerm) {
                 loadCustomers();
                 return;
             }
-            
+
             $.ajax({
-                url: '/api/customers/search',
+                url: './api/customers/search',
                 method: 'GET',
                 data: { q: searchTerm },
-                success: function(data) {
+                success: function (data) {
                     const customers = data.customers || [];
                     const customerSelect = $('#customer-select');
-                    
+
                     customerSelect.empty();
                     customerSelect.append('<option value="">Select Customer</option>');
-                    
-                    customers.forEach(function(customer) {
+
+                    customers.forEach(function (customer) {
                         customerSelect.append(`<option value="${customer._id}">${customer.name} - ${customer.phone}</option>`);
                     });
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error searching customers:', error);
                 }
             });
@@ -724,17 +755,17 @@
         function applyBulkPreferences() {
             const segment = $('#bulk-segment').val();
             const action = $('#bulk-action').val();
-            
+
             if (!segment || !action) {
                 showNotification('Please select segment and action', 'warning');
                 return;
             }
-            
+
             const bulkData = {
                 segment: segment,
                 action: action
             };
-            
+
             // Add quiet hours if that action is selected
             if (action === 'set-quiet-hours') {
                 bulkData.quietHours = {
@@ -743,13 +774,13 @@
                     end: '08:00'
                 };
             }
-            
+
             $.ajax({
-                url: '/api/customer-communication-preferences/bulk-update',
+                url: './api/customer-communication-preferences/bulk-update',
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(bulkData),
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         showNotification('Bulk preferences applied successfully', 'success');
                         updatePreferencesStats();
@@ -757,7 +788,7 @@
                         showNotification('Error applying bulk preferences', 'error');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error applying bulk preferences:', error);
                     showNotification('Error applying bulk preferences', 'error');
                 }
@@ -767,9 +798,9 @@
         // Export preferences
         function exportPreferences() {
             $.ajax({
-                url: '/api/customer-communication-preferences/export',
+                url: './api/customer-communication-preferences/export',
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     // Create a download link for the CSV
                     const csvContent = data.csv;
                     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -781,10 +812,10 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    
+
                     showNotification('Preferences exported successfully', 'success');
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error exporting preferences:', error);
                     showNotification('Error exporting preferences', 'error');
                 }
@@ -792,4 +823,5 @@
         }
     </script>
 </body>
+
 </html>

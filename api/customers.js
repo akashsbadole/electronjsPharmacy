@@ -8,16 +8,25 @@ const validator = require("validator");
 const dbUtils = require('./db-utils');
 const dbPath = dbUtils.getDatabasePath("customers.db");
 
+const dbManager = require('./db-manager');
+
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let customerDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let customerDB;
 
-customerDB.ensureIndex({ fieldName: "_id", unique: true });
+// Initialize the database when the module loads
+(async function() {
+    try {
+        customerDB = await dbManager.getDatabase("customers.db");
+        customerDB.ensureIndex({ fieldName: "_id", unique: true });
+        console.log("Customers database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize customers database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get the welcome message for the Customer API.
@@ -177,19 +186,7 @@ router.get("/customer/:customerId/with-account", function (req, res) {
         }
         
         // Get customer account
-        const Datastore = require("@seald-io/nedb");
-        const customerAccountsDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "customer-accounts.db",
-        );
-        
-        const customerAccountsDB = new Datastore({
-            filename: customerAccountsDbPath,
-            autoload: true,
-        });
+        const customerAccountsDB = dbManager.getDatabase("customer-accounts.db");
         
         customerAccountsDB.findOne({ customerId: customerId }, function (err, account) {
             if (err) {
@@ -200,19 +197,7 @@ router.get("/customer/:customerId/with-account", function (req, res) {
                 });
             }
             
-            // Get loyalty account
-            const customerLoyaltyDbPath = path.join(
-                appData,
-                appName,
-                "server",
-                "databases",
-                "customer-loyalty-accounts.db",
-            );
-            
-            const customerLoyaltyDB = new Datastore({
-                filename: customerLoyaltyDbPath,
-                autoload: true,
-            });
+            const customerLoyaltyDB = dbManager.getDatabase("customer-loyalty-accounts.db");
             
             customerLoyaltyDB.findOne({ customer_id: customerId }, function (err, loyaltyAccount) {
                 if (err) {
@@ -223,19 +208,7 @@ router.get("/customer/:customerId/with-account", function (req, res) {
                     });
                 }
                 
-                // Get delivery addresses
-                const deliveryAddressesDbPath = path.join(
-                    appData,
-                    appName,
-                    "server",
-                    "databases",
-                    "customer-delivery-addresses.db",
-                );
-                
-                const deliveryAddressesDB = new Datastore({
-                    filename: deliveryAddressesDbPath,
-                    autoload: true,
-                });
+                const deliveryAddressesDB = dbManager.getDatabase("customer-delivery-addresses.db");
                 
                 deliveryAddressesDB.find({ customer_id: customerId }, function (err, deliveryAddresses) {
                     if (err) {
@@ -246,18 +219,7 @@ router.get("/customer/:customerId/with-account", function (req, res) {
                     // Get payment terms if available
                     let paymentTerms = null;
                     if (account && account.paymentTermId) {
-                        const paymentTermsDbPath = path.join(
-                            appData,
-                            appName,
-                            "server",
-                            "databases",
-                            "payment-terms.db",
-                        );
-                        
-                        const paymentTermsDB = new Datastore({
-                            filename: paymentTermsDbPath,
-                            autoload: true,
-                        });
+                        const paymentTermsDB = dbManager.getDatabase("payment-terms.db");
                         
                         paymentTermsDB.findOne({ _id: account.paymentTermId }, function (err, terms) {
                             if (!err && terms) {
@@ -321,20 +283,7 @@ router.post("/customer/:customerId/account", function (req, res) {
             });
         }
         
-        // Create or update customer account
-        const Datastore = require("@seald-io/nedb");
-        const customerAccountsDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "customer-accounts.db",
-        );
-        
-        const customerAccountsDB = new Datastore({
-            filename: customerAccountsDbPath,
-            autoload: true,
-        });
+        const customerAccountsDB = dbManager.getDatabase("customer-accounts.db");
         
         // Check if account already exists
         customerAccountsDB.findOne({ customerId: customerId }, function (err, existingAccount) {
@@ -458,19 +407,7 @@ router.post("/customer/:customerId/enroll-loyalty", function (req, res) {
             }
         };
         
-        // Simulate calling the loyalty enrollment endpoint
-        const customerLoyaltyDbPath = path.join(
-            appData,
-            appName,
-            "server",
-            "databases",
-            "customer-loyalty-accounts.db",
-        );
-        
-        const customerLoyaltyDB = new Datastore({
-            filename: customerLoyaltyDbPath,
-            autoload: true,
-        });
+        const customerLoyaltyDB = dbManager.getDatabase("customer-loyalty-accounts.db");
         
         // Check if customer already has a loyalty account
         customerLoyaltyDB.findOne({ customer_id: customerId }, function (err, existingAccount) {
@@ -533,444 +470,310 @@ router.post("/customer/:customerId/enroll-loyalty", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/with-accounts", function (req, res) {
+router.get("/with-accounts", async function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    customerDB.find({})
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limit)
-        .exec(function (err, customers) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({
-                    error: "Internal Server Error",
-                    message: "An unexpected error occurred.",
-                });
-            }
-            
-            // Get total count for pagination
-            customerDB.count({}, function (err, count) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({
-                        error: "Internal Server Error",
-                        message: "An unexpected error occurred.",
-                    });
-                }
-                
-                // Get account information for all customers
-                const Datastore = require("@seald-io/nedb");
-                const customerAccountsDbPath = path.join(
-                    appData,
-                    appName,
-                    "server",
-                    "databases",
-                    "customer-accounts.db",
-                );
-                
-                const customerAccountsDB = new Datastore({
-                    filename: customerAccountsDbPath,
-                    autoload: true,
-                });
-                
-                customerAccountsDB.find({}, function (err, accounts) {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred.",
-                        });
-                    }
-                    
-                    // Get loyalty account information for all customers
-                    const customerLoyaltyDbPath = path.join(
-                        appData,
-                        appName,
-                        "server",
-                        "databases",
-                        "customer-loyalty-accounts.db",
-                    );
-                    
-                    const customerLoyaltyDB = new Datastore({
-                        filename: customerLoyaltyDbPath,
-                        autoload: true,
-                    });
-                    
-                    customerLoyaltyDB.find({}, function (err, loyaltyAccounts) {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        }
-                        
-                        // Combine customer, account, and loyalty information
-                        const customersWithAccounts = customers.map(customer => {
-                            const account = accounts.find(acc => acc.customerId === customer._id);
-                            const loyaltyAccount = loyaltyAccounts.find(loyalty => loyalty.customer_id === customer._id);
-                            return {
-                                ...customer,
-                                account: account || null,
-                                loyaltyAccount: loyaltyAccount || null
-                            };
-                        });
-                        
-                        res.json({
-                            customers: customersWithAccounts,
-                            pagination: {
-                                total: count,
-                                page: page,
-                                limit: limit,
-                                pages: Math.ceil(count / limit)
-                            }
-                        });
-                    });
-                });
-                
-                /**
-                 * POST endpoint: Add delivery address for a customer
-                 *
-                 * @param {Object} req request object with delivery address data in body.
-                 * @param {Object} res response object.
-                 * @returns {void}
-                 */
-                router.post("/customer/:customerId/delivery-address", function (req, res) {
-                    if (!req.params.customerId) {
-                        return res.status(400).json({
-                            error: "Bad Request",
-                            message: "Customer ID is required.",
-                        });
-                    }
-                    
-                    const customerId = req.params.customerId;
-                    const newAddress = req.body;
-                    
-                    // Validate required fields
-                    if (!newAddress.address || !newAddress.pincode) {
-                        return res.status(400).json({
-                            error: "Bad Request",
-                            message: "Address and pincode are required.",
-                        });
-                    }
-                    
-                    // Check if customer exists
-                    customerDB.findOne({ _id: customerId }, function (err, customer) {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        }
-                        
-                        if (!customer) {
-                            return res.status(404).json({
-                                error: "Not Found",
-                                message: "Customer not found.",
-                            });
-                        }
-                        
-                        // Create delivery address
-                        const Datastore = require("@seald-io/nedb");
-                        const deliveryAddressesDbPath = path.join(
-                            appData,
-                            appName,
-                            "server",
-                            "databases",
-                            "customer-delivery-addresses.db",
-                        );
-                        
-                        const deliveryAddressesDB = new Datastore({
-                            filename: deliveryAddressesDbPath,
-                            autoload: true,
-                        });
-                        
-                        const deliveryAddress = {
-                            _id: "ADDR-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9),
-                            customer_id: customerId,
-                            address: newAddress.address,
-                            landmark: newAddress.landmark || null,
-                            pincode: newAddress.pincode,
-                            latitude: newAddress.latitude || null,
-                            longitude: newAddress.longitude || null,
-                            is_default: newAddress.is_default || false,
-                            created_at: new Date(),
-                            updated_at: new Date()
-                        };
-                        
-                        // If this is set as default, unset other default addresses
-                        if (deliveryAddress.is_default) {
-                            deliveryAddressesDB.update(
-                                { customer_id: customerId },
-                                { $set: { is_default: false, updated_at: new Date() } },
-                                { multi: true },
-                                function (err) {
-                                    if (err) {
-                                        console.error("Failed to unset default addresses:", err);
-                                    }
-                                }
-                            );
-                        }
-                        
-                        deliveryAddressesDB.insert(deliveryAddress, function (err, address) {
-                            if (err) {
-                                console.error(err);
-                                return res.status(500).json({
-                                    error: "Internal Server Error",
-                                    message: "An unexpected error occurred.",
-                                });
-                            }
-                            
-                            res.status(201).json(address);
-                        });
-                    });
-                });
-                
-                /**
-                 * PUT endpoint: Update delivery address
-                 *
-                 * @param {Object} req request object with updated address data in body.
-                 * @param {Object} res response object.
-                 * @returns {void}
-                 */
-                router.put("/customer/:customerId/delivery-address/:addressId", function (req, res) {
-                    const customerId = req.params.customerId;
-                    const addressId = req.params.addressId;
-                    const updatedAddress = req.body;
-                    
-                    // Don't allow updating certain fields
-                    delete updatedAddress._id;
-                    delete updatedAddress.customer_id;
-                    delete updatedAddress.created_at;
-                    
-                    // Update timestamp
-                    updatedAddress.updated_at = new Date();
-                    
-                    const Datastore = require("@seald-io/nedb");
-                    const deliveryAddressesDbPath = path.join(
-                        appData,
-                        appName,
-                        "server",
-                        "databases",
-                        "customer-delivery-addresses.db",
-                    );
-                    
-                    const deliveryAddressesDB = new Datastore({
-                        filename: deliveryAddressesDbPath,
-                        autoload: true,
-                    });
-                    
-                    // If this is set as default, unset other default addresses
-                    if (updatedAddress.is_default) {
-                        deliveryAddressesDB.update(
-                            { customer_id: customerId },
-                            { $set: { is_default: false, updated_at: new Date() } },
-                            { multi: true },
-                            function (err) {
-                                if (err) {
-                                    console.error("Failed to unset default addresses:", err);
-                                }
-                            }
-                        );
-                    }
-                    
-                    deliveryAddressesDB.update(
-                        { _id: addressId, customer_id: customerId },
-                        { $set: updatedAddress },
-                        {},
-                        function (err, numReplaced) {
-                            if (err) {
-                                console.error(err);
-                                return res.status(500).json({
-                                    error: "Internal Server Error",
-                                    message: "An unexpected error occurred.",
-                                });
-                            }
-                            
-                            if (numReplaced === 0) {
-                                return res.status(404).json({
-                                    error: "Not Found",
-                                    message: "Delivery address not found.",
-                                });
-                            }
-                            
-                            res.sendStatus(200);
-                        }
-                    );
-                });
-                
-                /**
-                 * DELETE endpoint: Delete delivery address
-                 *
-                 * @param {Object} req request object with customer ID and address ID as parameters.
-                 * @param {Object} res response object.
-                 * @returns {void}
-                 */
-                router.delete("/customer/:customerId/delivery-address/:addressId", function (req, res) {
-                    const customerId = req.params.customerId;
-                    const addressId = req.params.addressId;
-                    
-                    const Datastore = require("@seald-io/nedb");
-                    const deliveryAddressesDbPath = path.join(
-                        appData,
-                        appName,
-                        "server",
-                        "databases",
-                        "customer-delivery-addresses.db",
-                    );
-                    
-                    const deliveryAddressesDB = new Datastore({
-                        filename: deliveryAddressesDbPath,
-                        autoload: true,
-                    });
-                    
-                    deliveryAddressesDB.remove({ _id: addressId, customer_id: customerId }, {}, function (err, numRemoved) {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        }
-                        
-                        if (numRemoved === 0) {
-                            return res.status(404).json({
-                                error: "Not Found",
-                                message: "Delivery address not found.",
-                            });
-                        }
-                        
-                        res.sendStatus(200);
-                    });
-                });
-            });
-            
-            /**
-             * GET endpoint: Get customer communication preferences.
-             *
-             * @param {Object} req request object with customer ID as a parameter.
-             * @param {Object} res response object.
-             * @returns {void}
-             */
-            router.get("/customer/:customerId/communication-preferences", function (req, res) {
-                if (!req.params.customerId) {
-                    return res.status(400).json({
-                        error: "Bad Request",
-                        message: "Customer ID is required.",
-                    });
-                }
-                
-                const customerPreferencesDbPath = path.join(
-                    appData,
-                    appName,
-                    "server",
-                    "databases",
-                    "customer-communication-preferences.db",
-                );
-                
-                const customerPreferencesDB = new Datastore({
-                    filename: customerPreferencesDbPath,
-                    autoload: true,
-                });
-                
-                customerPreferencesDB.findOne({ customerId: req.params.customerId }, function (err, preferences) {
-                    if (err) {
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred.",
-                        });
-                    }
-                    
-                    // Return default preferences if none exist
-                    if (!preferences) {
-                        const defaultPreferences = require("./customer-communication-preferences").getDefaultPreferences
-                            ? require("./customer-communication-preferences").getDefaultPreferences(req.params.customerId)
-                            : {
-                                customerId: req.params.customerId,
-                                channels: {
-                                    sms: { enabled: true, consent: { marketing: false, transactional: true } },
-                                    email: { enabled: true, consent: { marketing: true, transactional: true } },
-                                    whatsapp: { enabled: true, consent: { marketing: false, transactional: true } }
-                                },
-                                global: { quietHours: { enabled: true, start: "22:00", end: "08:00" } }
-                            };
-                        return res.json(defaultPreferences);
-                    }
-                    
-                    res.json(preferences);
-                });
-            });
-            
-            /**
-             * POST endpoint: Send communication to customer.
-             *
-             * @param {Object} req request object with customer ID as a parameter and communication data in body.
-             * @param {Object} res response object.
-             * @returns {void}
-             */
-            router.post("/customer/:customerId/send-communication", function (req, res) {
-                if (!req.params.customerId) {
-                    return res.status(400).json({
-                        error: "Bad Request",
-                        message: "Customer ID is required.",
-                    });
-                }
-                
-                // Check if customer exists
-                customerDB.findOne({ _id: req.params.customerId }, function (err, customer) {
-                    if (err) {
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred.",
-                        });
-                    }
-                    
-                    if (!customer) {
-                        return res.status(404).json({
-                            error: "Not Found",
-                            message: "Customer not found.",
-                        });
-                    }
-                    
-                    // Use customer communication API to send message
-                    const customerCommunicationAPI = require("./customer-communication");
-                    
-                    // Create a mock request object
-                    const mockReq = {
-                        body: {
-                            customerId: req.params.customerId,
-                            channel: req.body.channel || "email",
-                            type: req.body.type || "TRANSACTIONAL",
-                            content: req.body.content || "",
-                            subject: req.body.subject || null,
-                            personalizationData: req.body.personalizationData || {},
-                            priority: req.body.priority || 1
-                        }
-                    };
-                    
-                    // Create a mock response object
-                    let responseData = null;
-                    const mockRes = {
-                        status: function(code) {
-                            this.statusCode = code;
-                            return this;
-                        },
-                        json: function(data) {
-                            responseData = data;
-                            if (mockRes.statusCode >= 400) {
-                                return res.status(mockRes.statusCode).json(data);
-                            }
-                            return res.status(mockRes.statusCode || 201).json(data);
-                        }
-                    };
-                    
-                    // Call the send endpoint
-                    customerCommunicationAPI._router.handle(mockReq, mockRes);
-                });
-            });
+    try {
+        const customers = await new Promise((resolve, reject) => {
+            customerDB.find({})
+                .sort({ name: 1 })
+                .skip(skip)
+                .limit(limit)
+                .exec((err, docs) => err ? reject(err) : resolve(docs));
         });
+
+        const count = await new Promise((resolve, reject) => {
+            customerDB.count({}, (err, c) => err ? reject(err) : resolve(c));
+        });
+
+        const customerAccountsDB = await dbManager.getDatabase("customer-accounts.db");
+        const accounts = await new Promise((resolve, reject) => {
+            customerAccountsDB.find({}, (err, docs) => err ? reject(err) : resolve(docs));
+        });
+
+        const customerLoyaltyDB = await dbManager.getDatabase("customer-loyalty-accounts.db");
+        const loyaltyAccounts = await new Promise((resolve, reject) => {
+            customerLoyaltyDB.find({}, (err, docs) => err ? reject(err) : resolve(docs));
+        });
+
+        const customersWithAccounts = customers.map(customer => {
+            const account = accounts.find(acc => acc.customerId === customer._id);
+            const loyaltyAccount = loyaltyAccounts.find(loyalty => loyalty.customer_id === customer._id);
+            return {
+                ...customer,
+                account: account || null,
+                loyaltyAccount: loyaltyAccount || null
+            };
+        });
+        
+        res.json({
+            customers: customersWithAccounts,
+            pagination: {
+                total: count,
+                page: page,
+                limit: limit,
+                pages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
 });
+
+/**
+ * POST endpoint: Add delivery address for a customer
+ *
+ * @param {Object} req request object with customer ID and address data in body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/customer/:customerId/delivery-address", async function (req, res) {
+    if (!req.params.customerId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Customer ID is required.",
+        });
+    }
+    
+    const customerId = req.params.customerId;
+    const newAddress = req.body;
+    
+    if (!newAddress.address || !newAddress.pincode) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Address and pincode are required.",
+        });
+    }
+    
+    try {
+        const customer = await new Promise((resolve, reject) => {
+            customerDB.findOne({ _id: customerId }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+
+        if (!customer) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Customer not found.",
+            });
+        }
+        
+        const deliveryAddressesDB = await dbManager.getDatabase("customer-delivery-addresses.db");
+        
+        const deliveryAddress = {
+            _id: "ADDR-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9),
+            customer_id: customerId,
+            address: newAddress.address,
+            landmark: newAddress.landmark || null,
+            pincode: newAddress.pincode,
+            latitude: newAddress.latitude || null,
+            longitude: newAddress.longitude || null,
+            is_default: newAddress.is_default || false,
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+        
+        if (deliveryAddress.is_default) {
+            await new Promise((resolve) => {
+                deliveryAddressesDB.update(
+                    { customer_id: customerId },
+                    { $set: { is_default: false, updated_at: new Date() } },
+                    { multi: true },
+                    () => resolve()
+                );
+            });
+        }
+        
+        const address = await new Promise((resolve, reject) => {
+            deliveryAddressesDB.insert(deliveryAddress, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+        
+        res.status(201).json(address);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
+});
+
+/**
+ * PUT endpoint: Update delivery address
+ *
+ * @param {Object} req request object with updated address data in body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.put("/customer/:customerId/delivery-address/:addressId", async function (req, res) {
+    const customerId = req.params.customerId;
+    const addressId = req.params.addressId;
+    const updatedAddress = req.body;
+    
+    delete updatedAddress._id;
+    delete updatedAddress.customer_id;
+    delete updatedAddress.created_at;
+    updatedAddress.updated_at = new Date();
+    
+    try {
+        const deliveryAddressesDB = await dbManager.getDatabase("customer-delivery-addresses.db");
+        
+        if (updatedAddress.is_default) {
+            await new Promise((resolve) => {
+                deliveryAddressesDB.update(
+                    { customer_id: customerId },
+                    { $set: { is_default: false, updated_at: new Date() } },
+                    { multi: true },
+                    () => resolve()
+                );
+            });
+        }
+        
+        const numReplaced = await new Promise((resolve, reject) => {
+            deliveryAddressesDB.update(
+                { _id: addressId, customer_id: customerId },
+                { $set: updatedAddress },
+                {},
+                (err, num) => err ? reject(err) : resolve(num)
+            );
+        });
+        
+        if (numReplaced === 0) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Delivery address not found.",
+            });
+        }
+        
+        res.sendStatus(200);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
+});
+
+/**
+ * DELETE endpoint: Delete delivery address
+ *
+ * @param {Object} req request object with customer ID and address ID as parameters.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.delete("/customer/:customerId/delivery-address/:addressId", async function (req, res) {
+    const customerId = req.params.customerId;
+    const addressId = req.params.addressId;
+    
+    try {
+        const deliveryAddressesDB = await dbManager.getDatabase("customer-delivery-addresses.db");
+        
+        const numRemoved = await new Promise((resolve, reject) => {
+            deliveryAddressesDB.remove({ _id: addressId, customer_id: customerId }, {}, (err, num) => err ? reject(err) : resolve(num));
+        });
+        
+        if (numRemoved === 0) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Delivery address not found.",
+            });
+        }
+        
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Error accessing delivery addresses DB:", error);
+        res.status(500).json({ error: "Internal Server Error", message: "Failed to access delivery addresses database." });
+    }
+});
+
+/**
+ * GET endpoint: Get customer communication preferences.
+ *
+ * @param {Object} req request object with customer ID as a parameter.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.get("/customer/:customerId/communication-preferences", async function (req, res) {
+    if (!req.params.customerId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Customer ID is required.",
+        });
+    }
+    
+    try {
+        const customerPreferencesDB = await dbManager.getDatabase("customer-communication-preferences.db");
+        
+        const preferences = await new Promise((resolve, reject) => {
+            customerPreferencesDB.findOne({ customerId: req.params.customerId }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+        
+        if (!preferences) {
+            const defaultPreferences = {
+                customerId: req.params.customerId,
+                channels: {
+                    sms: { enabled: true, consent: { marketing: false, transactional: true } },
+                    email: { enabled: true, consent: { marketing: true, transactional: true } },
+                    whatsapp: { enabled: true, consent: { marketing: false, transactional: true } }
+                },
+                global: { quietHours: { enabled: true, start: "22:00", end: "08:00" } }
+            };
+            return res.json(defaultPreferences);
+        }
+        
+        res.json(preferences);
+    } catch (error) {
+        console.error("Error accessing customer preferences DB:", error);
+        res.status(500).json({ error: "Internal Server Error", message: "Failed to access customer preferences database." });
+    }
+});
+
+/**
+ * POST endpoint: Send communication to customer.
+ *
+ * @param {Object} req request object with customer ID as a parameter and communication data in body.
+ * @param {Object} res response object.
+ * @returns {void}
+ */
+router.post("/customer/:customerId/send-communication", async function (req, res) {
+    if (!req.params.customerId) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Customer ID is required.",
+        });
+    }
+    
+    try {
+        const customer = await new Promise((resolve, reject) => {
+            customerDB.findOne({ _id: req.params.customerId }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+
+        if (!customer) {
+            return res.status(404).json({
+                error: "Not Found",
+                message: "Customer not found.",
+            });
+        }
+        
+        const customerCommunicationAPI = require("./customer-communication");
+        const mockReq = {
+            params: { customerId: req.params.customerId },
+            body: req.body,
+            header: () => {}
+        };
+        
+        const result = await new Promise((resolve) => {
+            const mockRes = {
+                statusCode: 200,
+                status: function(code) { this.statusCode = code; return this; },
+                json: function(data) { resolve({ code: this.statusCode, data }); return this; },
+                send: function(data) { resolve({ code: this.statusCode, data }); return this; },
+                sendStatus: function(code) { resolve({ code }); return this; }
+            };
+            customerCommunicationAPI._router.handle(mockReq, mockRes, () => {});
+        });
+        
+        res.status(result.code).json(result.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
+});
+

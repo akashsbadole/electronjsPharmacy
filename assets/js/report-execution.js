@@ -3,27 +3,27 @@
  * Handles report execution and results display functionality
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize report execution when execution modal is shown
-    $('#reportExecutionModal').on('shown.bs.modal', function() {
+    $('#reportExecutionModal').on('shown.bs.modal', function () {
         // Set default date range
         const today = new Date();
         const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
         $('#executionStartDate').val(lastMonth.toISOString().split('T')[0]);
         $('#executionEndDate').val(today.toISOString().split('T')[0]);
     });
-    
+
     // Handle filter changes in execution modal
-    $('#executionStartDate, #executionEndDate').on('change', function() {
+    $('#executionStartDate, #executionEndDate').on('change', function () {
         validateExecutionDates();
     });
-    
+
     // Handle export format change
-    $('#executionFormat').on('change', function() {
+    $('#executionFormat').on('change', function () {
         const format = $(this).val();
         updateExportOptions(format);
     });
-    
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 });
@@ -34,27 +34,27 @@ $(document).ready(function() {
 function executeReport(reportId) {
     // Show report execution modal
     $('#reportExecutionModal').modal('show');
-    
+
     // Load report configuration
     $.ajax({
         url: `/api/custom-reports/reports/${reportId}`,
         method: 'GET',
-        success: function(report) {
+        success: function (report) {
             // Set up execution form
             $('#executionReportName').text(report.name);
             $('#executionReportDescription').text(report.description);
             $('#executionReportId').val(reportId);
-            
+
             // Show filter options based on report configuration
             setupExecutionFilters(report);
-            
+
             // Set default date range
             const today = new Date();
             const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
             $('#executionStartDate').val(lastMonth.toISOString().split('T')[0]);
             $('#executionEndDate').val(today.toISOString().split('T')[0]);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading report:', error);
             showNotification('Error loading report configuration', 'error');
             $('#reportExecutionModal').modal('hide');
@@ -68,13 +68,13 @@ function executeReport(reportId) {
 function setupExecutionFilters(report) {
     const filtersContainer = $('#executionFilters');
     filtersContainer.empty();
-    
+
     if (!report.filters || Object.keys(report.filters).length === 0) {
         return;
     }
-    
+
     let filterHtml = '<div class="row">';
-    
+
     // Date range filter
     if (report.filters.dateRange) {
         filterHtml += `
@@ -92,7 +92,7 @@ function setupExecutionFilters(report) {
             </div>
         `;
     }
-    
+
     // Customer filter
     if (report.filters.customer) {
         filterHtml += `
@@ -106,7 +106,7 @@ function setupExecutionFilters(report) {
             </div>
         `;
     }
-    
+
     // Store filter
     if (report.filters.store) {
         filterHtml += `
@@ -120,7 +120,7 @@ function setupExecutionFilters(report) {
             </div>
         `;
     }
-    
+
     // Category filter
     if (report.filters.category) {
         filterHtml += `
@@ -134,7 +134,7 @@ function setupExecutionFilters(report) {
             </div>
         `;
     }
-    
+
     // Status filter
     if (report.filters.status) {
         filterHtml += `
@@ -150,10 +150,10 @@ function setupExecutionFilters(report) {
             </div>
         `;
     }
-    
+
     filterHtml += '</div>';
     filtersContainer.html(filterHtml);
-    
+
     // Load filter options if needed
     if (report.filters.customer) {
         loadCustomerOptions();
@@ -171,15 +171,15 @@ function setupExecutionFilters(report) {
  */
 function loadCustomerOptions() {
     $.ajax({
-        url: '/api/customers',
+        url: './api/customers',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const customerSelect = $('#executionCustomer');
             response.customers.forEach(customer => {
                 customerSelect.append(`<option value="${customer._id}">${customer.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading customers:', error);
         }
     });
@@ -190,15 +190,15 @@ function loadCustomerOptions() {
  */
 function loadStoreOptions() {
     $.ajax({
-        url: '/api/stores',
+        url: './api/stores',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const storeSelect = $('#executionStore');
             response.stores.forEach(store => {
                 storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading stores:', error);
         }
     });
@@ -209,15 +209,15 @@ function loadStoreOptions() {
  */
 function loadCategoryOptions() {
     $.ajax({
-        url: '/api/categories',
+        url: './api/categories',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const categorySelect = $('#executionCategory');
             response.categories.forEach(category => {
                 categorySelect.append(`<option value="${category._id}">${category.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading categories:', error);
         }
     });
@@ -229,7 +229,7 @@ function loadCategoryOptions() {
 function validateExecutionDates() {
     const startDate = $('#executionStartDate').val();
     const endDate = $('#executionEndDate').val();
-    
+
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
         showNotification('Start date cannot be after end date', 'error');
         $('#executeReportBtn').prop('disabled', true);
@@ -248,7 +248,7 @@ function runReportExecution() {
     const page = $('#executionPage').val() || 1;
     const limit = $('#executionLimit').val() || 50;
     const exportFormat = $('#executionFormat').val() || 'json';
-    
+
     // Build filters object
     const filters = {};
     if (startDate && endDate) {
@@ -266,13 +266,13 @@ function runReportExecution() {
     if ($('#executionStatus').val() !== undefined && $('#executionStatus').val() !== '') {
         filters.status = $('#executionStatus').val();
     }
-    
+
     const executeBtn = $('#executeReportBtn');
     const originalText = executeBtn.html();
     executeBtn.html('<i class="fa fa-spinner fa-spin"></i> Executing...').prop('disabled', true);
-    
+
     $.ajax({
-        url: '/api/report-execution/execute',
+        url: './api/report-execution/execute',
         method: 'POST',
         data: JSON.stringify({
             reportId: reportId,
@@ -283,13 +283,13 @@ function runReportExecution() {
             exportFormat: exportFormat
         }),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             displayReportResults(response);
             $('#reportExecutionModal').modal('hide');
             $('#reportResultsModal').modal('show');
             executeBtn.html(originalText).prop('disabled', false);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error executing report:', error);
             showNotification('Error executing report: ' + (xhr.responseJSON?.message || error), 'error');
             executeBtn.html(originalText).prop('disabled', false);
@@ -303,22 +303,22 @@ function runReportExecution() {
 function displayReportResults(response) {
     // Store result for export
     window.currentReportResult = response.result;
-    
+
     // Set report info in modal
     $('#resultsReportName').text(response.result.name || 'Custom Report');
     $('#resultsReportDescription').text(response.result.description || '');
     $('#executionTime').text(response.result.executionTime || 'N/A');
     $('#recordCount').text(response.result.totalRecords || response.result.data?.length || 0);
     $('#executionDate').text(new Date().toLocaleString());
-    
+
     // Show appropriate view based on report type
     const reportType = response.result.type || 'tabular';
-    
+
     // Hide all views first
     $('#tabularResults').hide();
     $('#chartResults').hide();
     $('#summaryResults').hide();
-    
+
     switch (reportType) {
         case 'tabular':
             displayTabularResults(response.result.data);
@@ -343,7 +343,7 @@ function displayTabularResults(data) {
         $('#tabularResults').show();
         return;
     }
-    
+
     // Build table headers
     const fields = Object.keys(data[0]);
     let headerHtml = '';
@@ -351,7 +351,7 @@ function displayTabularResults(data) {
         headerHtml += `<th>${field}</th>`;
     });
     $('#resultsTableHeader').html(headerHtml);
-    
+
     // Build table rows
     let bodyHtml = '';
     data.forEach(row => {
@@ -368,7 +368,7 @@ function displayTabularResults(data) {
         bodyHtml += '</tr>';
     });
     $('#resultsTableBody').html(bodyHtml);
-    
+
     $('#tabularResults').show();
 }
 
@@ -382,7 +382,7 @@ function displayChartResults(data) {
         displayTabularResults(data);
         return;
     }
-    
+
     // Default to bar chart
     const chartType = $('#chartTypeSelector').val() || 'bar';
     renderChart(data, chartType);
@@ -399,7 +399,7 @@ function displaySummaryResults(result) {
         displayTabularResults(result.data || []);
         return;
     }
-    
+
     let summaryHtml = '<div class="row">';
     Object.keys(result.summary).forEach(key => {
         const value = result.summary[key];
@@ -415,7 +415,7 @@ function displaySummaryResults(result) {
         `;
     });
     summaryHtml += '</div>';
-    
+
     // Also show detailed data if available
     if (result.data && result.data.length > 0) {
         summaryHtml += `
@@ -427,18 +427,18 @@ function displaySummaryResults(result) {
                             <thead>
                                 <tr>
         `;
-        
+
         const fields = Object.keys(result.data[0]);
         fields.forEach(field => {
             summaryHtml += `<th>${field}</th>`;
         });
-        
+
         summaryHtml += `
                                 </tr>
                             </thead>
                             <tbody>
         `;
-        
+
         result.data.forEach(row => {
             summaryHtml += '<tr>';
             fields.forEach(field => {
@@ -446,7 +446,7 @@ function displaySummaryResults(result) {
             });
             summaryHtml += '</tr>';
         });
-        
+
         summaryHtml += `
                             </tbody>
                         </table>
@@ -455,7 +455,7 @@ function displaySummaryResults(result) {
             </div>
         `;
     }
-    
+
     $('#summaryContent').html(summaryHtml);
     $('#summaryResults').show();
 }

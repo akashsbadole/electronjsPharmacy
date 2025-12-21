@@ -1,33 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const validator = require("validator");
-const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "purchase-orders.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let purchaseOrdersDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let purchaseOrdersDB;
 
-purchaseOrdersDB.ensureIndex({ fieldName: "_id", unique: true });
-purchaseOrdersDB.ensureIndex({ fieldName: "orderNumber" });
-purchaseOrdersDB.ensureIndex({ fieldName: "supplierId" });
-purchaseOrdersDB.ensureIndex({ fieldName: "status" });
+// Initialize the database when the module loads
+(async function() {
+    try {
+        purchaseOrdersDB = await dbManager.getDatabase("purchase-orders.db");
+        purchaseOrdersDB.ensureIndex({ fieldName: "_id", unique: true });
+        purchaseOrdersDB.ensureIndex({ fieldName: "orderNumber" });
+        purchaseOrdersDB.ensureIndex({ fieldName: "supplierId" });
+        purchaseOrdersDB.ensureIndex({ fieldName: "status" });
+        console.log("Purchase orders database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize purchase orders database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get welcome message for Purchase Orders API.
@@ -131,19 +128,7 @@ router.post("/", function (req, res) {
     }
     
     // Check if supplier exists
-    const Datastore = require("@seald-io/nedb");
-    const suppliersDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "suppliers.db",
-    );
-    
-    const suppliersDB = new Datastore({
-        filename: suppliersDbPath,
-        autoload: true,
-    });
+    const suppliersDB = await dbManager.getDatabase("suppliers.db");
     
     suppliersDB.findOne({ _id: parseInt(req.body.supplierId) }, function (err, supplier) {
         if (err) {
@@ -710,22 +695,8 @@ function generateOrderNumber() {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createPurchaseOrderItems(orderId, items, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "purchase-order-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function createPurchaseOrderItems(orderId, items, callback) {
+    const itemsDB = await dbManager.getDatabase("purchase-order-items.db");
     
     const createdItems = [];
     
@@ -773,22 +744,8 @@ function createPurchaseOrderItems(orderId, items, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function getPurchaseOrderItems(orderId, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "purchase-order-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function getPurchaseOrderItems(orderId, callback) {
+    const itemsDB = await dbManager.getDatabase("purchase-order-items.db");
     
     itemsDB.find({ purchaseOrderId: orderId })
         .sort({ createdAt: 1 })
@@ -808,22 +765,8 @@ function getPurchaseOrderItems(orderId, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function deletePurchaseOrderItems(orderId, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "purchase-order-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function deletePurchaseOrderItems(orderId, callback) {
+    const itemsDB = await dbManager.getDatabase("purchase-order-items.db");
     
     itemsDB.remove({ purchaseOrderId: orderId }, { multi: true }, function(err, numRemoved) {
         if (err) {
@@ -841,23 +784,8 @@ function deletePurchaseOrderItems(orderId, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function updateInventoryWithReceivedItems(orderId, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    // Get purchase order items
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "purchase-order-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function updateInventoryWithReceivedItems(orderId, callback) {
+    const itemsDB = await dbManager.getDatabase("purchase-order-items.db");
     
     itemsDB.find({ purchaseOrderId: orderId }, function(err, items) {
         if (err) {
@@ -865,19 +793,8 @@ function updateInventoryWithReceivedItems(orderId, callback) {
         }
         
         // Update inventory quantities for each item
-        async.eachSeries(items, function(item, callback) {
-            const inventoryDbPath = path.join(
-                process.env.APPDATA,
-                process.env.APPNAME,
-                "server",
-                "databases",
-                "inventory.db",
-            );
-            
-            const inventoryDB = new Datastore({
-                filename: inventoryDbPath,
-                autoload: true,
-            });
+        async.eachSeries(items, async function(item, callback) {
+            const inventoryDB = await dbManager.getDatabase("inventory.db");
             
             inventoryDB.findOne({ _id: item.productId }, function(err, product) {
                 if (err) {
@@ -926,22 +843,8 @@ function updateInventoryWithReceivedItems(orderId, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function updateOrCreateBatch(item, product, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const batchesDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "batches.db",
-    );
-    
-    const batchesDB = new Datastore({
-        filename: batchesDbPath,
-        autoload: true,
-    });
+async function updateOrCreateBatch(item, product, callback) {
+    const batchesDB = await dbManager.getDatabase("batches.db");
     
     // Check if batch already exists
     batchesDB.findOne({
@@ -1005,23 +908,10 @@ function updateOrCreateBatch(item, product, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createSupplierInvoice(purchaseOrder, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    // Get purchase order items
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "purchase-order-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function createSupplierInvoice(purchaseOrder, callback) {
+    try {
+        // Get purchase order items
+        const itemsDB = await dbManager.getDatabase("purchase-order-items.db");
     
     itemsDB.find({ purchaseOrderId: purchaseOrder._id }, function(err, items) {
         if (err) {
@@ -1029,36 +919,14 @@ function createSupplierInvoice(purchaseOrder, callback) {
         }
         
         // Create supplier invoice
-        const supplierInvoicesDbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "supplier-invoices.db",
-        );
-        
-        const supplierInvoicesDB = new Datastore({
-            filename: supplierInvoicesDbPath,
-            autoload: true,
-        });
+        const supplierInvoicesDB = await dbManager.getDatabase("supplier-invoices.db");
         
         // Generate unique invoice number
         const invoiceNumber = generateInvoiceNumber('SUPPLIER');
         
         // Calculate due date based on payment terms
         let dueDate = new Date();
-        const supplierAccountsDbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "supplier-accounts.db",
-        );
-        
-        const supplierAccountsDB = new Datastore({
-            filename: supplierAccountsDbPath,
-            autoload: true,
-        });
+        const supplierAccountsDB = await dbManager.getDatabase("supplier-accounts.db");
         
         supplierAccountsDB.findOne({ supplierId: purchaseOrder.supplierId }, function(err, account) {
             if (err) {
@@ -1067,18 +935,7 @@ function createSupplierInvoice(purchaseOrder, callback) {
             
             if (account && account.paymentTermId) {
                 // Get payment terms
-                const paymentTermsDbPath = path.join(
-                    process.env.APPDATA,
-                    process.env.APPNAME,
-                    "server",
-                    "databases",
-                    "payment-terms.db",
-                );
-                
-                const paymentTermsDB = new Datastore({
-                    filename: paymentTermsDbPath,
-                    autoload: true,
-                });
+                const paymentTermsDB = await dbManager.getDatabase("payment-terms.db");
                 
                 paymentTermsDB.findOne({ _id: account.paymentTermId }, function(err, paymentTerm) {
                     if (!err && paymentTerm) {
@@ -1146,22 +1003,9 @@ function createSupplierInvoice(purchaseOrder, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createSupplierInvoiceItems(invoiceId, items, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const itemsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "supplier-invoice-items.db",
-    );
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function createSupplierInvoiceItems(invoiceId, items, callback) {
+    try {
+        const itemsDB = await dbManager.getDatabase("supplier-invoice-items.db");
     
     const createdItems = [];
     
@@ -1200,22 +1044,9 @@ function createSupplierInvoiceItems(invoiceId, items, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function updateSupplierAccountBalance(supplierId, amount, callback) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    const supplierAccountsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "supplier-accounts.db",
-    );
-    
-    const supplierAccountsDB = new Datastore({
-        filename: supplierAccountsDbPath,
-        autoload: true,
-    });
+async function updateSupplierAccountBalance(supplierId, amount, callback) {
+    try {
+        const supplierAccountsDB = await dbManager.getDatabase("supplier-accounts.db");
     
     // Check if account exists
     supplierAccountsDB.findOne({ supplierId: supplierId }, function(err, account) {
@@ -1287,7 +1118,7 @@ function generateInvoiceNumber(type) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/automated", function (req, res) {
+router.post("/automated", async function (req, res) {
     // Validate required fields
     if (!req.body.suggestionId || !req.body.supplierId) {
         return res.status(400).json({
@@ -1296,22 +1127,9 @@ router.post("/automated", function (req, res) {
         });
     }
     
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    
-    // Get reorder suggestion
-    const reorderSuggestionsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "reorder-suggestions.db",
-    );
-    
-    const reorderSuggestionsDB = new Datastore({
-        filename: reorderSuggestionsDbPath,
-        autoload: true,
-    });
+    try {
+        // Get reorder suggestion
+        const reorderSuggestionsDB = await dbManager.getDatabase("reorder-suggestions.db");
     
     reorderSuggestionsDB.findOne({ _id: parseInt(req.body.suggestionId) }, function (err, suggestion) {
         if (err) {
@@ -1337,18 +1155,7 @@ router.post("/automated", function (req, res) {
         }
         
         // Check if supplier exists
-        const suppliersDbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "suppliers.db",
-        );
-        
-        const suppliersDB = new Datastore({
-            filename: suppliersDbPath,
-            autoload: true,
-        });
+        const suppliersDB = await dbManager.getDatabase("suppliers.db");
         
         suppliersDB.findOne({ _id: parseInt(req.body.supplierId) }, function (err, supplier) {
             if (err) {
@@ -1472,18 +1279,7 @@ router.post("/automated-bulk", function (req, res) {
     const path = require("path");
     
     // Get reorder suggestions
-    const reorderSuggestionsDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "reorder-suggestions.db",
-    );
-    
-    const reorderSuggestionsDB = new Datastore({
-        filename: reorderSuggestionsDbPath,
-        autoload: true,
-    });
+    const reorderSuggestionsDB = await dbManager.getDatabase("reorder-suggestions.db");
     
     const suggestionIds = req.body.suggestions.map(s => s.suggestionId || s);
     const results = {
@@ -1532,18 +1328,7 @@ router.post("/automated-bulk", function (req, res) {
             const supplierSuggestions = suggestionsBySupplier[supplierId];
             
             // Get product information for all suggestions
-            const inventoryDbPath = path.join(
-                process.env.APPDATA,
-                process.env.APPNAME,
-                "server",
-                "databases",
-                "inventory.db",
-            );
-            
-            const inventoryDB = new Datastore({
-                filename: inventoryDbPath,
-                autoload: true,
-            });
+            const inventoryDB = await dbManager.getDatabase("inventory.db");
             
             const productIds = supplierSuggestions.map(s => s.productId);
             

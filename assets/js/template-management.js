@@ -3,7 +3,7 @@
  * Handles communication templates for WhatsApp, SMS, and Email
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize template management functionality
     initializeTemplateManagement();
 });
@@ -101,7 +101,7 @@ function createTemplateManagementInterface() {
             </div>
         </div>
     `;
-    
+
     // Add to page content area
     $('.page-content').html(interfaceHtml);
 }
@@ -113,7 +113,7 @@ function createTemplateModal() {
     if ($('#templateModal').length > 0) {
         return; // Modal already exists
     }
-    
+
     const modalHtml = `
         <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg" role="document">
@@ -210,7 +210,7 @@ function createTemplateModal() {
             </div>
         </div>
     `;
-    
+
     $('body').append(modalHtml);
 }
 
@@ -222,41 +222,41 @@ function bindTemplateEvents() {
     if ($('#templateModal').length === 0) {
         createTemplateModal();
     }
-    
+
     // Add template button
-    $(document).on('click', '#addTemplateBtn', function() {
+    $(document).on('click', '#addTemplateBtn', function () {
         openTemplateModal();
     });
-    
+
     // Initialize defaults button
-    $(document).on('click', '#initializeDefaultsBtn', function() {
+    $(document).on('click', '#initializeDefaultsBtn', function () {
         initializeDefaultTemplates();
     });
-    
+
     // Apply filters button
-    $(document).on('click', '#applyFiltersBtn', function() {
+    $(document).on('click', '#applyFiltersBtn', function () {
         loadTemplates();
     });
-    
+
     // Save template button
-    $(document).on('click', '#saveTemplateBtn', function() {
+    $(document).on('click', '#saveTemplateBtn', function () {
         saveTemplate();
     });
-    
+
     // Edit template buttons
-    $(document).on('click', '.edit-template-btn', function() {
+    $(document).on('click', '.edit-template-btn', function () {
         const templateId = $(this).data('template-id');
         editTemplate(templateId);
     });
-    
+
     // Delete template buttons
-    $(document).on('click', '.delete-template-btn', function() {
+    $(document).on('click', '.delete-template-btn', function () {
         const templateId = $(this).data('template-id');
         deleteTemplate(templateId);
     });
-    
+
     // Toggle default template buttons
-    $(document).on('click', '.toggle-default-btn', function() {
+    $(document).on('click', '.toggle-default-btn', function () {
         const templateId = $(this).data('template-id');
         const isDefault = $(this).data('is-default');
         toggleDefaultTemplate(templateId, !isDefault);
@@ -269,32 +269,32 @@ function bindTemplateEvents() {
 function loadTemplates() {
     const typeFilter = $('#templateTypeFilter').val();
     const statusFilter = $('#templateStatusFilter').val();
-    
+
     let url = '/api/templates/all';
     const params = [];
-    
+
     if (typeFilter) {
         params.push(`type=${typeFilter}`);
     }
-    
+
     if (statusFilter) {
         params.push(statusFilter === 'active' ? 'isActive=true' : 'isActive=false');
     }
-    
+
     if (params.length > 0) {
         url += '?' + params.join('&');
     }
-    
+
     Notiflix.Loading.Standard('Loading templates...');
-    
+
     $.ajax({
         url: url,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             Notiflix.Loading.Remove();
             renderTemplatesTable(response.templates || []);
         },
-        error: function() {
+        error: function () {
             Notiflix.Loading.Remove();
             Notiflix.Report.failure('Error', 'Failed to load templates');
         }
@@ -307,7 +307,7 @@ function loadTemplates() {
 function renderTemplatesTable(templates) {
     const tbody = $('#templatesTable tbody');
     tbody.empty();
-    
+
     if (templates.length === 0) {
         tbody.append(`
             <tr>
@@ -316,7 +316,7 @@ function renderTemplatesTable(templates) {
         `);
         return;
     }
-    
+
     templates.forEach(template => {
         const row = `
             <tr>
@@ -369,11 +369,11 @@ function openTemplateModal() {
  */
 function editTemplate(templateId) {
     Notiflix.Loading.Standard('Loading template...');
-    
+
     $.ajax({
         url: `/api/templates/${templateId}`,
         type: 'GET',
-        success: function(template) {
+        success: function (template) {
             Notiflix.Loading.Remove();
             $('#templateModalTitle').text('Edit Template');
             $('#templateId').val(template._id);
@@ -386,7 +386,7 @@ function editTemplate(templateId) {
             $('#templateDefault').prop('checked', template.isDefault);
             $('#templateModal').modal('show');
         },
-        error: function() {
+        error: function () {
             Notiflix.Loading.Remove();
             Notiflix.Report.failure('Error', 'Failed to load template');
         }
@@ -399,13 +399,13 @@ function editTemplate(templateId) {
 function saveTemplate() {
     const templateId = $('#templateId').val();
     const isEdit = templateId && templateId !== '';
-    
+
     // Validate form
     if (!$('#templateForm')[0].checkValidity()) {
         Notiflix.Report.warning('Validation Error', 'Please fill in all required fields');
         return;
     }
-    
+
     const templateData = {
         name: $('#templateName').val(),
         type: $('#templateType').val(),
@@ -415,23 +415,23 @@ function saveTemplate() {
         isActive: $('#templateActive').is(':checked'),
         isDefault: $('#templateDefault').is(':checked')
     };
-    
+
     Notiflix.Loading.Standard(isEdit ? 'Updating template...' : 'Saving template...');
-    
+
     const url = isEdit ? `/api/templates/${templateId}` : '/api/templates/new';
     const method = isEdit ? 'PUT' : 'POST';
-    
+
     $.ajax({
         url: url,
         type: method,
         data: templateData,
-        success: function(response) {
+        success: function (response) {
             Notiflix.Loading.Remove();
             Notiflix.Report.success('Success', `Template ${isEdit ? 'updated' : 'created'} successfully`);
             $('#templateModal').modal('hide');
             loadTemplates(); // Reload templates
         },
-        error: function(xhr) {
+        error: function (xhr) {
             Notiflix.Loading.Remove();
             const error = xhr.responseJSON ? xhr.responseJSON.message : `Failed to ${isEdit ? 'update' : 'create'} template`;
             Notiflix.Report.failure('Error', error);
@@ -448,25 +448,25 @@ function deleteTemplate(templateId) {
         'Are you sure you want to delete this template? This action cannot be undone.',
         'Yes, delete it',
         'Cancel',
-        function() {
+        function () {
             Notiflix.Loading.Standard('Deleting template...');
-            
+
             $.ajax({
                 url: `/api/templates/${templateId}`,
                 type: 'DELETE',
-                success: function() {
+                success: function () {
                     Notiflix.Loading.Remove();
                     Notiflix.Report.success('Success', 'Template deleted successfully');
                     loadTemplates(); // Reload templates
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Notiflix.Loading.Remove();
                     const error = xhr.responseJSON ? xhr.responseJSON.message : 'Failed to delete template';
                     Notiflix.Report.failure('Error', error);
                 }
             });
         },
-        function() {
+        function () {
             // User cancelled
         }
     );
@@ -477,12 +477,12 @@ function deleteTemplate(templateId) {
  */
 function toggleDefaultTemplate(templateId, makeDefault) {
     Notiflix.Loading.Standard('Updating template...');
-    
+
     // First, we need to get the current template to know its type
     $.ajax({
         url: `/api/templates/${templateId}`,
         type: 'GET',
-        success: function(template) {
+        success: function (template) {
             // Update the template
             $.ajax({
                 url: `/api/templates/${templateId}`,
@@ -491,19 +491,19 @@ function toggleDefaultTemplate(templateId, makeDefault) {
                     ...template,
                     isDefault: makeDefault
                 },
-                success: function() {
+                success: function () {
                     Notiflix.Loading.Remove();
                     Notiflix.Report.success('Success', `Template ${makeDefault ? 'set as' : 'removed as'} default`);
                     loadTemplates(); // Reload templates
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Notiflix.Loading.Remove();
                     const error = xhr.responseJSON ? xhr.responseJSON.message : 'Failed to update template';
                     Notiflix.Report.failure('Error', error);
                 }
             });
         },
-        error: function() {
+        error: function () {
             Notiflix.Loading.Remove();
             Notiflix.Report.failure('Error', 'Failed to load template');
         }
@@ -519,25 +519,25 @@ function initializeDefaultTemplates() {
         'This will create default templates for WhatsApp, SMS, and Email if they don\'t exist. Continue?',
         'Yes, initialize',
         'Cancel',
-        function() {
+        function () {
             Notiflix.Loading.Standard('Initializing default templates...');
-            
+
             $.ajax({
-                url: '/api/templates/initialize-defaults',
+                url: './api/templates/initialize-defaults',
                 type: 'POST',
-                success: function(response) {
+                success: function (response) {
                     Notiflix.Loading.Remove();
                     Notiflix.Report.success('Success', response.message);
                     loadTemplates(); // Reload templates
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Notiflix.Loading.Remove();
                     const error = xhr.responseJSON ? xhr.responseJSON.message : 'Failed to initialize default templates';
                     Notiflix.Report.failure('Error', error);
                 }
             });
         },
-        function() {
+        function () {
             // User cancelled
         }
     );

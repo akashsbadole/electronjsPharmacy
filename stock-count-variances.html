@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Count Variances - PharmaSoft</title>
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css/icons.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
-    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
-    <link href="assets/css/responsive.css" rel="stylesheet" type="text/css" />
-    <script src="assets/js/modernizr.min.js"></script>
+    <link href="./assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="./assets/css/core.css" rel="stylesheet" type="text/css" />
+    <link href="./assets/css/components.css" rel="stylesheet" type="text/css" />
+    <link href="./assets/css/icons.css" rel="stylesheet" type="text/css" />
+    <link href="./assets/css/pages.css" rel="stylesheet" type="text/css" />
+    <link href="./assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="./assets/css/responsive.css" rel="stylesheet" type="text/css" />
+    <script src="./assets/js/modernizr.min.js"></script>
 </head>
+
 <body class="fixed-left">
     <!-- Begin page -->
     <div id="wrapper">
@@ -119,17 +121,19 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="card-box">
                                 <div class="dropdown pull-right">
-                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="md md-more-vert"></i>
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
                                         <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
                                     </ul>
                                 </div>
-                                <h4 class="text-muted m-t-0"><i class="md md-warning text-warning"></i> Total Variances</h4>
+                                <h4 class="text-muted m-t-0"><i class="md md-warning text-warning"></i> Total Variances
+                                </h4>
                                 <h2 class="m-b-20" id="totalVariances">0</h2>
                                 <p class="text-muted">
-                                    <span class="text-success">+<span id="surplusItems">0</span></span> surplus, 
+                                    <span class="text-success">+<span id="surplusItems">0</span></span> surplus,
                                     <span class="text-danger">-<span id="shortageItems">0</span></span> shortage
                                 </p>
                             </div>
@@ -137,14 +141,16 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="card-box">
                                 <div class="dropdown pull-right">
-                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="md md-more-vert"></i>
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
                                         <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
                                     </ul>
                                 </div>
-                                <h4 class="text-muted m-t-0"><i class="md md-attach-money text-info"></i> Variance Value</h4>
+                                <h4 class="text-muted m-t-0"><i class="md md-attach-money text-info"></i> Variance Value
+                                </h4>
                                 <h2 class="m-b-20">₹<span id="totalVarianceValue">0</span></h2>
                                 <p class="text-muted">
                                     Total value of all variances
@@ -154,14 +160,16 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="card-box">
                                 <div class="dropdown pull-right">
-                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="md md-more-vert"></i>
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
                                         <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
                                     </ul>
                                 </div>
-                                <h4 class="text-muted m-t-0"><i class="md md-assignment-late text-danger"></i> Pending Approval</h4>
+                                <h4 class="text-muted m-t-0"><i class="md md-assignment-late text-danger"></i> Pending
+                                    Approval</h4>
                                 <h2 class="m-b-20" id="pendingApprovals">0</h2>
                                 <p class="text-muted">
                                     <span id="highValueVariances">0</span> high-value variances
@@ -171,14 +179,16 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="card-box">
                                 <div class="dropdown pull-right">
-                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown" aria-expanded="false">
+                                    <a href="#" class="dropdown-toggle card-drop" data-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="md md-more-vert"></i>
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
                                         <li><a href="#" onclick="refreshSummary()">Refresh</a></li>
                                     </ul>
                                 </div>
-                                <h4 class="text-muted m-t-0"><i class="md md-check-circle text-success"></i> Approved Today</h4>
+                                <h4 class="text-muted m-t-0"><i class="md md-check-circle text-success"></i> Approved
+                                    Today</h4>
                                 <h2 class="m-b-20" id="approvedToday">0</h2>
                                 <p class="text-muted">
                                     <span id="adjustmentsCreated">0</span> adjustments created
@@ -207,7 +217,8 @@
                                     <div class="col-md-4">
                                         <div class="pull-right">
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-primary" id="initializeApprovalBtn">
+                                                <button type="button" class="btn btn-primary"
+                                                    id="initializeApprovalBtn">
                                                     <i class="md md-play-arrow"></i> Initialize Approval
                                                 </button>
                                                 <button type="button" class="btn btn-success" id="bulkApproveBtn">
@@ -322,12 +333,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 <!-- Pagination -->
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="dataTables_info" id="variancesInfo">
-                                            Showing <span id="startVariance">0</span> to <span id="endVariance">0</span> of <span id="totalVariancesCount">0</span> variances
+                                            Showing <span id="startVariance">0</span> to <span id="endVariance">0</span>
+                                            of <span id="totalVariancesCount">0</span> variances
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
@@ -369,7 +381,8 @@
     <!-- END wrapper -->
 
     <!-- Variance Details Modal -->
-    <div id="varianceDetailsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div id="varianceDetailsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -471,15 +484,18 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success waves-effect waves-light" id="approveVarianceBtn">Approve</button>
-                    <button type="button" class="btn btn-danger waves-effect waves-light" id="rejectVarianceBtn">Reject</button>
+                    <button type="button" class="btn btn-success waves-effect waves-light"
+                        id="approveVarianceBtn">Approve</button>
+                    <button type="button" class="btn btn-danger waves-effect waves-light"
+                        id="rejectVarianceBtn">Reject</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Approval Modal -->
-    <div id="approvalModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div id="approvalModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true" style="display: none;">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -489,7 +505,8 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="approvalReason">Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="approvalReason" rows="3" placeholder="Enter approval reason..."></textarea>
+                        <textarea class="form-control" id="approvalReason" rows="3"
+                            placeholder="Enter approval reason..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="adjustmentAction">Adjustment Action</label>
@@ -502,14 +519,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success waves-effect waves-light" id="confirmApprovalBtn">Confirm Approval</button>
+                    <button type="button" class="btn btn-success waves-effect waves-light"
+                        id="confirmApprovalBtn">Confirm Approval</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Rejection Modal -->
-    <div id="rejectionModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div id="rejectionModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true" style="display: none;">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -519,7 +538,8 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="rejectionReason">Rejection Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="rejectionReason" rows="3" placeholder="Enter rejection reason..."></textarea>
+                        <textarea class="form-control" id="rejectionReason" rows="3"
+                            placeholder="Enter rejection reason..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="recountRequired">Recount Required</label>
@@ -531,24 +551,26 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger waves-effect waves-light" id="confirmRejectionBtn">Confirm Rejection</button>
+                    <button type="button" class="btn btn-danger waves-effect waves-light"
+                        id="confirmRejectionBtn">Confirm Rejection</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- jQuery -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-    <script src="assets/js/detect.js"></script>
-    <script src="assets/js/fastclick.js"></script>
-    <script src="assets/js/jquery.slimscroll.js"></script>
-    <script src="assets/js/jquery.blockUI.js"></script>
-    <script src="assets/js/waves.js"></script>
-    <script src="assets/js/wow.min.js"></script>
-    <script src="assets/js/jquery.nicescroll.js"></script>
-    <script src="assets/js/jquery.scrollTo.min.js"></script>
-    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
-    <script src="assets/js/stock-count-variances.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/detect.js"></script>
+    <script src="./assets/js/fastclick.js"></script>
+    <script src="./assets/js/jquery.slimscroll.js"></script>
+    <script src="./assets/js/jquery.blockUI.js"></script>
+    <script src="./assets/js/waves.js"></script>
+    <script src="./assets/js/wow.min.js"></script>
+    <script src="./assets/js/jquery.nicescroll.js"></script>
+    <script src="./assets/js/jquery.scrollTo.min.js"></script>
+    <script src="./assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
+    <script src="./assets/js/stock-count-variances.js"></script>
 </body>
+
 </html>

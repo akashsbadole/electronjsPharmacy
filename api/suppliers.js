@@ -1,32 +1,31 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
-const validator = require("validator");
 const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "suppliers.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let suppliersDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
 
-suppliersDB.ensureIndex({ fieldName: "_id", unique: true });
-suppliersDB.ensureIndex({ fieldName: "gstNumber" });
-suppliersDB.ensureIndex({ fieldName: "panNumber" });
-suppliersDB.ensureIndex({ fieldName: "isActive" });
+// Initialize database asynchronously
+let suppliersDB;
+
+// Initialize the database when the module loads
+(async function() {
+    try {
+        suppliersDB = await dbManager.getDatabase("suppliers.db");
+        suppliersDB.ensureIndex({ fieldName: "_id", unique: true });
+        suppliersDB.ensureIndex({ fieldName: "gstNumber" });
+        suppliersDB.ensureIndex({ fieldName: "panNumber" });
+        suppliersDB.ensureIndex({ fieldName: "isActive" });
+        console.log("Suppliers database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize suppliers database:", error);
+    }
+})();
+
 
 /**
  * GET endpoint: Get welcome message for Suppliers API.
@@ -384,55 +383,12 @@ router.delete("/:id", function (req, res) {
         // Check if supplier has associated batches or purchase orders
         checkSupplierDependencies();
         
-        function checkSupplierDependencies() {
-            const Datastore = require("@seald-io/nedb");
-            const path = require("path");
-            
-            // Check batches
-            const batchesDbPath = path.join(
-                process.env.APPDATA,
-                process.env.APPNAME,
-                "server",
-                "databases",
-                "batches.db",
-            );
-            
-            const batchesDB = new Datastore({
-                filename: batchesDbPath,
-                autoload: true,
-            });
-            
-            batchesDB.findOne({ supplierId: supplierId }, function (err, batch) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({
-                        error: "Internal Server Error",
-                        message: "An unexpected error occurred.",
-                    });
-                }
+        async function checkSupplierDependencies() {
+            try {
+                // Check batches
+                const batchesDB = await dbManager.getDatabase("batches.db");
                 
-                if (batch) {
-                    return res.status(400).json({
-                        error: "Bad Request",
-                        message: "Cannot delete supplier with associated batches. Remove or reassign batches first.",
-                    });
-                }
-                
-                // Check purchase orders
-                const purchaseOrdersDbPath = path.join(
-                    process.env.APPDATA,
-                    process.env.APPNAME,
-                    "server",
-                    "databases",
-                    "purchase-orders.db",
-                );
-                
-                const purchaseOrdersDB = new Datastore({
-                    filename: purchaseOrdersDbPath,
-                    autoload: true,
-                });
-                
-                purchaseOrdersDB.findOne({ supplierId: supplierId }, function (err, purchaseOrder) {
+                batchesDB.findOne({ supplierId: supplierId }, async function (err, batch) {
                     if (err) {
                         console.error(err);
                         return res.status(500).json({
@@ -441,28 +397,57 @@ router.delete("/:id", function (req, res) {
                         });
                     }
                     
-                    if (purchaseOrder) {
+                    if (batch) {
                         return res.status(400).json({
                             error: "Bad Request",
-                            message: "Cannot delete supplier with associated purchase orders. Remove or reassign orders first.",
+                            message: "Cannot delete supplier with associated batches. Remove or reassign batches first.",
                         });
                     }
                     
-                    // Safe to delete
-                    suppliersDB.remove({ _id: supplierId }, function (err, numRemoved) {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).json({
-                                error: "Internal Server Error",
-                                message: "An unexpected error occurred.",
-                            });
-                        }
+                    try {
+                        // Check purchase orders
+                        const purchaseOrdersDB = await dbManager.getDatabase("purchase-orders.db");
                         
-                        res.json({ message: "Supplier deleted successfully." });
-                    });
+                        purchaseOrdersDB.findOne({ supplierId: supplierId }, function (err, purchaseOrder) {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).json({
+                                    error: "Internal Server Error",
+                                    message: "An unexpected error occurred.",
+                                });
+                            }
+                            
+                            if (purchaseOrder) {
+                                return res.status(400).json({
+                                    error: "Bad Request",
+                                    message: "Cannot delete supplier with associated purchase orders. Remove or reassign orders first.",
+                                });
+                            }
+                            
+                            // Safe to delete
+                            suppliersDB.remove({ _id: supplierId }, function (err, numRemoved) {
+                                if (err) {
+                                    console.error(err);
+                                    return res.status(500).json({
+                                        error: "Internal Server Error",
+                                        message: "An unexpected error occurred.",
+                                    });
+                                }
+                                
+                                res.json({ message: "Supplier deleted successfully." });
+                            });
+                        });
+                    } catch (error) {
+                        console.error("Error accessing purchase orders DB:", error);
+                        res.status(500).json({ error: "Internal Server Error", message: "Failed to access purchase orders database." });
+                    }
                 });
-            });
+            } catch (error) {
+                console.error("Error accessing batches DB:", error);
+                res.status(500).json({ error: "Internal Server Error", message: "Failed to access batches database." });
+            }
         }
+
     });
 });
 
@@ -637,7 +622,8 @@ router.post("/bulk", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/:id/with-account", function (req, res) {
+router.get("/:id/with-account", async function (req, res) {
+
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -647,15 +633,11 @@ router.get("/:id/with-account", function (req, res) {
     
     const supplierId = parseInt(req.params.id);
     
-    suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
-        
+    try {
+        const supplier = await new Promise((resolve, reject) => {
+            suppliersDB.findOne({ _id: supplierId }, (err, doc) => err ? reject(err) : resolve(doc));
+        });
+
         if (!supplier) {
             return res.status(404).json({
                 error: "Not Found",
@@ -663,67 +645,41 @@ router.get("/:id/with-account", function (req, res) {
             });
         }
         
-        // Get supplier account
-        const Datastore = require("@seald-io/nedb");
-        const supplierAccountsDbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "supplier-accounts.db",
-        );
+        const supplierAccountsDB = await dbManager.getDatabase("supplier-accounts.db");
         
-        const supplierAccountsDB = new Datastore({
-            filename: supplierAccountsDbPath,
-            autoload: true,
+        const account = await new Promise((resolve, reject) => {
+            supplierAccountsDB.findOne({ supplierId: supplierId }, (err, doc) => err ? reject(err) : resolve(doc));
         });
         
-        supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, account) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({
-                    error: "Internal Server Error",
-                    message: "An unexpected error occurred.",
-                });
-            }
-            
-            // Get payment terms if available
-            let paymentTerms = null;
-            if (account && account.paymentTermId) {
-                const paymentTermsDbPath = path.join(
-                    process.env.APPDATA,
-                    process.env.APPNAME,
-                    "server",
-                    "databases",
-                    "payment-terms.db",
-                );
+        // Get payment terms if available
+        let paymentTerms = null;
+        if (account && account.paymentTermId) {
+            try {
+                const paymentTermsDB = await dbManager.getDatabase("payment-terms.db");
                 
-                const paymentTermsDB = new Datastore({
-                    filename: paymentTermsDbPath,
-                    autoload: true,
-                });
-                
-                paymentTermsDB.findOne({ _id: account.paymentTermId }, function (err, terms) {
-                    if (!err && terms) {
-                        paymentTerms = terms;
-                    }
-                    
-                    res.json({
-                        supplier: supplier,
-                        account: account,
-                        paymentTerms: paymentTerms
+                paymentTerms = await new Promise((resolve) => {
+                    paymentTermsDB.findOne({ _id: account.paymentTermId }, (err, terms) => {
+                        if (!err && terms) resolve(terms);
+                        else resolve(null);
                     });
                 });
-            } else {
-                res.json({
-                    supplier: supplier,
-                    account: account,
-                    paymentTerms: null
-                });
+            } catch (error) {
+                console.error("Error fetching payment terms:", error);
             }
+        }
+        
+        res.json({
+            supplier: supplier,
+            account: account,
+            paymentTerms: paymentTerms
         });
-    });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
 });
+
+
 
 /**
  * POST endpoint: Create or update supplier account.
@@ -732,7 +688,8 @@ router.get("/:id/with-account", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/:id/account", function (req, res) {
+router.post("/:id/account", async function (req, res) {
+
     if (!req.params.id) {
         return res.status(400).json({
             error: "Bad Request",
@@ -743,7 +700,8 @@ router.post("/:id/account", function (req, res) {
     const supplierId = parseInt(req.params.id);
     
     // Check if supplier exists
-    suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
+    suppliersDB.findOne({ _id: supplierId }, async function (err, supplier) {
+
         if (err) {
             console.error(err);
             return res.status(500).json({
@@ -759,23 +717,12 @@ router.post("/:id/account", function (req, res) {
             });
         }
         
-        // Create or update supplier account
-        const Datastore = require("@seald-io/nedb");
-        const supplierAccountsDbPath = path.join(
-            process.env.APPDATA,
-            process.env.APPNAME,
-            "server",
-            "databases",
-            "supplier-accounts.db",
-        );
-        
-        const supplierAccountsDB = new Datastore({
-            filename: supplierAccountsDbPath,
-            autoload: true,
-        });
-        
-        // Check if account already exists
-        supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, existingAccount) {
+        try {
+            const supplierAccountsDB = await dbManager.getDatabase("supplier-accounts.db");
+            
+            // Check if account already exists
+            supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, existingAccount) {
+
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -837,8 +784,15 @@ router.post("/:id/account", function (req, res) {
                 });
             }
         });
-    });
+
+    } catch (error) {
+        console.error("Error in /:id/account:", error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
 });
+});
+
+
 
 /**
  * GET endpoint: Get all suppliers with account information.
@@ -847,83 +801,59 @@ router.post("/:id/account", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/with-accounts", function (req, res) {
+router.get("/with-accounts", async function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    // Build query based on filters
     let query = {};
     if (req.query.isActive !== undefined) {
         query.isActive = req.query.isActive === 'true';
     }
     
-    suppliersDB.find(query)
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limit)
-        .exec(function (err, suppliers) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({
-                    error: "Internal Server Error",
-                    message: "An unexpected error occurred.",
-                });
-            }
-            
-            // Get total count for pagination
-            suppliersDB.count(query, function (err, count) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({
-                        error: "Internal Server Error",
-                        message: "An unexpected error occurred.",
-                    });
-                }
-                
-                // Get account information for all suppliers
-                const Datastore = require("@seald-io/nedb");
-                const supplierAccountsDbPath = path.join(
-                    process.env.APPDATA,
-                    process.env.APPNAME,
-                    "server",
-                    "databases",
-                    "supplier-accounts.db",
-                );
-                
-                const supplierAccountsDB = new Datastore({
-                    filename: supplierAccountsDbPath,
-                    autoload: true,
-                });
-                
-                supplierAccountsDB.find({}, function (err, accounts) {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({
-                            error: "Internal Server Error",
-                            message: "An unexpected error occurred.",
-                        });
-                    }
-                    
-                    // Combine supplier and account information
-                    const suppliersWithAccounts = suppliers.map(supplier => {
-                        const account = accounts.find(acc => acc.supplierId === supplier._id);
-                        return {
-                            ...supplier,
-                            account: account || null
-                        };
-                    });
-                    
-                    res.json({
-                        suppliers: suppliersWithAccounts,
-                        pagination: {
-                            total: count,
-                            page: page,
-                            limit: limit,
-                            pages: Math.ceil(count / limit)
-                        }
-                    });
+    try {
+        const suppliers = await new Promise((resolve, reject) => {
+            suppliersDB.find(query).sort({ name: 1 }).skip(skip).limit(limit).exec((err, docs) => {
+                if (err) reject(err);
+                else resolve(docs);
             });
+        });
+
+        const count = await new Promise((resolve, reject) => {
+            suppliersDB.count(query, (err, c) => {
+                if (err) reject(err);
+                else resolve(c);
+            });
+        });
+
+        const supplierAccountsDB = await dbManager.getDatabase("supplier-accounts.db");
+        const accounts = await new Promise((resolve, reject) => {
+            supplierAccountsDB.find({}, (err, docs) => {
+                if (err) reject(err);
+                else resolve(docs);
+            });
+        });
+
+        const suppliersWithAccounts = suppliers.map(supplier => {
+            const account = accounts.find(acc => acc.supplierId === supplier._id);
+            return { ...supplier, account: account || null };
+        });
+
+        res.json({
+            suppliers: suppliersWithAccounts,
+            pagination: {
+                total: count,
+                page: page,
+                limit: limit,
+                pages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error("Error in /with-accounts:", error);
+        res.status(500).json({ error: "Internal Server Error", message: "An unexpected error occurred." });
+    }
+});
+
             
             /**
              * GET endpoint: Get supplier performance metrics.
@@ -1644,8 +1574,3 @@ router.get("/with-accounts", function (req, res) {
                     }))
                 };
             }
-            
-            module.exports = router;
-            });
-        });
-});

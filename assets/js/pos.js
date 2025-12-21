@@ -50,7 +50,7 @@ let availableRewards = [];
 const appName = remote.app.getName();
 const appData = remote.app.getPath("appData");
 const host = "localhost";
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const img_path = path.join(appData, appName, "uploads", "/");
 const api = "http://" + host + ":" + port + "/api/";
 const bcrypt = require("bcryptjs");
@@ -75,7 +75,7 @@ let end_date = moment(end).toDate();
 let by_till = 0;
 let by_user = 0;
 let by_status = 1;
-const default_item_img = path.join("assets","images","default.jpg");
+const default_item_img = path.join("assets", "images", "default.jpg");
 const permissions = [
   "perm_products",
   "perm_categories",
@@ -156,19 +156,19 @@ $(function () {
 });
 
 //Allow only numbers in input field
-$.fn.allowOnlyNumbers = function() {
-  return this.on('keydown', function(e) {
-  // Allow: backspace, delete, tab, escape, enter, ., ctrl/cmd+A, ctrl/cmd+C, ctrl/cmd+X, ctrl/cmd+V, end, home, left, right, down, up
-    if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 || 
-      (e.keyCode >= 35 && e.keyCode <= 40) || 
+$.fn.allowOnlyNumbers = function () {
+  return this.on('keydown', function (e) {
+    // Allow: backspace, delete, tab, escape, enter, ., ctrl/cmd+A, ctrl/cmd+C, ctrl/cmd+X, ctrl/cmd+V, end, home, left, right, down, up
+    if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+      (e.keyCode >= 35 && e.keyCode <= 40) ||
       ((e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 88) && (e.ctrlKey === true || e.metaKey === true))) {
       return;
-  }
-  // Ensure that it is a number and stop the keypress
-  if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-    e.preventDefault();
-  }
-});
+    }
+    // Ensure that it is a number and stop the keypress
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+      e.preventDefault();
+    }
+  });
 };
 $('.number-input').allowOnlyNumbers();
 
@@ -194,7 +194,7 @@ user = storage.get("user");
 
 $("#main_app").hide();
 if (auth == undefined) {
-  $.get(api + "users/check/", function (data) {});
+  $.get(api + "users/check/", function (data) { });
 
   authenticate();
 } else {
@@ -301,16 +301,14 @@ if (auth == undefined) {
         });
 
         //Show notification if there are any expired goods.
-        if(expiredCount>0)
-        {
-           notiflix.Notify.failure(
-          `${expiredCount} ${
-            expiredCount > 0 ? "products" : "product"
-          } expired. Please restock!`,
-        );
+        if (expiredCount > 0) {
+          notiflix.Notify.failure(
+            `${expiredCount} ${expiredCount > 0 ? "products" : "product"
+            } expired. Please restock!`,
+          );
         }
 
-       
+
         $("#parent").text("");
 
         data.forEach((item) => {
@@ -318,40 +316,33 @@ if (auth == undefined) {
             categories.push(item.category);
           }
           let item_isExpired = isExpired(item.expirationDate);
-          let item_stockStatus = getStockStatus(item.quantity,item.minStock);
-          if(item.img==="")
-          {
+          let item_stockStatus = getStockStatus(item.quantity, item.minStock);
+          if (item.img === "") {
             item_img = default_item_img;
           }
-          else
-          {
+          else {
             item_img = path.join(img_path, item.img);
             item_img = checkFileExists(item_img) ? item_img : default_item_img;
           }
-          
+
 
           let item_info = `<div class="col-lg-2 box ${item.category}"
-                                onclick="$(this).addToCart(${item._id}, ${
-                                  item.quantity
-                                }, ${item.stock})">
+                                onclick="$(this).addToCart(${item._id}, ${item.quantity
+            }, ${item.stock})">
                             <div class="widget-panel widget-style-2 " title="${item.name}">                    
                             <div id="image"><img src="${item_img}" id="product_img" alt=""></div>                    
                                         <div class="text-muted m-t-5 text-center">
-                                        <div class="name" id="product_name"><span class="${
-                                          item_isExpired ? "text-danger" : ""
-                                        }">${item.name}</span></div> 
-                                        <span class="sku">${
-                                          item.barcode || item._id
-                                        }</span>
-                                        <span class="${item_stockStatus<1?'text-danger':''}"><span class="stock">STOCK </span><span class="count">${
-                                          item.stock == 1
-                                            ? item.quantity
-                                            : "N/A"
-                                        }</span></span></div>
-                                        <span class="text-success text-center"><b data-plugin="counterup">${
-                                          validator.unescape(settings.symbol) +
-                                          moneyFormat(item.price)
-                                        }</b> </span>
+                                        <div class="name" id="product_name"><span class="${item_isExpired ? "text-danger" : ""
+            }">${item.name}</span></div> 
+                                        <span class="sku">${item.barcode || item._id
+            }</span>
+                                        <span class="${item_stockStatus < 1 ? 'text-danger' : ''}"><span class="stock">STOCK </span><span class="count">${item.stock == 1
+              ? item.quantity
+              : "N/A"
+            }</span></span></div>
+                                        <span class="text-success text-center"><b data-plugin="counterup">${validator.unescape(settings.symbol) +
+            moneyFormat(item.price)
+            }</b> </span>
                             </div>
                         </div>`;
           $("#parent").append(item_info);
@@ -386,7 +377,7 @@ if (auth == undefined) {
     }
 
     // Add event handler for customer selection
-    $("#customer").on("change", function() {
+    $("#customer").on("change", function () {
       const customerData = JSON.parse($(this).val());
       if (customerData && customerData.id !== 0) {
         loadCustomerLoyalty(customerData.id);
@@ -413,7 +404,7 @@ if (auth == undefined) {
 
       $.get(api + "customers/" + customerId, function (customer) {
         currentCustomer = customer;
-        
+
         if (customer.loyaltyAccount) {
           customerLoyaltyAccount = customer.loyaltyAccount;
           displayLoyaltyInfo();
@@ -421,7 +412,7 @@ if (auth == undefined) {
           customerLoyaltyAccount = null;
           $("#loyaltyInfo").hide();
         }
-        
+
         // Load available promotions for this customer
         loadAvailablePromotions();
       });
@@ -437,7 +428,7 @@ if (auth == undefined) {
       $("#loyaltyTier").text(customerLoyaltyAccount.tier);
       $("#loyaltyPoints").text(customerLoyaltyAccount.points);
       $("#loyaltyMemberSince").text(moment(customerLoyaltyAccount.memberSince).format("MMM DD, YYYY"));
-      
+
       // Calculate points to next tier
       const tierThresholds = {
         'Basic': 100,
@@ -445,10 +436,10 @@ if (auth == undefined) {
         'Gold': 1000,
         'Platinum': 0 // Platinum is the highest tier
       };
-      
+
       const currentTier = customerLoyaltyAccount.tier;
       let pointsToNextTier = 0;
-      
+
       if (currentTier === 'Basic') {
         pointsToNextTier = tierThresholds.Silver - customerLoyaltyAccount.points;
       } else if (currentTier === 'Silver') {
@@ -456,14 +447,14 @@ if (auth == undefined) {
       } else if (currentTier === 'Gold') {
         pointsToNextTier = tierThresholds.Platinum - customerLoyaltyAccount.points;
       }
-      
+
       if (pointsToNextTier > 0) {
         $("#pointsToNextTier").text(pointsToNextTier + " points to " + getNextTier(currentTier));
         $("#nextTierInfo").show();
       } else {
         $("#nextTierInfo").hide();
       }
-      
+
       $("#loyaltyInfo").show();
     }
 
@@ -485,19 +476,19 @@ if (auth == undefined) {
     // Display available promotions in the POS
     function displayAvailablePromotions() {
       $("#availablePromotions").empty();
-      
+
       if (availablePromotions.length === 0) {
         $("#availablePromotions").html("<p>No available promotions</p>");
         return;
       }
-      
+
       availablePromotions.forEach((promotion, index) => {
         // Check if this promotion is already applied
         const isApplied = appliedPromotions.some(p => p._id === promotion._id);
-        
+
         // Check if promotion is applicable to current cart
         const isApplicable = checkPromotionApplicability(promotion);
-        
+
         if (!isApplied && isApplicable) {
           const promotionElement = $(`
             <div class="promotion-item">
@@ -513,7 +504,7 @@ if (auth == undefined) {
               </div>
             </div>
           `);
-          
+
           $("#availablePromotions").append(promotionElement);
         }
       });
@@ -525,14 +516,14 @@ if (auth == undefined) {
       if (promotion.minimumPurchase && subTotal < promotion.minimumPurchase) {
         return false;
       }
-      
+
       // Check customer tier requirement
       if (promotion.customerTiers && promotion.customerTiers.length > 0) {
         if (!customerLoyaltyAccount || !promotion.customerTiers.includes(customerLoyaltyAccount.tier)) {
           return false;
         }
       }
-      
+
       // Check product applicability
       if (promotion.applicableProducts && promotion.applicableProducts.length > 0) {
         const hasApplicableProduct = cart.some(item =>
@@ -542,7 +533,7 @@ if (auth == undefined) {
           return false;
         }
       }
-      
+
       // Check category applicability
       if (promotion.applicableCategories && promotion.applicableCategories.length > 0) {
         const hasApplicableCategory = cart.some(item => {
@@ -553,17 +544,17 @@ if (auth == undefined) {
           return false;
         }
       }
-      
+
       return true;
     }
 
     // Apply a promotion to the current cart
     function applyPromotion(promotionIndex) {
       const promotion = availablePromotions[promotionIndex];
-      
+
       // Calculate promotion discount
       let discountAmount = 0;
-      
+
       if (promotion.type === 'percentage_discount') {
         discountAmount = (subTotal * promotion.value) / 100;
       } else if (promotion.type === 'fixed_amount') {
@@ -573,7 +564,7 @@ if (auth == undefined) {
         const applicableItems = cart.filter(item =>
           promotion.applicableProducts.includes(item.id)
         );
-        
+
         if (applicableItems.length > 0) {
           // Sort by price to get the most expensive item for discount
           applicableItems.sort((a, b) => (b.price * b.quantity) - (a.price * a.quantity));
@@ -585,19 +576,19 @@ if (auth == undefined) {
         // We'll handle this during transaction processing
         discountAmount = 0;
       }
-      
+
       // Add to applied promotions
       appliedPromotions.push({
         ...promotion,
         discountAmount: discountAmount
       });
-      
+
       // Update cart calculation
       $(this).renderTable(cart);
-      
+
       // Refresh available promotions
       displayAvailablePromotions();
-      
+
       // Show applied promotions
       displayAppliedPromotions();
     }
@@ -605,12 +596,12 @@ if (auth == undefined) {
     // Display applied promotions
     function displayAppliedPromotions() {
       $("#appliedPromotions").empty();
-      
+
       if (appliedPromotions.length === 0) {
         $("#appliedPromotions").html("<p>No promotions applied</p>");
         return;
       }
-      
+
       appliedPromotions.forEach((promotion, index) => {
         const promotionElement = $(`
           <div class="applied-promotion-item">
@@ -625,7 +616,7 @@ if (auth == undefined) {
             </div>
           </div>
         `);
-        
+
         $("#appliedPromotions").append(promotionElement);
       });
     }
@@ -787,23 +778,23 @@ if (auth == undefined) {
       let grossTotal;
       let total_items = 0;
       let totalPromotionDiscount = 0;
-      
+
       $.each(cart, function (index, data) {
         total += data.quantity * data.price;
         total_items += parseInt(data.quantity);
       });
-      
+
       $("#total").text(total_items);
-      
+
       // Calculate total promotion discounts
       totalPromotionDiscount = appliedPromotions.reduce((sum, promotion) => {
         return sum + (promotion.discountAmount || 0);
       }, 0);
-      
+
       // Apply manual discount and promotion discounts
       const manualDiscount = parseFloat($("#inputDiscount").val()) || 0;
       total = total - manualDiscount - totalPromotionDiscount;
-      
+
       $("#price").text(validator.unescape(settings.symbol) + moneyFormat(total.toFixed(2)));
       $("#promotionDiscount").text(validator.unescape(settings.symbol) + moneyFormat(totalPromotionDiscount.toFixed(2)));
 
@@ -824,28 +815,28 @@ if (auth == undefined) {
 
       $("#gross_price").text(validator.unescape(settings.symbol) + moneyFormat(orderTotal));
       $("#payablePrice").val(moneyFormat(grossTotal));
-      
+
       // Calculate estimated loyalty points
       calculateEstimatedLoyaltyPoints();
     };
-    
+
     // Calculate estimated loyalty points for current transaction
     function calculateEstimatedLoyaltyPoints() {
       if (!customerLoyaltyAccount) {
         $("#estimatedPoints").text("0");
         return;
       }
-      
+
       let basePoints = Math.floor(subTotal); // 1 point per currency unit
       let bonusMultiplier = 1;
-      
+
       // Check for points multiplier promotions
       appliedPromotions.forEach(promotion => {
         if (promotion.type === 'points_multiplier') {
           bonusMultiplier = Math.max(bonusMultiplier, promotion.value);
         }
       });
-      
+
       // Apply tier bonus
       const tierBonuses = {
         'Basic': 1,
@@ -853,10 +844,10 @@ if (auth == undefined) {
         'Gold': 1.5,
         'Platinum': 2
       };
-      
+
       const tierBonus = tierBonuses[customerLoyaltyAccount.tier] || 1;
       loyaltyPointsEarned = Math.floor(basePoints * bonusMultiplier * tierBonus);
-      
+
       $("#estimatedPoints").text(loyaltyPointsEarned);
     }
 
@@ -1023,7 +1014,7 @@ if (auth == undefined) {
       $.get(api + "customers/" + customerId, function (customer) {
         $("#deliveryAddress").empty();
         $("#deliveryAddress").append(`<option value="">Select delivery address</option>`);
-        
+
         if (customer.deliveryAddresses && customer.deliveryAddresses.length > 0) {
           customer.deliveryAddresses.forEach((address, index) => {
             const addressText = `${address.address}, ${address.city}, ${address.state} ${address.postalCode}`;
@@ -1032,7 +1023,7 @@ if (auth == undefined) {
             );
           });
         }
-        
+
         // Add new address button
         $("#deliveryAddress").append(
           `<option value="new">+ Add New Address</option>`
@@ -1041,7 +1032,7 @@ if (auth == undefined) {
     }
 
     // Handle delivery address selection
-    $("#deliveryAddress").on("change", function() {
+    $("#deliveryAddress").on("change", function () {
       const selectedValue = $(this).val();
       if (selectedValue === "new") {
         $("#newAddressForm").show();
@@ -1051,14 +1042,14 @@ if (auth == undefined) {
     });
 
     // Process delivery order
-    $("#processDelivery").on("click", function() {
+    $("#processDelivery").on("click", function () {
       const customerData = JSON.parse($("#customer").val());
       const selectedAddress = $("#deliveryAddress").val();
       const deliveryPriority = $("#deliveryPriority").val();
       const deliveryNotes = $("#deliveryNotes").val();
-      
+
       let deliveryAddress = null;
-      
+
       if (selectedAddress === "new") {
         // Validate new address form
         if (!$("#newAddress").val() || !$("#newCity").val() || !$("#newState").val() || !$("#newPostalCode").val()) {
@@ -1069,7 +1060,7 @@ if (auth == undefined) {
           );
           return;
         }
-        
+
         deliveryAddress = {
           address: $("#newAddress").val(),
           city: $("#newCity").val(),
@@ -1092,7 +1083,7 @@ if (auth == undefined) {
         );
         return;
       }
-      
+
       // If new address, save it first
       if (selectedAddress === "new") {
         $.ajax({
@@ -1100,10 +1091,10 @@ if (auth == undefined) {
           type: "POST",
           data: JSON.stringify(deliveryAddress),
           contentType: "application/json; charset=utf-8",
-          success: function() {
+          success: function () {
             createDeliveryOrder(deliveryAddress, deliveryPriority, deliveryNotes);
           },
-          error: function() {
+          error: function () {
             notiflix.Report.failure(
               "Error",
               "Failed to save delivery address",
@@ -1117,7 +1108,7 @@ if (auth == undefined) {
     // Create delivery order function
     function createDeliveryOrder(deliveryAddress, deliveryPriority, deliveryNotes) {
       const customerData = JSON.parse($("#customer").val());
-      
+
       let deliveryData = {
         customerId: customerData.id,
         customerName: customerData.name,
@@ -1130,13 +1121,13 @@ if (auth == undefined) {
         total: orderTotal,
         paymentStatus: "pending"
       };
-      
+
       $.ajax({
         url: api + "delivery/orders",
         type: "POST",
         data: JSON.stringify(deliveryData),
         contentType: "application/json; charset=utf-8",
-        success: function(deliveryOrder) {
+        success: function (deliveryOrder) {
           // Create transaction record
           const transactionData = {
             order: deliveryOrder.orderNumber,
@@ -1166,30 +1157,30 @@ if (auth == undefined) {
             deliveryAddress: deliveryAddress,
             deliveryOrderId: deliveryOrder._id
           };
-          
+
           $.ajax({
             url: api + "new",
             type: "POST",
             data: JSON.stringify(transactionData),
             contentType: "application/json; charset=utf-8",
-            success: function() {
+            success: function () {
               // Reset cart and data
               cart = [];
               appliedPromotions = [];
               loyaltyPointsEarned = 0;
               $(this).renderTable(cart);
-              
+
               $("#deliveryModal").modal("hide");
               notiflix.Report.success(
                 "Delivery Order Created!",
                 `Delivery order #${deliveryOrder.orderNumber} has been created successfully`,
                 "Ok"
               );
-              
+
               loadProducts();
               loadCustomers();
             },
-            error: function() {
+            error: function () {
               notiflix.Report.failure(
                 "Error",
                 "Failed to create transaction record",
@@ -1198,7 +1189,7 @@ if (auth == undefined) {
             }
           });
         },
-        error: function() {
+        error: function () {
           notiflix.Report.failure(
             "Error",
             "Failed to create delivery order",
@@ -1225,12 +1216,11 @@ if (auth == undefined) {
       let payment = 0;
       paymentType = $('.list-group-item.active').data('payment-type');
       cart.forEach((item) => {
-    items += `<tr><td>${DOMPurify.sanitize(item.product_name)}</td><td>${
-      DOMPurify.sanitize(item.quantity)
-    } </td><td class="text-right"> ${DOMPurify.sanitize(validator.unescape(settings.symbol))} ${moneyFormat(
-      DOMPurify.sanitize(Math.abs(item.price).toFixed(2)),
-    )} </td></tr>`;
-});
+        items += `<tr><td>${DOMPurify.sanitize(item.product_name)}</td><td>${DOMPurify.sanitize(item.quantity)
+          } </td><td class="text-right"> ${DOMPurify.sanitize(validator.unescape(settings.symbol))} ${moneyFormat(
+            DOMPurify.sanitize(Math.abs(item.price).toFixed(2)),
+          )} </td></tr>`;
+      });
 
       let currentTime = new Date(moment());
       let discount = $("#inputDiscount").val();
@@ -1248,7 +1238,7 @@ if (auth == undefined) {
       let tax_row = "";
       let promotion_row = "";
       let loyalty_row = "";
-      
+
       switch (paymentType) {
         case 1:
           type = "Cash";
@@ -1286,15 +1276,15 @@ if (auth == undefined) {
                         <td>Paid</td>
                         <td>:</td>
                         <td class="text-right">${validator.unescape(settings.symbol)} ${moneyFormat(
-                          Math.abs(paid).toFixed(2),
-                        )}</td>
+          Math.abs(paid).toFixed(2),
+        )}</td>
                     </tr>
                     <tr>
                         <td>Change</td>
                         <td>:</td>
                         <td class="text-right">${validator.unescape(settings.symbol)} ${moneyFormat(
-                          Math.abs(change).toFixed(2),
-                        )}</td>
+          Math.abs(change).toFixed(2),
+        )}</td>
                     </tr>
                     <tr>
                         <td>Method</td>
@@ -1308,8 +1298,8 @@ if (auth == undefined) {
                     <td>VAT(${validator.unescape(settings.percentage)})% </td>
                     <td>:</td>
                     <td class="text-right">${validator.unescape(settings.symbol)} ${moneyFormat(
-                      parseFloat(totalVat).toFixed(2),
-                    )}</td>
+          parseFloat(totalVat).toFixed(2),
+        )}</td>
                 </tr>`;
       }
 
@@ -1338,17 +1328,15 @@ if (auth == undefined) {
 
       receipt = `<div style="font-size: 10px">
         <p style="text-align: center;">
-        ${
-          checkFileExists(logo)
-            ? `<img style='max-width: 50px' src='${logo}' /><br>`
-            : ``
+        ${checkFileExists(logo)
+          ? `<img style='max-width: 50px' src='${logo}' /><br>`
+          : ``
         }
             <span style="font-size: 22px;">${validator.unescape(settings.store)}</span> <br>
             ${validator.unescape(settings.address_one)} <br>
             ${validator.unescape(settings.address_two)} <br>
-            ${
-              validator.unescape(settings.contact) != "" ? "Tel: " + validator.unescape(settings.contact) + "<br>" : ""
-            }
+            ${validator.unescape(settings.contact) != "" ? "Tel: " + validator.unescape(settings.contact) + "<br>" : ""
+        }
             ${validator.unescape(settings.tax) != "" ? "Vat No: " + validator.unescape(settings.tax) + "<br>" : ""}
         </p>
         <hr>
@@ -1356,9 +1344,8 @@ if (auth == undefined) {
             <p>
             Order No : ${orderNumber} <br>
             Ref No : ${refNumber == "" ? orderNumber : _.escape(refNumber)} <br>
-            Customer : ${
-              customer == 0 ? "Walk in customer" : _.escape(customer.name)
-            } <br>
+            Customer : ${customer == 0 ? "Walk in customer" : _.escape(customer.name)
+        } <br>
             ${customerLoyaltyAccount ? `Loyalty Tier: ${customerLoyaltyAccount.tier} <br>` : ''}
             Cashier : ${user.fullname} <br>
             Date : ${date}<br>
@@ -1381,18 +1368,17 @@ if (auth == undefined) {
                 <td><b>Subtotal</b></td>
                 <td>:</td>
                 <td class="text-right"><b>${validator.unescape(settings.symbol)}${moneyFormat(
-                  subTotal.toFixed(2),
-                )}</b></td>
+          subTotal.toFixed(2),
+        )}</b></td>
             </tr>
             <tr>
                 <td>Discount</td>
                 <td>:</td>
-                <td class="text-right">${
-                  discount > 0
-                    ? validator.unescape(settings.symbol) +
-                      moneyFormat(parseFloat(discount).toFixed(2))
-                    : ""
-                }</td>
+                <td class="text-right">${discount > 0
+          ? validator.unescape(settings.symbol) +
+          moneyFormat(parseFloat(discount).toFixed(2))
+          : ""
+        }</td>
             </tr>
             ${promotion_row}
             ${tax_row}
@@ -1401,8 +1387,8 @@ if (auth == undefined) {
                 <td><h5>:</h5></td>
                 <td class="text-right">
                     <h5>${validator.unescape(settings.symbol)} ${moneyFormat(
-                      parseFloat(orderTotal).toFixed(2),
-                    )}</h3>
+          parseFloat(orderTotal).toFixed(2),
+        )}</h3>
                 </td>
             </tr>
             ${loyalty_row}
@@ -1468,7 +1454,7 @@ if (auth == undefined) {
           // Reset loyalty and promotions data after successful transaction
           appliedPromotions = [];
           loyaltyPointsEarned = 0;
-          receipt = DOMPurify.sanitize(receipt,{ ALLOW_UNKNOWN_PROTOCOLS: true });
+          receipt = DOMPurify.sanitize(receipt, { ALLOW_UNKNOWN_PROTOCOLS: true });
           $("#viewTransaction").html("");
           $("#viewTransaction").html(receipt);
           $("#orderModal").modal("show");
@@ -1821,21 +1807,23 @@ if (auth == undefined) {
             diagOptions.text,
             diagOptions.okButtonText,
             diagOptions.cancelButtonText,
-            ()=>{},
+            () => { },
             () => {
               $("#newProduct").modal("hide");
             },
           );
         },
         //error for product
-       error: function (jqXHR,textStatus, errorThrown) {
-      console.error(jqXHR.responseJSON.message);
-      notiflix.Report.failure(
-        jqXHR.responseJSON.error,
-        jqXHR.responseJSON.message,
-        "Ok",
-      );
-      }
+        error: function (jqXHR, _textStatus, _errorThrown) {
+          const errorMsg = jqXHR.responseJSON?.message || jqXHR.statusText || "An unexpected error occurred";
+          const errorTitle = jqXHR.responseJSON?.error || "Error";
+          console.error(errorMsg);
+          notiflix.Report.failure(
+            errorTitle,
+            errorMsg,
+            "Ok",
+          );
+        }
 
       });
     });
@@ -1869,10 +1857,10 @@ if (auth == undefined) {
             diagOptions.text,
             diagOptions.okButtonText,
             diagOptions.cancelButtonText,
-            ()=>{},
+            () => { },
 
             () => {
-                $("#newCategory").modal("hide");
+              $("#newCategory").modal("hide");
             },
           );
         },
@@ -1927,7 +1915,7 @@ if (auth == undefined) {
       $("#fullname").val(allUsers[index].fullname);
       $("#username").val(validator.unescape(allUsers[index].username));
       $("#password").attr("placeholder", "New Password");
-    
+
 
       for (perm of permissions) {
         var el = "#" + perm;
@@ -2070,17 +2058,15 @@ if (auth == undefined) {
           user_list += `<tr>
             <td>${user.fullname}</td>
             <td>${user.username}</td>
-            <td class="${class_name}">${
-              state.length > 0 ? login_status : ""
+            <td class="${class_name}">${state.length > 0 ? login_status : ""
             } <br><small> ${state.length > 0 ? login_time : ""}</small></td>
-            <td>${
-              user._id == 1
-                ? '<span class="btn-group"><button class="btn btn-dark"><i class="fa fa-edit"></i></button><button class="btn btn-dark"><i class="fa fa-trash"></i></button></span>'
-                : '<span class="btn-group"><button onClick="$(this).editUser(' +
-                  index +
-                  ')" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteUser(' +
-                  user._id +
-                  ')" class="btn btn-danger"><i class="fa fa-trash"></i></button></span>'
+            <td>${user._id == 1
+              ? '<span class="btn-group"><button class="btn btn-dark"><i class="fa fa-edit"></i></button><button class="btn btn-dark"><i class="fa fa-trash"></i></button></span>'
+              : '<span class="btn-group"><button onClick="$(this).editUser(' +
+              index +
+              ')" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteUser(' +
+              user._id +
+              ')" class="btn btn-danger"><i class="fa fa-trash"></i></button></span>'
             }</td></tr>`;
 
           if (counter == users.length) {
@@ -2118,9 +2104,8 @@ if (auth == undefined) {
         const expiryDate = moment(product.expirationDate, DATE_FORMAT);
 
         //show stock status indicator
-        const stockStatus = getStockStatus(product.quantity,product.minStock);
-          if(stockStatus<=0)
-          {
+        const stockStatus = getStockStatus(product.quantity, product.minStock);
+        if (stockStatus <= 0) {
           if (stockStatus === 0) {
             product.stockStatus = "No Stock";
             icon = "fa fa-exclamation-triangle";
@@ -2149,18 +2134,16 @@ if (auth == undefined) {
           product.expiryAlert = `<p class="text-danger"><small><i class="${icon}"></i> ${product.expiryStatus}</small></p>`;
         }
 
-        if(product.img==="")
-        {
-          product_img=default_item_img;
+        if (product.img === "") {
+          product_img = default_item_img;
         }
-        else
-        {
+        else {
           product_img = img_path + product.img;
           product_img = checkFileExists(product_img)
-          ? product_img
-          : default_item_img;
+            ? product_img
+            : default_item_img;
         }
-        
+
         //render product list
         product_list +=
           `<tr>
@@ -2176,9 +2159,8 @@ if (auth == undefined) {
             </td>
             <td>${product.expirationDate}</td>
             <td>${category.length > 0 ? category[0].name : ""}</td>
-            <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${
-              product._id
-            })" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
+            <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${product._id
+          })" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
 
         if (counter == allProducts.length) {
           $("#product_list").html(product_list);
@@ -2269,13 +2251,11 @@ if (auth == undefined) {
       let formData = $(this).serializeObject();
       let mac_address;
 
-      api = "http://" + host + ":" + port + "/api/";
-
       macaddress.one(function (err, mac) {
         mac_address = mac;
       });
       const appChoice = $("#app").find("option:selected").text();
-    
+
       formData["app"] = appChoice;
       formData["mac"] = mac_address;
       formData["till"] = 1;
@@ -2286,10 +2266,10 @@ if (auth == undefined) {
         type: 'hidden',
         name: 'app',
         value: formData.app
-    });
-        $appField.length 
-            ? $appField.val(formData.app) 
-            : $("#settings_form").append(`<input type="hidden" name="app" value="${$hiddenAppField}" />`);
+      });
+      $appField.length
+        ? $appField.val(formData.app)
+        : $("#settings_form").append(`<input type="hidden" name="app" value="${$hiddenAppField}" />`);
 
 
       if (formData.percentage != "" && typeof formData.percentage === 'number') {
@@ -2310,16 +2290,18 @@ if (auth == undefined) {
             ipcRenderer.send("app-reload", "");
           },
           error: function (jqXHR) {
-            console.error(jqXHR.responseJSON.message);
+            const errorMsg = jqXHR.responseJSON?.message || jqXHR.statusText || "An unexpected error occurred";
+            const errorTitle = jqXHR.responseJSON?.error || "Error";
+            console.error(errorMsg);
             notiflix.Report.failure(
-              jqXHR.responseJSON.error,
-              jqXHR.responseJSON.message,
+              errorTitle,
+              errorMsg,
               "Ok",
             );
+          }
+        });
       }
     });
-    }
-  });
 
     $("#net_settings_form").on("submit", function (e) {
       e.preventDefault();
@@ -2334,8 +2316,40 @@ if (auth == undefined) {
       } else {
         if (isNumeric(formData.till)) {
           formData["app"] = $("#app").find("option:selected").text();
-          storage.set("settings", formData);
-          ipcRenderer.send("app-reload", "");
+
+          // Save network settings to database via API
+          $.ajax({
+            url: api + "settings/network",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json; charset=utf-8",
+            success: function (response) {
+              if (response.success) {
+                // Also save to local storage for offline access
+                storage.set("settings", formData);
+                notiflix.Report.success(
+                  "Success!",
+                  "Network settings saved successfully!",
+                  "Ok",
+                );
+                ipcRenderer.send("app-reload", "");
+              } else {
+                notiflix.Report.failure(
+                  "Error",
+                  response.message || "Failed to save network settings",
+                  "Ok",
+                );
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error("Network settings save error:", error);
+              notiflix.Report.failure(
+                "Error",
+                "Failed to save network settings. Please try again.",
+                "Ok",
+              );
+            }
+          });
         } else {
           notiflix.Report.warning(
             "Oops!",
@@ -2377,10 +2391,12 @@ if (auth == undefined) {
               notiflix.Report.success("Great!", "User details saved!", "Ok");
             }
           },
-          error: function (jqXHR,textStatus, errorThrown) {
+          error: function (jqXHR, _textStatus, _errorThrown) {
+            const errorMsg = jqXHR.responseJSON?.message || jqXHR.statusText || "An unexpected error occurred";
+            const errorTitle = jqXHR.responseJSON?.error || "Error";
             notiflix.Report.failure(
-              jqXHR.responseJSON.error,
-              jqXHR.responseJSON.message,
+              errorTitle,
+              errorMsg,
               "Ok",
             );
           },
@@ -2482,7 +2498,7 @@ if (auth == undefined) {
           .prop("selected", true);
       }
     });
- });
+  });
 
   $("#rmv_logo").on("click", function () {
     $("#remove_logo").val("1");
@@ -2546,38 +2562,33 @@ function loadTransactions() {
         transaction_list += `<tr>
                                 <td>${trans.order}</td>
                                 <td class="nobr">${moment(trans.date).format(
-                                  "DD-MMM-YYYY HH:mm:ss",
-                                )}</td>
-                                <td>${
-                                  validator.unescape(settings.symbol) + moneyFormat(trans.total)
-                                }</td>
-                                <td>${
-                                  trans.paid == ""
-                                    ? ""
-                                    : validator.unescape(settings.symbol) + moneyFormat(trans.paid)
-                                }</td>
-                                <td>${
-                                  trans.change
-                                    ? validator.unescape(settings.symbol) +
-                                      moneyFormat(
-                                        Math.abs(trans.change).toFixed(2),
-                                      )
-                                    : ""
-                                }</td>
-                                <td>${
-                                  trans.paid == ""
-                                    ? ""
-                                    : trans.payment_type
-                                }</td>
+          "DD-MMM-YYYY HH:mm:ss",
+        )}</td>
+                                <td>${validator.unescape(settings.symbol) + moneyFormat(trans.total)
+          }</td>
+                                <td>${trans.paid == ""
+            ? ""
+            : validator.unescape(settings.symbol) + moneyFormat(trans.paid)
+          }</td>
+                                <td>${trans.change
+            ? validator.unescape(settings.symbol) +
+            moneyFormat(
+              Math.abs(trans.change).toFixed(2),
+            )
+            : ""
+          }</td>
+                                <td>${trans.paid == ""
+            ? ""
+            : trans.payment_type
+          }</td>
                                 <td>${trans.till}</td>
                                 <td>${trans.user}</td>
-                                <td>${
-                                  trans.paid == ""
-                                    ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>'
-                                    : '<button onClick="$(this).viewTransaction(' +
-                                      index +
-                                      ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button></td>'
-                                }</tr>
+                                <td>${trans.paid == ""
+            ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>'
+            : '<button onClick="$(this).viewTransaction(' +
+            index +
+            ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button></td>'
+          }</tr>
                     `;
 
         if (counter == transactions.length) {
@@ -2674,17 +2685,15 @@ function loadSoldProducts() {
     sold_list += `<tr>
             <td>${item.product}</td>
             <td>${item.qty}</td>
-            <td>${
-              product[0].stock == 1
-                ? product.length > 0
-                  ? product[0].quantity
-                  : ""
-                : "N/A"
-            }</td>
-            <td>${
-              validator.unescape(settings.symbol) +
-              moneyFormat((item.qty * parseFloat(item.price)).toFixed(2))
-            }</td>
+            <td>${product[0].stock == 1
+        ? product.length > 0
+          ? product[0].quantity
+          : ""
+        : "N/A"
+      }</td>
+            <td>${validator.unescape(settings.symbol) +
+      moneyFormat((item.qty * parseFloat(item.price)).toFixed(2))
+      }</td>
             </tr>`;
 
     if (counter == sold.length) {
@@ -2735,30 +2744,29 @@ $.fn.viewTransaction = function (index) {
   let products = allTransactions[index].items;
 
   products.forEach((item) => {
-    items += `<tr><td>${item.product_name}</td><td>${
-      item.quantity
-    } </td><td class="text-right"> ${validator.unescape(settings.symbol)} ${moneyFormat(
-      Math.abs(item.price).toFixed(2),
-    )} </td></tr>`;
+    items += `<tr><td>${item.product_name}</td><td>${item.quantity
+      } </td><td class="text-right"> ${validator.unescape(settings.symbol)} ${moneyFormat(
+        Math.abs(item.price).toFixed(2),
+      )} </td></tr>`;
   });
 
   paymentMethod = allTransactions[index].payment_type;
- 
+
 
   if (allTransactions[index].paid != "") {
     payment = `<tr>
                     <td>Paid</td>
                     <td>:</td>
                     <td class="text-right">${validator.unescape(settings.symbol)} ${moneyFormat(
-                      Math.abs(allTransactions[index].paid).toFixed(2),
-                    )}</td>
+      Math.abs(allTransactions[index].paid).toFixed(2),
+    )}</td>
                 </tr>
                 <tr>
                     <td>Change</td>
                     <td>:</td>
                     <td class="text-right">${validator.unescape(settings.symbol)} ${moneyFormat(
-                      Math.abs(allTransactions[index].change).toFixed(2),
-                    )}</td>
+      Math.abs(allTransactions[index].change).toFixed(2),
+    )}</td>
                 </tr>
                 <tr>
                     <td>Method</td>
@@ -2772,26 +2780,24 @@ $.fn.viewTransaction = function (index) {
                 <td>Vat(${validator.unescape(settings.percentage)})% </td>
                 <td>:</td>
                 <td class="text-right">${validator.unescape(settings.symbol)}${parseFloat(
-                  allTransactions[index].tax,
-                ).toFixed(2)}</td>
+      allTransactions[index].tax,
+    ).toFixed(2)}</td>
             </tr>`;
   }
 
-    logo = path.join(img_path, validator.unescape(settings.img));
-      
-      receipt = `<div style="font-size: 10px">                            
+  logo = path.join(img_path, validator.unescape(settings.img));
+
+  receipt = `<div style="font-size: 10px">                            
         <p style="text-align: center;">
-        ${
-          checkFileExists(logo)
-            ? `<img style='max-width: 50px' src='${logo}' /><br>`
-            : ``
-        }
+        ${checkFileExists(logo)
+      ? `<img style='max-width: 50px' src='${logo}' /><br>`
+      : ``
+    }
             <span style="font-size: 22px;">${validator.unescape(settings.store)}</span> <br>
             ${validator.unescape(settings.address_one)} <br>
             ${validator.unescape(settings.address_two)} <br>
-            ${
-              validator.unescape(settings.contact) != "" ? "Tel: " + validator.unescape(settings.contact) + "<br>" : ""
-            } 
+            ${validator.unescape(settings.contact) != "" ? "Tel: " + validator.unescape(settings.contact) + "<br>" : ""
+    } 
             ${validator.unescape(settings.tax) != "" ? "Vat No: " + validator.unescape(settings.tax) + "<br>" : ""} 
     </p>
     <hr>
@@ -2799,15 +2805,14 @@ $.fn.viewTransaction = function (index) {
         <p>
         Invoice : ${orderNumber} <br>
         Ref No : ${refNumber} <br>
-        Customer : ${
-          allTransactions[index].customer == 0
-            ? "Walk in Customer"
-            : allTransactions[index].customer.name
-        } <br>
+        Customer : ${allTransactions[index].customer == 0
+      ? "Walk in Customer"
+      : allTransactions[index].customer.name
+    } <br>
         Cashier : ${allTransactions[index].user} <br>
         Date : ${moment(allTransactions[index].date).format(
-          "DD MMM YYYY HH:mm:ss",
-        )}<br>
+      "DD MMM YYYY HH:mm:ss",
+    )}<br>
         </p>
 
     </left>
@@ -2827,20 +2832,19 @@ $.fn.viewTransaction = function (index) {
             <td><b>Subtotal</b></td>
             <td>:</td>
             <td class="text-right"><b>${validator.unescape(settings.symbol)}${moneyFormat(
-              allTransactions[index].subtotal,
-            )}</b></td>
+      allTransactions[index].subtotal,
+    )}</b></td>
         </tr>
         <tr>
             <td>Discount</td>
             <td>:</td>
-            <td class="text-right">${
-              discount > 0
-                ? validator.unescape(settings.symbol) +
-                  moneyFormat(
-                    parseFloat(allTransactions[index].discount).toFixed(2),
-                  )
-                : ""
-            }</td>
+            <td class="text-right">${discount > 0
+      ? validator.unescape(settings.symbol) +
+      moneyFormat(
+        parseFloat(allTransactions[index].discount).toFixed(2),
+      )
+      : ""
+    }</td>
         </tr>
         
         ${tax_row}
@@ -2850,8 +2854,8 @@ $.fn.viewTransaction = function (index) {
             <td><h5>:</h5></td>
             <td class="text-right">
                 <h5>${validator.unescape(settings.symbol)}${moneyFormat(
-                  allTransactions[index].total,
-                )}</h5>
+      allTransactions[index].total,
+    )}</h5>
             </td>
         </tr>
         ${payment == 0 ? "" : payment}
@@ -2865,8 +2869,8 @@ $.fn.viewTransaction = function (index) {
          </p>
         </div>`;
 
-        //prevent DOM XSS; allow windows paths in img src
-        receipt = DOMPurify.sanitize(receipt,{ ALLOW_UNKNOWN_PROTOCOLS: true });
+  //prevent DOM XSS; allow windows paths in img src
+  receipt = DOMPurify.sanitize(receipt, { ALLOW_UNKNOWN_PROTOCOLS: true });
 
   $("#viewTransaction").html("");
   $("#viewTransaction").html(receipt);

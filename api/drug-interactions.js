@@ -1,32 +1,35 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "drug-interactions.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let drugInteractionsDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
 
-drugInteractionsDB.ensureIndex({ fieldName: "_id", unique: true });
-drugInteractionsDB.ensureIndex({ fieldName: "product_id_1" });
-drugInteractionsDB.ensureIndex({ fieldName: "product_id_2" });
+// Database instances
+let drugInteractionsDB, inventoryDB;
+
+// Initialize databases asynchronously
+(async function() {
+    try {
+        drugInteractionsDB = await dbManager.getDatabase("drug-interactions.db");
+        inventoryDB = await dbManager.getDatabase("inventory.db");
+        
+        // Ensure indexes are created
+        drugInteractionsDB.ensureIndex({ fieldName: "_id", unique: true });
+        drugInteractionsDB.ensureIndex({ fieldName: "product_id_1" });
+        drugInteractionsDB.ensureIndex({ fieldName: "product_id_2" });
+        
+        console.log("Drug Interactions database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize Drug Interactions database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get welcome message for the Drug Interactions API.
@@ -35,7 +38,7 @@ drugInteractionsDB.ensureIndex({ fieldName: "product_id_2" });
  * @param {Object} res response object.
  * @returns {void}
  */
-router.get("/", function (req, res) {
+router.get("/welcome", function (req, res) {
     res.send("Drug Interactions API");
 });
 
@@ -74,8 +77,6 @@ router.get("/", function (req, res) {
                     });
                 }
                 
-                // Get product details for each interaction
-                const inventoryDB = getInventoryDB();
                 let interactionsWithProducts = [];
                 let processedCount = 0;
                 
@@ -145,7 +146,6 @@ router.post("/", function (req, res) {
     }
     
     // Check if products exist
-    const inventoryDB = getInventoryDB();
     inventoryDB.findOne({ _id: parseInt(req.body.product_id_1) }, function (err, product1) {
         if (err) {
             console.error(err);
@@ -263,7 +263,6 @@ router.get("/:id", function (req, res) {
         }
         
         // Get product details
-        const inventoryDB = getInventoryDB();
         inventoryDB.findOne({ _id: parseInt(interaction.product_id_1) }, function (err, product1) {
             inventoryDB.findOne({ _id: parseInt(interaction.product_id_2) }, function (err, product2) {
                 res.json({
@@ -412,7 +411,6 @@ router.post("/check", function (req, res) {
     }
     
     const drugIds = req.body.drug_ids.map(id => parseInt(id));
-    const inventoryDB = getInventoryDB();
     
     // Check if all drugs exist
     let validDrugCount = 0;
@@ -509,7 +507,6 @@ router.get("/drug/:drugId", function (req, res) {
     const drugId = parseInt(req.params.drugId);
     
     // Check if drug exists
-    const inventoryDB = getInventoryDB();
     inventoryDB.findOne({ _id: drugId }, function (err, drug) {
         if (err) {
             console.error(err);
@@ -580,25 +577,3 @@ router.get("/drug/:drugId", function (req, res) {
         });
     });
 });
-
-/**
- * Helper function to get inventory database instance
- *
- * @returns {Object} NeDB instance for inventory
- */
-function getInventoryDB() {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    const dbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "inventory.db",
-    );
-    
-    return new Datastore({
-        filename: dbPath,
-        autoload: true,
-    });
-}

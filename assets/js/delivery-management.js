@@ -1,58 +1,58 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize delivery management
     initDeliveryManagement();
 });
 
 function initDeliveryManagement() {
     // Load delivery orders on tab show
-    $('a[href="#deliveryOrdersTab"]').on('shown.bs.tab', function(e) {
+    $('a[href="#deliveryOrdersTab"]').on('shown.bs.tab', function (e) {
         loadDeliveryOrders();
     });
-    
+
     // Load drivers on tab show
-    $('a[href="#driversTab"]').on('shown.bs.tab', function(e) {
+    $('a[href="#driversTab"]').on('shown.bs.tab', function (e) {
         loadDrivers();
     });
-    
+
     // Load routes on tab show
-    $('a[href="#routesTab"]').on('shown.bs.tab', function(e) {
+    $('a[href="#routesTab"]').on('shown.bs.tab', function (e) {
         loadRoutes();
     });
-    
+
     // Initialize tracking map on tab show
-    $('a[href="#trackingTab"]').on('shown.bs.tab', function(e) {
+    $('a[href="#trackingTab"]').on('shown.bs.tab', function (e) {
         initTrackingMap();
     });
-    
+
     // Initialize route planning map on tab show
-    $('a[href="#routesTab"]').on('shown.bs.tab', function(e) {
+    $('a[href="#routesTab"]').on('shown.bs.tab', function (e) {
         initRoutePlanningMap();
     });
-    
+
     // Delivery order search
-    $('#deliveryOrderSearch').on('keyup', function() {
+    $('#deliveryOrderSearch').on('keyup', function () {
         const searchTerm = $(this).val().toLowerCase();
-        $('#deliveryOrdersTable tbody tr').filter(function() {
+        $('#deliveryOrdersTable tbody tr').filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(searchTerm) > -1);
         });
     });
-    
+
     // Driver search
-    $('#driverSearch').on('keyup', function() {
+    $('#driverSearch').on('keyup', function () {
         const searchTerm = $(this).val().toLowerCase();
-        $('#driversTable tbody tr').filter(function() {
+        $('#driversTable tbody tr').filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(searchTerm) > -1);
         });
     });
-    
+
     // Route search
-    $('#routeSearch').on('keyup', function() {
+    $('#routeSearch').on('keyup', function () {
         const searchTerm = $(this).val().toLowerCase();
-        $('#routesTable tbody tr').filter(function() {
+        $('#routesTable tbody tr').filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(searchTerm) > -1);
         });
     });
-    
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 }
@@ -60,16 +60,16 @@ function initDeliveryManagement() {
 // Delivery Order Management
 function loadDeliveryOrders() {
     $.ajax({
-        url: '/api/delivery/orders',
+        url: './api/delivery/orders',
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderDeliveryOrders(response.orders);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load delivery orders', 'OK');
         }
     });
@@ -78,16 +78,16 @@ function loadDeliveryOrders() {
 function renderDeliveryOrders(orders) {
     const tbody = $('#deliveryOrdersBody');
     tbody.empty();
-    
+
     if (orders.length === 0) {
         tbody.append('<tr><td colspan="6" class="text-center">No delivery orders found</td></tr>');
         return;
     }
-    
-    orders.forEach(function(order) {
+
+    orders.forEach(function (order) {
         const statusBadge = getStatusBadge(order.status);
         const priorityBadge = getPriorityBadge(order.priority);
-        
+
         const row = `
             <tr>
                 <td>${order.orderNumber}</td>
@@ -136,14 +136,14 @@ function viewDeliveryOrder(orderId) {
     $.ajax({
         url: `/api/delivery/orders/${orderId}`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showDeliveryOrderDetails(response.order);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load delivery order details', 'OK');
         }
     });
@@ -196,23 +196,23 @@ function showDeliveryOrderDetails(order) {
             </tfoot>
         </table>
     `;
-    
+
     notiflix.Report.info('Delivery Order Details', details, 'Close');
 }
 
 // Driver Management
 function loadDrivers() {
     $.ajax({
-        url: '/api/delivery/drivers',
+        url: './api/delivery/drivers',
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderDrivers(response.drivers);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load drivers', 'OK');
         }
     });
@@ -221,17 +221,17 @@ function loadDrivers() {
 function renderDrivers(drivers) {
     const tbody = $('#driversBody');
     tbody.empty();
-    
+
     if (drivers.length === 0) {
         tbody.append('<tr><td colspan="5" class="text-center">No drivers found</td></tr>');
         return;
     }
-    
-    drivers.forEach(function(driver) {
-        const statusBadge = driver.isAvailable ? 
-            '<span class="label label-success">Available</span>' : 
+
+    drivers.forEach(function (driver) {
+        const statusBadge = driver.isAvailable ?
+            '<span class="label label-success">Available</span>' :
             '<span class="label label-danger">Unavailable</span>';
-        
+
         const row = `
             <tr>
                 <td>${driver.name}</td>
@@ -261,14 +261,14 @@ function viewDriver(driverId) {
     $.ajax({
         url: `/api/delivery/drivers/${driverId}`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showDriverDetails(response.driver);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load driver details', 'OK');
         }
     });
@@ -281,9 +281,9 @@ function showDriverDetails(driver) {
                 <strong>Name:</strong> ${driver.name}<br>
                 <strong>Phone:</strong> ${driver.phone}<br>
                 <strong>Email:</strong> ${driver.email || 'Not provided'}<br>
-                <strong>Status:</strong> ${driver.isAvailable ? 
-                    '<span class="label label-success">Available</span>' : 
-                    '<span class="label label-danger">Unavailable</span>'}
+                <strong>Status:</strong> ${driver.isAvailable ?
+            '<span class="label label-success">Available</span>' :
+            '<span class="label label-danger">Unavailable</span>'}
             </div>
             <div class="col-md-6">
                 <strong>Vehicle Type:</strong> ${driver.vehicleType}<br>
@@ -294,7 +294,7 @@ function showDriverDetails(driver) {
             </div>
         </div>
     `;
-    
+
     notiflix.Report.info('Driver Details', details, 'Close');
 }
 
@@ -302,7 +302,7 @@ function toggleDriverAvailability(driverId) {
     $.ajax({
         url: `/api/delivery/drivers/${driverId}/toggle-availability`,
         type: 'PUT',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 notiflix.Report.success('Success', 'Driver availability updated', 'OK');
                 loadDrivers();
@@ -310,7 +310,7 @@ function toggleDriverAvailability(driverId) {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to update driver availability', 'OK');
         }
     });
@@ -319,16 +319,16 @@ function toggleDriverAvailability(driverId) {
 // Route Management
 function loadRoutes() {
     $.ajax({
-        url: '/api/delivery/routes',
+        url: './api/delivery/routes',
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 renderRoutes(response.routes);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load routes', 'OK');
         }
     });
@@ -337,15 +337,15 @@ function loadRoutes() {
 function renderRoutes(routes) {
     const tbody = $('#routesBody');
     tbody.empty();
-    
+
     if (routes.length === 0) {
         tbody.append('<tr><td colspan="5" class="text-center">No routes found</td></tr>');
         return;
     }
-    
-    routes.forEach(function(route) {
+
+    routes.forEach(function (route) {
         const statusBadge = getStatusBadge(route.status);
-        
+
         const row = `
             <tr>
                 <td>${route.name}</td>
@@ -373,14 +373,14 @@ function viewRoute(routeId) {
     $.ajax({
         url: `/api/delivery/routes/${routeId}`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showRouteDetails(response.route);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load route details', 'OK');
         }
     });
@@ -427,7 +427,7 @@ function showRouteDetails(route) {
             </tbody>
         </table>
     `;
-    
+
     notiflix.Report.info('Route Details', details, 'Close');
 }
 
@@ -436,11 +436,11 @@ function optimizeRoute(routeId) {
         'Optimize Route',
         'Do you want to optimize this route for better efficiency?',
         'Yes', 'No',
-        function() {
+        function () {
             $.ajax({
                 url: `/api/delivery/routes/${routeId}/optimize`,
                 type: 'POST',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         notiflix.Report.success('Success', 'Route optimized successfully', 'OK');
                         loadRoutes();
@@ -448,7 +448,7 @@ function optimizeRoute(routeId) {
                         notiflix.Report.failure('Error', response.message, 'OK');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     notiflix.Report.failure('Error', 'Failed to optimize route', 'OK');
                 }
             });
@@ -463,10 +463,10 @@ function initTrackingMap() {
     if (trackingMap) {
         return; // Already initialized
     }
-    
+
     // Initialize the map
     trackingMap = L.map('trackingMap').setView([20.5937, 78.9629], 5); // Center on India
-    
+
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -475,23 +475,23 @@ function initTrackingMap() {
 
 function trackDelivery() {
     const orderId = $('#trackingOrderId').val().trim();
-    
+
     if (!orderId) {
         notiflix.Report.warning('Warning', 'Please enter a delivery order ID', 'OK');
         return;
     }
-    
+
     $.ajax({
         url: `/api/delivery/tracking/${orderId}`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 showTrackingResults(response.tracking);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to track delivery', 'OK');
         }
     });
@@ -499,39 +499,39 @@ function trackDelivery() {
 
 function showTrackingResults(tracking) {
     $('#trackingResults').show();
-    
+
     // Clear existing markers
     if (trackingMap) {
-        trackingMap.eachLayer(function(layer) {
+        trackingMap.eachLayer(function (layer) {
             if (layer instanceof L.Marker) {
                 trackingMap.removeLayer(layer);
             }
         });
     }
-    
+
     // Add markers for delivery locations
     if (tracking.currentLocation) {
         const driverMarker = L.marker([tracking.currentLocation.lat, tracking.currentLocation.lng])
             .addTo(trackingMap)
             .bindPopup('Driver Current Location');
-        
+
         // Center map on driver location
         trackingMap.setView([tracking.currentLocation.lat, tracking.currentLocation.lng], 13);
     }
-    
+
     if (tracking.deliveryLocation) {
         const deliveryMarker = L.marker([tracking.deliveryLocation.lat, tracking.deliveryLocation.lng])
             .addTo(trackingMap)
             .bindPopup('Delivery Address');
     }
-    
+
     // Draw route if available
     if (tracking.route && tracking.route.length > 0) {
         const routeCoordinates = tracking.route.map(point => [point.lat, point.lng]);
-        const routeLine = L.polyline(routeCoordinates, {color: 'blue', weight: 4, opacity: 0.7})
+        const routeLine = L.polyline(routeCoordinates, { color: 'blue', weight: 4, opacity: 0.7 })
             .addTo(trackingMap);
     }
-    
+
     // Update delivery details
     const details = `
         <div class="row">
@@ -565,7 +565,7 @@ function showTrackingResults(tracking) {
             `).join('')}
         </div>
     `;
-    
+
     $('#deliveryDetails').html(details);
 }
 
@@ -586,14 +586,14 @@ function loadCustomerDeliveryAddresses(customerId) {
     $.ajax({
         url: `/api/customers/${customerId}/delivery-addresses`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 populateDeliveryAddresses(response.addresses);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load delivery addresses', 'OK');
         }
     });
@@ -603,25 +603,25 @@ function populateDeliveryAddresses(addresses) {
     const select = $('#deliveryAddress');
     select.empty();
     select.append('<option value="">Select delivery address</option>');
-    
-    addresses.forEach(function(address) {
+
+    addresses.forEach(function (address) {
         const option = `<option value="${address._id}">${address.address}, ${address.city}</option>`;
         select.append(option);
     });
 }
 
 // Process delivery order from POS
-$('#processDelivery').on('click', function() {
+$('#processDelivery').on('click', function () {
     const customerData = JSON.parse($("#customer").val());
     const selectedAddressId = $('#deliveryAddress').val();
     const priority = $('#deliveryPriority').val();
     const notes = $('#deliveryNotes').val();
-    
+
     if (!selectedAddressId) {
         notiflix.Report.warning('Warning', 'Please select a delivery address', 'OK');
         return;
     }
-    
+
     // Create delivery order
     const deliveryData = {
         customerId: customerData.id,
@@ -633,23 +633,23 @@ $('#processDelivery').on('click', function() {
         items: cart,
         total: parseFloat($("#gross_price").text())
     };
-    
+
     $.ajax({
-        url: '/api/delivery/orders',
+        url: './api/delivery/orders',
         type: 'POST',
         data: deliveryData,
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 notiflix.Report.success('Success', 'Delivery order created successfully', 'OK');
                 $('#deliveryModal').modal('hide');
-                
+
                 // Process payment for the delivery order
                 processDeliveryPayment(response.order);
             } else {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to create delivery order', 'OK');
         }
     });
@@ -660,22 +660,22 @@ function processDeliveryPayment(deliveryOrder) {
     const subtotal = parseFloat($("#gross_price").text());
     const deliveryFee = deliveryOrder.deliveryFee || 0;
     const totalAmount = subtotal + deliveryFee;
-    
+
     // Update payment modal with delivery fee
     $('#payablePrice').val(totalAmount.toFixed(2));
     $('#paymentText').val(totalAmount.toFixed(2));
-    
+
     // Show payment modal
     $('#paymentModel').modal('show');
-    
+
     // Store delivery order ID for payment processing
     $('#paymentModel').data('deliveryOrderId', deliveryOrder._id);
 }
 
 // Override payment confirmation to handle delivery orders
-$('#confirmPayment').off('click').on('click', function() {
+$('#confirmPayment').off('click').on('click', function () {
     const deliveryOrderId = $('#paymentModel').data('deliveryOrderId');
-    
+
     if (deliveryOrderId) {
         // This is a delivery order, update its status to paid
         $.ajax({
@@ -686,19 +686,19 @@ $('#confirmPayment').off('click').on('click', function() {
                 method: $('.list-group-item.active').data('payment-method'),
                 paymentInfo: $('#paymentInfo').val()
             },
-            success: function(response) {
+            success: function (response) {
                 if (response.success) {
                     notiflix.Report.success('Success', 'Payment processed successfully', 'OK');
                     $('#paymentModel').modal('hide');
                     $('#paymentModel').removeData('deliveryOrderId');
-                    
+
                     // Clear cart and reset POS
                     cancelOrder();
                 } else {
                     notiflix.Report.failure('Error', response.message, 'OK');
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 notiflix.Report.failure('Error', 'Failed to process payment', 'OK');
             }
         });
@@ -709,7 +709,7 @@ $('#confirmPayment').off('click').on('click', function() {
 });
 
 // Toggle new address form
-$('#deliveryAddress').on('change', function() {
+$('#deliveryAddress').on('change', function () {
     if ($(this).val() === 'new') {
         $('#newAddressForm').show();
     } else {
@@ -718,7 +718,7 @@ $('#deliveryAddress').on('change', function() {
 });
 
 // Add new delivery address
-$('#addNewAddressBtn').on('click', function() {
+$('#addNewAddressBtn').on('click', function () {
     const customerData = JSON.parse($("#customer").val());
     const addressData = {
         address: $('#newAddress').val(),
@@ -727,17 +727,17 @@ $('#addNewAddressBtn').on('click', function() {
         postalCode: $('#newPostalCode').val(),
         isDefault: $('#isDefaultAddress').is(':checked')
     };
-    
+
     $.ajax({
         url: `/api/customers/${customerData.id}/delivery-address`,
         type: 'POST',
         data: addressData,
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 notiflix.Report.success('Success', 'Delivery address added successfully', 'OK');
                 $('#newAddressForm').hide();
                 loadCustomerDeliveryAddresses(customerData.id);
-                
+
                 // Clear form
                 $('#newAddress, #newCity, #newState, #newPostalCode').val('');
                 $('#isDefaultAddress').prop('checked', false);
@@ -745,7 +745,7 @@ $('#addNewAddressBtn').on('click', function() {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to add delivery address', 'OK');
         }
     });
@@ -760,38 +760,38 @@ function initRoutePlanningMap() {
     if (routePlanningMap) {
         return; // Already initialized
     }
-    
+
     // Initialize map
     routePlanningMap = L.map('routePlanningMap').setView([20.5937, 78.9629], 12); // Center on India with higher zoom
-    
+
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(routePlanningMap);
-    
+
     // Add click event to add waypoints
-    routePlanningMap.on('click', function(e) {
+    routePlanningMap.on('click', function (e) {
         addRouteWaypoint(e.latlng);
     });
 }
 
 function addRouteWaypoint(latlng) {
     const waypointNumber = routeMarkers.length + 1;
-    
+
     // Create custom icon for waypoint
     const waypointIcon = L.divIcon({
         html: `<div style="background-color: #5bc0de; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">${waypointNumber}</div>`,
         iconSize: [30, 30],
         className: 'route-waypoint-marker'
     });
-    
+
     // Add marker to map
     const marker = L.marker(latlng, { icon: waypointIcon })
         .addTo(routePlanningMap)
         .bindPopup(`Waypoint ${waypointNumber}<br>Lat: ${latlng.lat.toFixed(6)}<br>Lng: ${latlng.lng.toFixed(6)}`);
-    
+
     routeMarkers.push(marker);
-    
+
     // Update route line if we have at least 2 points
     if (routeMarkers.length >= 2) {
         updateRoutePolyline();
@@ -803,13 +803,13 @@ function updateRoutePolyline() {
     if (routePolyline) {
         routePlanningMap.removeLayer(routePolyline);
     }
-    
+
     // Get coordinates from markers
     const coordinates = routeMarkers.map(marker => {
         const latlng = marker.getLatLng();
         return [latlng.lat, latlng.lng];
     });
-    
+
     // Create new polyline
     routePolyline = L.polyline(coordinates, {
         color: '#5bc0de',
@@ -825,7 +825,7 @@ function clearRouteMap() {
         routePlanningMap.removeLayer(marker);
     });
     routeMarkers = [];
-    
+
     // Remove polyline
     if (routePolyline) {
         routePlanningMap.removeLayer(routePolyline);
@@ -836,11 +836,11 @@ function clearRouteMap() {
 function visualizeRouteOnMap(route) {
     // Clear existing route
     clearRouteMap();
-    
+
     if (!route.waypoints || route.waypoints.length === 0) {
         return;
     }
-    
+
     // Add waypoints to map
     route.waypoints.forEach((waypoint, index) => {
         if (waypoint.location_lat && waypoint.location_lng) {
@@ -849,7 +849,7 @@ function visualizeRouteOnMap(route) {
                 iconSize: [30, 30],
                 className: 'route-waypoint-marker'
             });
-            
+
             const marker = L.marker([waypoint.location_lat, waypoint.location_lng], { icon: waypointIcon })
                 .addTo(routePlanningMap)
                 .bindPopup(`
@@ -858,14 +858,14 @@ function visualizeRouteOnMap(route) {
                     ${waypoint.address || 'Address'}<br>
                     Order: ${waypoint.order_number || 'N/A'}
                 `);
-            
+
             routeMarkers.push(marker);
         }
     });
-    
+
     // Draw route line
     updateRoutePolyline();
-    
+
     // Fit map to show all waypoints
     if (routeMarkers.length > 0) {
         const group = new L.featureGroup(routeMarkers);
@@ -925,19 +925,19 @@ function showRoutePlanningModal(routeId) {
         `;
         $('body').append(modalHtml);
     }
-    
+
     // Initialize map when modal is shown
-    $('#routePlanningModal').on('shown.bs.modal', function() {
-        setTimeout(function() {
+    $('#routePlanningModal').on('shown.bs.modal', function () {
+        setTimeout(function () {
             initRoutePlanningMap();
-            
+
             // Load route data if routeId is provided
             if (routeId) {
                 loadRouteForPlanning(routeId);
             }
         }, 200);
     });
-    
+
     // Show modal
     $('#routePlanningModal').modal('show');
 }
@@ -946,7 +946,7 @@ function loadRouteForPlanning(routeId) {
     $.ajax({
         url: `/api/delivery/routes/${routeId}`,
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 visualizeRouteOnMap(response.route);
                 updateRoutePlanningInfo(response.route);
@@ -954,7 +954,7 @@ function loadRouteForPlanning(routeId) {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to load route for planning', 'OK');
         }
     });
@@ -970,9 +970,9 @@ function updateRoutePlanningInfo(route) {
         <p><strong>Estimated Duration:</strong> ${route.estimated_duration_minutes || 0} minutes</p>
         <p><strong>Created:</strong> ${new Date(route.created_at).toLocaleString()}</p>
     `;
-    
+
     $('#routePlanningInfo').html(info);
-    
+
     // Show route stats
     $('#routeStats').show();
     $('#routeDistance').text(route.total_distance_km || 0);
@@ -985,7 +985,7 @@ function optimizeManualRoute() {
         notiflix.Report.warning('Warning', 'Please add at least 2 waypoints to optimize the route', 'OK');
         return;
     }
-    
+
     // Create waypoints array from markers
     const waypoints = routeMarkers.map((marker, index) => {
         const latlng = marker.getLatLng();
@@ -996,21 +996,21 @@ function optimizeManualRoute() {
             waypoint_order: index + 1
         };
     });
-    
+
     notiflix.Confirm.show(
         'Optimize Route',
         'Do you want to optimize this route using the nearest neighbor algorithm?',
         'Yes', 'No',
-        function() {
+        function () {
             $.ajax({
-                url: '/api/delivery/routes/optimize-waypoints',
+                url: './api/delivery/routes/optimize-waypoints',
                 type: 'POST',
                 data: { waypoints: waypoints },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         // Clear and redraw optimized route
                         clearRouteMap();
-                        
+
                         // Add optimized waypoints to map
                         response.optimizedWaypoints.forEach((waypoint, index) => {
                             if (waypoint.location_lat && waypoint.location_lng) {
@@ -1019,28 +1019,28 @@ function optimizeManualRoute() {
                                     iconSize: [30, 30],
                                     className: 'route-waypoint-marker optimized'
                                 });
-                                
+
                                 const marker = L.marker([waypoint.location_lat, waypoint.location_lng], { icon: waypointIcon })
                                     .addTo(routePlanningMap)
                                     .bindPopup(`Optimized Waypoint ${index + 1}<br>Lat: ${waypoint.location_lat.toFixed(6)}<br>Lng: ${waypoint.location_lng.toFixed(6)}`);
-                                
+
                                 routeMarkers.push(marker);
                             }
                         });
-                        
+
                         // Update route line
                         updateRoutePolyline();
-                        
+
                         // Update stats
                         $('#routeDistance').text(response.totalDistance.toFixed(2));
                         $('#routeTime').text(response.estimatedDuration);
-                        
+
                         notiflix.Report.success('Success', 'Route optimized successfully', 'OK');
                     } else {
                         notiflix.Report.failure('Error', response.message, 'OK');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     notiflix.Report.failure('Error', 'Failed to optimize route', 'OK');
                 }
             });
@@ -1053,7 +1053,7 @@ function saveManualRoute() {
         notiflix.Report.warning('Warning', 'Please add at least 2 waypoints to create a route', 'OK');
         return;
     }
-    
+
     // Create route data
     const routeData = {
         name: prompt('Enter route name:') || 'New Route',
@@ -1066,12 +1066,12 @@ function saveManualRoute() {
             };
         })
     };
-    
+
     $.ajax({
-        url: '/api/delivery/routes/new',
+        url: './api/delivery/routes/new',
         type: 'POST',
         data: routeData,
-        success: function(response) {
+        success: function (response) {
             if (response.success) {
                 notiflix.Report.success('Success', 'Route created successfully', 'OK');
                 $('#routePlanningModal').modal('hide');
@@ -1080,7 +1080,7 @@ function saveManualRoute() {
                 notiflix.Report.failure('Error', response.message, 'OK');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             notiflix.Report.failure('Error', 'Failed to create route', 'OK');
         }
     });

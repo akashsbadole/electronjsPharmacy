@@ -3,17 +3,17 @@
  * Handles all analytics functionality including charts and data visualization
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize analytics when the analytics tab is shown
-    $('a[href="#salesAnalyticsTab"]').on('shown.bs.tab', function() {
+    $('a[href="#salesAnalyticsTab"]').on('shown.bs.tab', function () {
         loadSalesAnalytics();
     });
-    
-    $('a[href="#inventoryAnalyticsTab"]').on('shown.bs.tab', function() {
+
+    $('a[href="#inventoryAnalyticsTab"]').on('shown.bs.tab', function () {
         loadInventoryAnalytics();
     });
-    
-    $('a[href="#customerAnalyticsTab"]').on('shown.bs.tab', function() {
+
+    $('a[href="#customerAnalyticsTab"]').on('shown.bs.tab', function () {
         loadCustomerAnalytics();
     });
 });
@@ -23,29 +23,29 @@ $(document).ready(function() {
  */
 function loadSalesAnalytics() {
     const period = $('#salesPeriod').val();
-    
+
     $.ajax({
-        url: '/api/analytics/sales/trends',
+        url: './api/analytics/sales/trends',
         method: 'GET',
         data: { period: period },
-        success: function(response) {
+        success: function (response) {
             renderSalesTrendChart(response.chartData, response.summary);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading sales analytics:', error);
             showNotification('Error loading sales analytics', 'error');
         }
     });
-    
+
     // Load top products
     $.ajax({
-        url: '/api/analytics/sales/top-products',
+        url: './api/analytics/sales/top-products',
         method: 'GET',
         data: { period: period, limit: 10 },
-        success: function(response) {
+        success: function (response) {
             renderTopProductsTable(response.topProducts);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading top products:', error);
         }
     });
@@ -56,14 +56,14 @@ function loadSalesAnalytics() {
  */
 function loadInventoryAnalytics() {
     $.ajax({
-        url: '/api/analytics/inventory/analysis',
+        url: './api/analytics/inventory/analysis',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             renderStockSummary(response.stockAnalysis);
             renderExpiryAnalysis(response.expiryAnalysis);
             renderLowStockTable(response.stockAnalysis.lowStock);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading inventory analytics:', error);
             showNotification('Error loading inventory analytics', 'error');
         }
@@ -75,16 +75,16 @@ function loadInventoryAnalytics() {
  */
 function loadCustomerAnalytics() {
     const period = $('#customerPeriod').val();
-    
+
     $.ajax({
-        url: '/api/analytics/customers/analysis',
+        url: './api/analytics/customers/analysis',
         method: 'GET',
         data: { period: period, limit: 10 },
-        success: function(response) {
+        success: function (response) {
             renderCustomerSummary(response.customerAnalysis);
             renderTopCustomersTable(response.customerAnalysis.topCustomers);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading customer analytics:', error);
             showNotification('Error loading customer analytics', 'error');
         }
@@ -96,16 +96,16 @@ function loadCustomerAnalytics() {
  */
 function renderSalesTrendChart(chartData, summary) {
     const ctx = document.getElementById('salesAnalyticsChart').getContext('2d');
-    
+
     // Destroy existing chart if it exists
     if (window.salesAnalyticsChart) {
         window.salesAnalyticsChart.destroy();
     }
-    
+
     const labels = chartData.map(item => item.date);
     const salesData = chartData.map(item => item.sales);
     const transactionsData = chartData.map(item => item.transactions);
-    
+
     window.salesAnalyticsChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -158,7 +158,7 @@ function renderSalesTrendChart(chartData, summary) {
             plugins: {
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             let label = context.dataset.label || '';
                             if (label) {
                                 label += ': ';
@@ -183,12 +183,12 @@ function renderSalesTrendChart(chartData, summary) {
 function renderTopProductsTable(topProducts) {
     const tbody = $('#topProductsBody');
     tbody.empty();
-    
+
     if (topProducts.length === 0) {
         tbody.append('<tr><td colspan="3" class="text-center">No data available</td></tr>');
         return;
     }
-    
+
     topProducts.forEach(product => {
         const row = `
             <tr>
@@ -271,16 +271,16 @@ function renderExpiryAnalysis(expiryAnalysis) {
 function renderLowStockTable(lowStockItems) {
     const tbody = $('#lowStockBody');
     tbody.empty();
-    
+
     if (lowStockItems.length === 0) {
         tbody.append('<tr><td colspan="4" class="text-center">No low stock items</td></tr>');
         return;
     }
-    
+
     lowStockItems.forEach(item => {
         const statusClass = item.currentQuantity <= 0 ? 'danger' : 'warning';
         const statusText = item.currentQuantity <= 0 ? 'Out of Stock' : 'Low Stock';
-        
+
         const row = `
             <tr>
                 <td>${item.name}</td>
@@ -342,12 +342,12 @@ function renderCustomerSummary(customerAnalysis) {
 function renderTopCustomersTable(topCustomers) {
     const tbody = $('#topCustomersBody');
     tbody.empty();
-    
+
     if (topCustomers.length === 0) {
         tbody.append('<tr><td colspan="4" class="text-center">No data available</td></tr>');
         return;
     }
-    
+
     topCustomers.forEach(customer => {
         const avgTransaction = customer.transactionCount > 0 ? customer.totalSpent / customer.transactionCount : 0;
         const row = `
@@ -376,9 +376,9 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
+
     $('body').prepend(notification);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
         notification.alert('close');

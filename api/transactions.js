@@ -8,24 +8,27 @@ const path = require("path");
 const dbUtils = require('./db-utils');
 const dbPath = dbUtils.getDatabasePath("transactions.db");
 
-// Initialize stores database for store context
-const storesDBPath = dbUtils.getDatabasePath("stores.db");
-
-const storesDB = new Datastore({
-  filename: storesDBPath,
-  autoload: true,
-});
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let transactionsDB = new Datastore({
-  filename: dbPath,
-  autoload: true,
-});
+// Initialize databases asynchronously
+let storesDB;
+let transactionsDB;
 
-transactionsDB.ensureIndex({ fieldName: "_id", unique: true });
+// Initialize the databases when the module loads
+(async function() {
+    try {
+        storesDB = await dbManager.getDatabase("stores.db");
+        transactionsDB = await dbManager.getDatabase("transactions.db");
+        transactionsDB.ensureIndex({ fieldName: "_id", unique: true });
+        console.log("Transactions database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize transactions database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get the welcome message for the Transactions API.
@@ -274,7 +277,7 @@ router.get("/:transactionId", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/calculate-gst", function (req, res) {
+router.post("/calculate-gst", async function (req, res) {
     // Validate required fields
     if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
         return res.status(400).json({
@@ -291,116 +294,111 @@ router.post("/calculate-gst", function (req, res) {
     }
 
     // Get active GST configuration
-    const Datastore = require("@seald-io/nedb");
-    const dbPath = dbUtils.getDatabasePath("gst-config.db");
-    
-    const gstConfigDB = new Datastore({
-        filename: dbPath,
-        autoload: true,
-    });
+    try {
+        const gstConfigDB = await dbManager.getDatabase("gst-config.db");
 
-    gstConfigDB.findOne({ is_active: true }, function (err, config) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
-
-        if (!config) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "No active GST configuration found.",
-            });
-        }
-
-        // Check if it's an inter-state or intra-state transaction
-        const customerState = req.body.customer_state;
-        const isInterState = config.state_code !== customerState;
-        
-        let subtotal = 0;
-        let totalCGST = 0;
-        let totalSGST = 0;
-        let totalIGST = 0;
-        let totalCESS = 0;
-        
-        // Process each item
-        const itemsWithGST = req.body.items.map(function (item) {
-            const itemAmount = parseFloat(item.price) * parseInt(item.quantity);
-            let cgstAmount = 0;
-            let sgstAmount = 0;
-            let igstAmount = 0;
-            let cessAmount = 0;
-            let itemGST = 0;
-            
-            // Get HSN code specific GST rates if available, otherwise use default rates
-            // In a real implementation, we would have a separate HSN codes database
-            const hsnCode = item.hsn_code || "default";
-            let cgstRate = config.cgst_rate;
-            let sgstRate = config.sgst_rate;
-            let igstRate = config.igst_rate;
-            let cessRate = config.cess_rate;
-            
-            // Calculate GST based on transaction type
-            if (isInterState) {
-                // Inter-state transaction: IGST applies
-                igstAmount = (itemAmount * igstRate) / 100;
-                itemGST = igstAmount;
-            } else {
-                // Intra-state transaction: CGST + SGST applies
-                cgstAmount = (itemAmount * cgstRate) / 100;
-                sgstAmount = (itemAmount * sgstRate) / 100;
-                itemGST = cgstAmount + sgstAmount;
+        gstConfigDB.findOne({ is_active: true }, function (err, config) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: "Internal Server Error",
+                    message: "An unexpected error occurred.",
+                });
             }
+
+            if (!config) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "No active GST configuration found.",
+                });
+            }
+
+            // Check if it's an inter-state or intra-state transaction
+            const customerState = req.body.customer_state;
+            const isInterState = config.state_code !== customerState;
             
-            // CESS applies to both inter-state and intra-state transactions
-            cessAmount = (itemAmount * cessRate) / 100;
-            itemGST += cessAmount;
+            let subtotal = 0;
+            let totalCGST = 0;
+            let totalSGST = 0;
+            let totalIGST = 0;
+            let totalCESS = 0;
             
-            // Update totals
-            subtotal += itemAmount;
-            totalCGST += cgstAmount;
-            totalSGST += sgstAmount;
-            totalIGST += igstAmount;
-            totalCESS += cessAmount;
+            // Process each item
+            const itemsWithGST = req.body.items.map(function (item) {
+                const itemAmount = parseFloat(item.price) * parseInt(item.quantity);
+                let cgstAmount = 0;
+                let sgstAmount = 0;
+                let igstAmount = 0;
+                let cessAmount = 0;
+                let itemGST = 0;
+                
+                let cgstRate = config.cgst_rate;
+                let sgstRate = config.sgst_rate;
+                let igstRate = config.igst_rate;
+                let cessRate = config.cess_rate;
+                
+                if (isInterState) {
+                    igstAmount = (itemAmount * igstRate) / 100;
+                    itemGST = igstAmount;
+                } else {
+                    cgstAmount = (itemAmount * cgstRate) / 100;
+                    sgstAmount = (itemAmount * sgstRate) / 100;
+                    itemGST = cgstAmount + sgstAmount;
+                }
+                
+                cessAmount = (itemAmount * cessRate) / 100;
+                itemGST += cessAmount;
+                
+                subtotal += itemAmount;
+                totalCGST += cgstAmount;
+                totalSGST += sgstAmount;
+                totalIGST += igstAmount;
+                totalCESS += cessAmount;
+                
+                return {
+                    ...item,
+                    item_amount: parseFloat(itemAmount.toFixed(2)),
+                    cgst_rate: cgstRate,
+                    sgst_rate: sgstRate,
+                    igst_rate: igstRate,
+                    cess_rate: cessRate,
+                    cgst_amount: parseFloat(cgstAmount.toFixed(2)),
+                    sgst_amount: parseFloat(sgstAmount.toFixed(2)),
+                    igst_amount: parseFloat(igstAmount.toFixed(2)),
+                    cess_amount: parseFloat(cessAmount.toFixed(2)),
+                    item_gst: parseFloat(itemGST.toFixed(2)),
+                    item_total: parseFloat((itemAmount + itemGST).toFixed(2))
+                };
+            });
             
-            return {
-                ...item,
-                item_amount: parseFloat(itemAmount.toFixed(2)),
-                cgst_rate: cgstRate,
-                sgst_rate: sgstRate,
-                igst_rate: igstRate,
-                cess_rate: cessRate,
-                cgst_amount: parseFloat(cgstAmount.toFixed(2)),
-                sgst_amount: parseFloat(sgstAmount.toFixed(2)),
-                igst_amount: parseFloat(igstAmount.toFixed(2)),
-                cess_amount: parseFloat(cessAmount.toFixed(2)),
-                item_gst: parseFloat(itemGST.toFixed(2)),
-                item_total: parseFloat((itemAmount + itemGST).toFixed(2))
-            };
+            const totalGST = totalCGST + totalSGST + totalIGST + totalCESS;
+            const totalAmount = subtotal + totalGST;
+            
+            res.send({
+                items: itemsWithGST,
+                subtotal: parseFloat(subtotal.toFixed(2)),
+                cgst_rate: config.cgst_rate,
+                sgst_rate: config.sgst_rate,
+                igst_rate: config.igst_rate,
+                cess_rate: config.cess_rate,
+                total_cgst: parseFloat(totalCGST.toFixed(2)),
+                total_sgst: parseFloat(totalSGST.toFixed(2)),
+                total_igst: parseFloat(totalIGST.toFixed(2)),
+                total_cess: parseFloat(totalCESS.toFixed(2)),
+                total_gst: parseFloat(totalGST.toFixed(2)),
+                total_amount: parseFloat(totalAmount.toFixed(2)),
+                is_inter_state: isInterState
+            });
         });
-        
-        const totalGST = totalCGST + totalSGST + totalIGST + totalCESS;
-        const totalAmount = subtotal + totalGST;
-        
-        res.send({
-            items: itemsWithGST,
-            subtotal: parseFloat(subtotal.toFixed(2)),
-            cgst_rate: config.cgst_rate,
-            sgst_rate: config.sgst_rate,
-            igst_rate: config.igst_rate,
-            cess_rate: config.cess_rate,
-            total_cgst: parseFloat(totalCGST.toFixed(2)),
-            total_sgst: parseFloat(totalSGST.toFixed(2)),
-            total_igst: parseFloat(totalIGST.toFixed(2)),
-            total_cess: parseFloat(totalCESS.toFixed(2)),
-            total_gst: parseFloat(totalGST.toFixed(2)),
-            total_amount: parseFloat(totalAmount.toFixed(2)),
-            is_inter_state: isInterState
+    } catch (error) {
+        console.error("Error calculating GST:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to calculate GST.",
         });
-    });
+    }
 });
+
 
 /**
  * POST endpoint: Generate e-invoice for a transaction.
@@ -409,38 +407,16 @@ router.post("/calculate-gst", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/:transactionId/generate-e-invoice", function (req, res) {
+router.post("/:transactionId/generate-e-invoice", async function (req, res) {
     if (!req.params.transactionId) {
         return res.status(400).send("Transaction ID is required.");
     }
 
-    // Check if transaction exists
-    transactionsDB.findOne({ _id: req.params.transactionId }, function (err, transaction) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
+    try {
+        const eInvoiceDB = await dbManager.getDatabase("e-invoices.db");
 
-        if (!transaction) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Transaction not found.",
-            });
-        }
-
-        // Check if e-invoice already exists for this transaction
-        const Datastore = require("@seald-io/nedb");
-        const dbPath = dbUtils.getDatabasePath("e-invoices.db");
-        
-        const eInvoiceDB = new Datastore({
-            filename: dbPath,
-            autoload: true,
-        });
-
-        eInvoiceDB.findOne({ transaction_id: req.params.transactionId }, function (err, existingInvoice) {
+        // Check if transaction exists
+        transactionsDB.findOne({ _id: req.params.transactionId }, async function (err, transaction) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -449,33 +425,15 @@ router.post("/:transactionId/generate-e-invoice", function (req, res) {
                 });
             }
 
-            if (existingInvoice) {
-                return res.status(409).json({
-                    error: "Conflict",
-                    message: "E-Invoice already exists for this transaction.",
+            if (!transaction) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Transaction not found.",
                 });
             }
 
-            // Create e-invoice
-            const crypto = require("crypto");
-            const invoiceId = crypto.randomBytes(16).toString('hex');
-            
-            const eInvoice = {
-                _id: invoiceId,
-                transaction_id: req.params.transactionId,
-                irn: null, // Will be generated after GSTN verification
-                signed_invoice: null,
-                signed_qr_code: null,
-                ack_number: null,
-                ack_date: null,
-                invoice_status: 'PENDING',
-                cancellation_reason: null,
-                cancelled_at: null,
-                created_at: new Date(),
-                updated_at: new Date()
-            };
-
-            eInvoiceDB.insert(eInvoice, function (err, newInvoice) {
+            // Check if e-invoice already exists for this transaction
+            eInvoiceDB.findOne({ transaction_id: req.params.transactionId }, function (err, existingInvoice) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
@@ -484,42 +442,75 @@ router.post("/:transactionId/generate-e-invoice", function (req, res) {
                     });
                 }
 
-                // Simulate IRN generation
-                setTimeout(function() {
-                    // Generate a mock IRN (64 characters as per GSTN specification)
-                    const mockIRN = crypto.randomBytes(32).toString('hex').toUpperCase();
-                    
-                    // Generate a mock acknowledgement number (20 characters)
-                    const mockAckNumber = Math.floor(10000000000000000000 + Math.random() * 90000000000000000000).toString();
-                    
-                    // Update invoice with mock data
-                    eInvoiceDB.update(
-                        { _id: invoiceId },
-                        { 
-                            $set: {
-                                irn: mockIRN,
-                                signed_invoice: "mock_signed_invoice_data",
-                                signed_qr_code: "mock_qr_code_data",
-                                ack_number: mockAckNumber,
-                                ack_date: new Date(),
-                                invoice_status: "GENERATED",
-                                updated_at: new Date()
-                            }
-                        },
-                        {},
-                        function (err, numReplaced) {
-                            if (err) {
-                                console.error("Error updating e-invoice:", err);
-                            }
-                        }
-                    );
-                }, 2000); // Simulate a 2-second delay for API call
+                if (existingInvoice) {
+                    return res.status(409).json({
+                        error: "Conflict",
+                        message: "E-Invoice already exists for this transaction.",
+                    });
+                }
 
-                res.status(201).send(newInvoice);
+                // Create e-invoice
+                const crypto = require("crypto");
+                const invoiceId = crypto.randomBytes(16).toString('hex');
+                
+                const eInvoice = {
+                    _id: invoiceId,
+                    transaction_id: req.params.transactionId,
+                    irn: null,
+                    signed_invoice: null,
+                    signed_qr_code: null,
+                    ack_number: null,
+                    ack_date: null,
+                    invoice_status: 'PENDING',
+                    cancellation_reason: null,
+                    cancelled_at: null,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                eInvoiceDB.insert(eInvoice, function (err, newInvoice) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+
+                    // Simulate IRN generation
+                    setTimeout(function() {
+                        const mockIRN = crypto.randomBytes(32).toString('hex').toUpperCase();
+                        const mockAckNumber = Math.floor(10000000000000000000 + Math.random() * 90000000000000000000).toString();
+                        
+                        eInvoiceDB.update(
+                            { _id: invoiceId },
+                            { 
+                                $set: {
+                                    irn: mockIRN,
+                                    signed_invoice: "mock_signed_invoice_data",
+                                    signed_qr_code: "mock_qr_code_data",
+                                    ack_number: mockAckNumber,
+                                    ack_date: new Date(),
+                                    invoice_status: "GENERATED",
+                                    updated_at: new Date()
+                                }
+                            }
+                        );
+                    }, 2000);
+
+                    res.status(201).send(newInvoice);
+                });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error generating e-invoice:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to generate e-invoice.",
+        });
+    }
 });
+
 
 /**
  * POST endpoint: Generate e-way bill for a transaction.
@@ -528,55 +519,23 @@ router.post("/:transactionId/generate-e-invoice", function (req, res) {
  * @param {Object} res response object.
  * @returns {void}
  */
-router.post("/:transactionId/generate-eway-bill", function (req, res) {
+router.post("/:transactionId/generate-eway-bill", async function (req, res) {
     if (!req.params.transactionId) {
         return res.status(400).send("Transaction ID is required.");
     }
 
-    // Validate required fields
-    if (!req.body.from_state || !req.body.to_state || 
-        !req.body.from_pincode || !req.body.to_pincode) {
+    if (!req.body.from_state || !req.body.to_state || !req.body.from_pincode || !req.body.to_pincode) {
         return res.status(400).json({
             error: "Bad Request",
             message: "From state, to state, from pincode, and to pincode are required fields.",
         });
     }
 
-    // Validate pincodes (6 digits)
-    if (!/^\d{6}$/.test(req.body.from_pincode) || !/^\d{6}$/.test(req.body.to_pincode)) {
-        return res.status(400).json({
-            error: "Bad Request",
-            message: "Pincodes must be 6 digits.",
-        });
-    }
+    try {
+        const eWayBillDB = await dbManager.getDatabase("eway-bill.db");
 
-    // Check if transaction exists
-    transactionsDB.findOne({ _id: req.params.transactionId }, function (err, transaction) {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: "Internal Server Error",
-                message: "An unexpected error occurred.",
-            });
-        }
-
-        if (!transaction) {
-            return res.status(404).json({
-                error: "Not Found",
-                message: "Transaction not found.",
-            });
-        }
-
-        // Check if e-way bill already exists for this transaction
-        const Datastore = require("@seald-io/nedb");
-        const dbPath = dbUtils.getDatabasePath("eway-bill.db");
-        
-        const eWayBillDB = new Datastore({
-            filename: dbPath,
-            autoload: true,
-        });
-
-        eWayBillDB.findOne({ transaction_id: req.params.transactionId }, function (err, existingBill) {
+        // Check if transaction exists
+        transactionsDB.findOne({ _id: req.params.transactionId }, async function (err, transaction) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -585,43 +544,14 @@ router.post("/:transactionId/generate-eway-bill", function (req, res) {
                 });
             }
 
-            if (existingBill) {
-                return res.status(409).json({
-                    error: "Conflict",
-                    message: "E-Way Bill already exists for this transaction.",
+            if (!transaction) {
+                return res.status(404).json({
+                    error: "Not Found",
+                    message: "Transaction not found.",
                 });
             }
 
-            // Calculate validity date (default 1 day from generation date)
-            const generatedDate = new Date(req.body.generated_date) || new Date();
-            const validUntil = new Date(generatedDate);
-            validUntil.setDate(validUntil.getDate() + 1);
-
-            // Create e-way bill
-            const crypto = require("crypto");
-            const billId = crypto.randomBytes(16).toString('hex');
-            
-            const eWayBill = {
-                _id: billId,
-                transaction_id: req.params.transactionId,
-                eway_bill_number: null, // Will be generated after GSTN verification
-                generated_date: generatedDate,
-                valid_until: validUntil,
-                from_state: req.body.from_state,
-                to_state: req.body.to_state,
-                from_pincode: req.body.from_pincode,
-                to_pincode: req.body.to_pincode,
-                transporter_id: req.body.transporter_id || null,
-                vehicle_number: req.body.vehicle_number || null,
-                distance_km: req.body.distance_km || 0,
-                document_status: 'ACTIVE',
-                cancel_reason: null,
-                cancelled_at: null,
-                created_at: new Date(),
-                updated_at: new Date()
-            };
-
-            eWayBillDB.insert(eWayBill, function (err, newBill) {
+            eWayBillDB.findOne({ transaction_id: req.params.transactionId }, function (err, existingBill) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
@@ -630,34 +560,65 @@ router.post("/:transactionId/generate-eway-bill", function (req, res) {
                     });
                 }
 
-                // Simulate e-way bill number generation
-                setTimeout(function() {
-                    // Generate a mock e-way bill number (12 characters as per GSTN specification)
-                    const mockBillNumber = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-                    
-                    // Update e-way bill with mock data
-                    eWayBillDB.update(
-                        { _id: billId },
-                        { 
-                            $set: {
-                                eway_bill_number: mockBillNumber,
-                                updated_at: new Date()
-                            }
-                        },
-                        {},
-                        function (err, numReplaced) {
-                            if (err) {
-                                console.error("Error updating e-way bill:", err);
-                            }
-                        }
-                    );
-                }, 2000); // Simulate a 2-second delay for API call
+                if (existingBill) {
+                    return res.status(409).json({
+                        error: "Conflict",
+                        message: "E-Way Bill already exists for this transaction.",
+                    });
+                }
 
-                res.status(201).send(newBill);
+                const generatedDate = req.body.generated_date ? new Date(req.body.generated_date) : new Date();
+                const validUntil = new Date(generatedDate);
+                validUntil.setDate(validUntil.getDate() + 1);
+
+                const crypto = require("crypto");
+                const billId = crypto.randomBytes(16).toString('hex');
+                
+                const eWayBill = {
+                    _id: billId,
+                    transaction_id: req.params.transactionId,
+                    eway_bill_number: null,
+                    generated_date: generatedDate,
+                    valid_until: validUntil,
+                    from_state: req.body.from_state,
+                    to_state: req.body.to_state,
+                    from_pincode: req.body.from_pincode,
+                    to_pincode: req.body.to_pincode,
+                    transporter_id: req.body.transporter_id || null,
+                    vehicle_number: req.body.vehicle_number || null,
+                    distance_km: req.body.distance_km || 0,
+                    document_status: 'ACTIVE',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                eWayBillDB.insert(eWayBill, function (err, newBill) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: "Internal Server Error",
+                            message: "An unexpected error occurred.",
+                        });
+                    }
+
+                    setTimeout(function() {
+                        const mockBillNumber = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+                        eWayBillDB.update({ _id: billId }, { $set: { eway_bill_number: mockBillNumber, updated_at: new Date() } });
+                    }, 2000);
+
+                    res.status(201).send(newBill);
+                });
             });
         });
-    });
+    } catch (error) {
+        console.error("Error generating e-way bill:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to generate e-way bill.",
+        });
+    }
 });
+
 
 /**
  * Helper function to create customer invoice
@@ -666,105 +627,69 @@ router.post("/:transactionId/generate-eway-bill", function (req, res) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createCustomerInvoice(transaction, callback) {
-    const Datastore = require("@seald-io/nedb");
-    
-    // Create customer invoice
-    const customerInvoicesDbPath = dbUtils.getDatabasePath("customer-invoices.db");
-    
-    const customerInvoicesDB = new Datastore({
-        filename: customerInvoicesDbPath,
-        autoload: true,
-    });
-    
-    // Generate unique invoice number
-    const invoiceNumber = generateInvoiceNumber('CUSTOMER');
-    
-    // Calculate due date based on payment terms
-    let dueDate = new Date();
-    const customerAccountsDbPath = path.join(
-        appData,
-        appName,
-        "server",
-        "databases",
-        "customer-accounts.db",
-    );
-    
-    const customerAccountsDB = new Datastore({
-        filename: customerAccountsDbPath,
-        autoload: true,
-    });
-    
-    customerAccountsDB.findOne({ customerId: transaction.customer }, function(err, account) {
-        if (err) {
-            return callback(err);
-        }
+async function createCustomerInvoice(transaction, callback) {
+    try {
+        const customerInvoicesDB = await dbManager.getDatabase("customer-invoices.db");
+        const customerAccountsDB = await dbManager.getDatabase("customer-accounts.db");
         
-        if (account && account.paymentTermId) {
-            // Get payment terms
-            const paymentTermsDbPath = dbUtils.getDatabasePath("payment-terms.db");
-            
-            const paymentTermsDB = new Datastore({
-                filename: paymentTermsDbPath,
-                autoload: true,
-            });
-            
-            paymentTermsDB.findOne({ _id: account.paymentTermId }, function(err, paymentTerm) {
-                if (!err && paymentTerm) {
-                    dueDate.setDate(dueDate.getDate() + paymentTerm.days);
-                }
-                
-                createInvoice();
-            });
-        } else {
-            // Default 30 days
-            dueDate.setDate(dueDate.getDate() + 30);
-            createInvoice();
-        }
+        const invoiceNumber = generateInvoiceNumber('CUSTOMER');
+        let dueDate = new Date();
         
-        function createInvoice() {
-            const newInvoice = {
-                _id: Math.floor(Date.now() / 1000),
-                invoiceNumber: invoiceNumber,
-                transactionId: transaction._id,
-                customerId: transaction.customer,
-                invoiceDate: new Date().toISOString().split('T')[0],
-                dueDate: dueDate.toISOString().split('T')[0],
-                subtotal: transaction.subtotal || transaction.total,
-                gstAmount: transaction.gstAmount || 0,
-                totalAmount: transaction.total,
-                discountAmount: transaction.discountAmount || 0,
-                balanceAmount: transaction.total - transaction.paid,
-                status: 'PENDING',
-                notes: transaction.notes || null,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
+        customerAccountsDB.findOne({ customerId: transaction.customer }, async function(err, account) {
+            if (err) return callback(err);
             
-            customerInvoicesDB.insert(newInvoice, function (err, invoice) {
-                if (err) {
-                    return callback(err);
-                }
-                
-                // Create invoice items
-                createCustomerInvoiceItems(invoice._id, transaction.items, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    
-                    // Update customer account balance
-                    updateCustomerAccountBalance(transaction.customer, transaction.total - transaction.paid, function(err) {
-                        if (err) {
-                            console.error("Failed to update customer account balance:", err);
+            if (account && account.paymentTermId) {
+                try {
+                    const paymentTermsDB = await dbManager.getDatabase("payment-terms.db");
+                    paymentTermsDB.findOne({ _id: account.paymentTermId }, function(err, paymentTerm) {
+                        if (!err && paymentTerm) {
+                            dueDate.setDate(dueDate.getDate() + paymentTerm.days);
                         }
-                        
-                        callback(null);
+                        createInvoice();
+                    });
+                } catch (error) {
+                    createInvoice();
+                }
+            } else {
+                dueDate.setDate(dueDate.getDate() + 30);
+                createInvoice();
+            }
+            
+            function createInvoice() {
+                const newInvoice = {
+                    _id: Math.floor(Date.now() / 1000),
+                    invoiceNumber: invoiceNumber,
+                    transactionId: transaction._id,
+                    customerId: transaction.customer,
+                    invoiceDate: new Date().toISOString().split('T')[0],
+                    dueDate: dueDate.toISOString().split('T')[0],
+                    subtotal: transaction.subtotal || transaction.total,
+                    gstAmount: transaction.gstAmount || 0,
+                    totalAmount: transaction.total,
+                    discountAmount: transaction.discountAmount || 0,
+                    balanceAmount: transaction.total - transaction.paid,
+                    status: 'PENDING',
+                    notes: transaction.notes || null,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                customerInvoicesDB.insert(newInvoice, function (err, invoice) {
+                    if (err) return callback(err);
+                    createCustomerInvoiceItems(invoice._id, transaction.items, function(err) {
+                        if (err) return callback(err);
+                        updateCustomerAccountBalance(transaction.customer, transaction.total - transaction.paid, function(err) {
+                            callback(null);
+                        });
                     });
                 });
-            });
-        }
-    });
+            }
+        });
+    } catch (error) {
+        callback(error);
+    }
 }
+
 
 /**
  * Helper function to create customer invoice items
@@ -774,15 +699,9 @@ function createCustomerInvoice(transaction, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createCustomerInvoiceItems(invoiceId, items, callback) {
-    const Datastore = require("@seald-io/nedb");
-    
-    const itemsDbPath = dbUtils.getDatabasePath("customer-invoice-items.db");
-    
-    const itemsDB = new Datastore({
-        filename: itemsDbPath,
-        autoload: true,
-    });
+async function createCustomerInvoiceItems(invoiceId, items, callback) {
+    try {
+        const itemsDB = await dbManager.getDatabase("customer-invoice-items.db");
     
     const createdItems = [];
     
@@ -811,6 +730,9 @@ function createCustomerInvoiceItems(invoiceId, items, callback) {
         
         callback(null);
     });
+    } catch (error) {
+        callback(error);
+    }
 }
 
 /**
@@ -821,61 +743,59 @@ function createCustomerInvoiceItems(invoiceId, items, callback) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function updateCustomerAccountBalance(customerId, amount, callback) {
-    const Datastore = require("@seald-io/nedb");
-    
-    const customerAccountsDbPath = dbUtils.getDatabasePath("customer-accounts.db");
-    
-    const customerAccountsDB = new Datastore({
-        filename: customerAccountsDbPath,
-        autoload: true,
-    });
-    
-    // Check if account exists
-    customerAccountsDB.findOne({ customerId: customerId }, function(err, account) {
-        if (err) {
-            return callback(err);
-        }
+async function updateCustomerAccountBalance(customerId, amount, callback) {
+    try {
+        const customerAccountsDB = await dbManager.getDatabase("customer-accounts.db");
         
-        if (account) {
-            // Update existing account
-            customerAccountsDB.update(
-                { customerId: customerId },
-                {
-                    $inc: { balance: amount },
-                    $set: { updatedAt: new Date() }
-                },
-                {},
-                function(err, numReplaced) {
+        // Check if account exists
+        customerAccountsDB.findOne({ customerId: customerId }, function(err, account) {
+            if (err) {
+                return callback(err);
+            }
+            
+            if (account) {
+                // Update existing account
+                customerAccountsDB.update(
+                    { customerId: customerId },
+                    {
+                        $inc: { balance: amount },
+                        $set: { updatedAt: new Date() }
+                    },
+                    {},
+                    function(err, numReplaced) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        
+                        callback(null);
+                    }
+                );
+            } else {
+                // Create new account
+                const newAccount = {
+                    _id: Math.floor(Date.now() / 1000),
+                    customerId: customerId,
+                    creditLimit: 0,
+                    balance: amount,
+                    paymentTermId: null,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                customerAccountsDB.insert(newAccount, function(err, account) {
                     if (err) {
                         return callback(err);
                     }
                     
                     callback(null);
-                }
-            );
-        } else {
-            // Create new account
-            const newAccount = {
-                _id: Math.floor(Date.now() / 1000),
-                customerId: customerId,
-                creditLimit: 0,
-                balance: amount,
-                paymentTermId: null,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            
-            customerAccountsDB.insert(newAccount, function(err, account) {
-                if (err) {
-                    return callback(err);
-                }
-                
-                callback(null);
-            });
-        }
-    });
+                });
+            }
+        });
+    } catch (error) {
+        callback(error);
+    }
 }
+
 
 /**
  * Helper function to generate unique invoice number
@@ -901,96 +821,92 @@ function generateInvoiceNumber(type) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function awardLoyaltyPoints(transaction, callback) {
+async function awardLoyaltyPoints(transaction, callback) {
     if (!transaction.customer || transaction.customer === "0") {
         return callback(null);
     }
     
-    const Datastore = require("@seald-io/nedb");
-    
-    // Get customer loyalty account
-    const customerLoyaltyDbPath = dbUtils.getDatabasePath("customer-loyalty-accounts.db");
-    
-    const customerLoyaltyDB = new Datastore({
-        filename: customerLoyaltyDbPath,
-        autoload: true,
-    });
-    
-    customerLoyaltyDB.findOne({ customer_id: transaction.customer }, function (err, loyaltyAccount) {
-        if (err) {
-            return callback(err);
-        }
+    try {
+        const customerLoyaltyDB = await dbManager.getDatabase("customer-loyalty-accounts.db");
         
-        if (!loyaltyAccount || !loyaltyAccount.is_active) {
-            return callback(null); // Customer not enrolled in loyalty program
-        }
-        
-        // Calculate points to award (1% of transaction amount)
-        const transactionAmount = transaction.subtotal || transaction.total;
-        let pointsToAward = Math.floor(transactionAmount * 0.01);
-        
-        // Apply tier bonus
-        const tierBonus = getTierBonus(loyaltyAccount.tier);
-        pointsToAward = Math.floor(pointsToAward * (1 + tierBonus));
-        
-        if (pointsToAward <= 0) {
-            return callback(null);
-        }
-        
-        // Update loyalty account
-        const updatedAccount = {
-            current_points: loyaltyAccount.current_points + pointsToAward,
-            total_points_earned: loyaltyAccount.total_points_earned + pointsToAward,
-            last_activity_date: new Date().toISOString().split('T')[0],
-            updated_at: new Date()
-        };
-        
-        // Check for tier progression
-        const newTier = checkTierProgression(updatedAccount.total_points_earned);
-        if (newTier !== loyaltyAccount.tier) {
-            updatedAccount.tier = newTier;
-            updatedAccount.tier_expiry_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
-        }
-        
-        customerLoyaltyDB.update(
-            { _id: loyaltyAccount._id },
-            { $set: updatedAccount },
-            {},
-            function (err, numReplaced) {
-                if (err) {
-                    return callback(err);
-                }
-                
-                // Create loyalty transaction record
-                const loyaltyTransactionsDbPath = dbUtils.getDatabasePath("loyalty-transactions.db");
-                
-                const loyaltyTransactionsDB = new Datastore({
-                    filename: loyaltyTransactionsDbPath,
-                    autoload: true,
-                });
-                
-                const loyaltyTransaction = {
-                    _id: Math.floor(Date.now() / 1000) + Math.random(),
-                    customer_loyalty_id: loyaltyAccount._id,
-                    transaction_id: transaction._id,
-                    transaction_type: "EARN",
-                    points: pointsToAward,
-                    description: `Purchase points earned - Transaction #${transaction._id}`,
-                    reference_id: transaction._id.toString(),
-                    created_at: new Date()
-                };
-                
-                loyaltyTransactionsDB.insert(loyaltyTransaction, function (err) {
+        customerLoyaltyDB.findOne({ customer_id: transaction.customer }, async function (err, loyaltyAccount) {
+            if (err) {
+                return callback(err);
+            }
+            
+            if (!loyaltyAccount || !loyaltyAccount.is_active) {
+                return callback(null); // Customer not enrolled in loyalty program
+            }
+            
+            // Calculate points to award (1% of transaction amount)
+            const transactionAmount = transaction.subtotal || transaction.total;
+            let pointsToAward = Math.floor(transactionAmount * 0.01);
+            
+            // Apply tier bonus
+            const tierBonus = getTierBonus(loyaltyAccount.tier);
+            pointsToAward = Math.floor(pointsToAward * (1 + tierBonus));
+            
+            if (pointsToAward <= 0) {
+                return callback(null);
+            }
+            
+            // Update loyalty account
+            const updatedAccount = {
+                current_points: loyaltyAccount.current_points + pointsToAward,
+                total_points_earned: loyaltyAccount.total_points_earned + pointsToAward,
+                last_activity_date: new Date().toISOString().split('T')[0],
+                updated_at: new Date()
+            };
+            
+            // Check for tier progression
+            const newTier = checkTierProgression(updatedAccount.total_points_earned);
+            if (newTier !== loyaltyAccount.tier) {
+                updatedAccount.tier = newTier;
+                updatedAccount.tier_expiry_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+            }
+            
+            customerLoyaltyDB.update(
+                { _id: loyaltyAccount._id },
+                { $set: updatedAccount },
+                {},
+                async function (err, numReplaced) {
                     if (err) {
-                        console.error("Failed to create loyalty transaction:", err);
+                        return callback(err);
                     }
                     
-                    callback(null);
-                });
-            }
-        );
-    });
+                    try {
+                        const loyaltyTransactionsDB = await dbManager.getDatabase("loyalty-transactions.db");
+                        
+                        const loyaltyTransaction = {
+                            _id: Math.floor(Date.now() / 1000) + Math.random(),
+                            customer_loyalty_id: loyaltyAccount._id,
+                            transaction_id: transaction._id,
+                            transaction_type: "EARN",
+                            points: pointsToAward,
+                            description: `Purchase points earned - Transaction #${transaction._id}`,
+                            reference_id: transaction._id.toString(),
+                            created_at: new Date()
+                        };
+                        
+                        loyaltyTransactionsDB.insert(loyaltyTransaction, function (err) {
+                            if (err) {
+                                console.error("Failed to create loyalty transaction:", err);
+                            }
+                            
+                            callback(null);
+                        });
+                    } catch (error) {
+                        console.error("Error accessing loyalty transactions DB:", error);
+                        callback(null); // Don't fail the whole process
+                    }
+                }
+            );
+        });
+    } catch (error) {
+        callback(error);
+    }
 }
+
 
 /**
  * Helper function to get tier bonus multiplier.
@@ -1015,78 +931,75 @@ function getTierBonus(tier) {
  * @param {function} callback callback function
  * @returns {void}
  */
-function createDeliveryOrder(transaction, callback) {
-    const Datastore = require("@seald-io/nedb");
-    
-    const deliveryOrdersDbPath = dbUtils.getDatabasePath("delivery-orders.db");
-    
-    const deliveryOrdersDB = new Datastore({
-        filename: deliveryOrdersDbPath,
-        autoload: true,
-    });
-    
-    // Generate unique ID for delivery order
-    const deliveryOrderId = "DEL-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-    
-    // Calculate delivery fee based on distance (simplified)
-    let deliveryCharge = 25; // Base fee
-    if (transaction.deliveryDistance) {
-        deliveryCharge += transaction.deliveryDistance * 5; // ₹5 per km
-    }
-    
-    const deliveryOrder = {
-        _id: deliveryOrderId,
-        transaction_id: transaction._id,
-        customer_id: transaction.customer,
-        store_id: transaction.storeId,
-        delivery_address: transaction.deliveryAddress,
-        delivery_lat: transaction.deliveryLat || null,
-        delivery_lng: transaction.deliveryLng || null,
-        delivery_pincode: transaction.deliveryPincode || null,
-        delivery_phone: transaction.deliveryPhone || null,
-        delivery_instructions: transaction.deliveryInstructions || null,
-        delivery_status: "PENDING",
-        priority_level: transaction.priorityLevel || 1,
-        scheduled_delivery_time: transaction.scheduledDeliveryTime || null,
-        estimated_delivery_time: calculateEstimatedDeliveryTime(transaction.scheduledDeliveryTime),
-        delivery_charge: deliveryCharge,
-        distance_km: transaction.deliveryDistance || 0,
-        created_at: new Date(),
-        updated_at: new Date(),
-        sync_version: 1
-    };
-    
-    deliveryOrdersDB.insert(deliveryOrder, function (err, deliveryOrder) {
-        if (err) {
-            return callback(err);
+async function createDeliveryOrder(transaction, callback) {
+    try {
+        const deliveryOrdersDB = await dbManager.getDatabase("delivery-orders.db");
+        
+        // Generate unique ID for delivery order
+        const deliveryOrderId = "DEL-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        
+        // Calculate delivery fee based on distance (simplified)
+        let deliveryCharge = 25; // Base fee
+        if (transaction.deliveryDistance) {
+            deliveryCharge += transaction.deliveryDistance * 5; // ₹5 per km
         }
         
-        // Create initial status update
-        const deliveryStatusUpdatesDbPath = dbUtils.getDatabasePath("delivery-status-updates.db");
-        
-        const deliveryStatusUpdatesDB = new Datastore({
-            filename: deliveryStatusUpdatesDbPath,
-            autoload: true,
-        });
-        
-        const statusUpdate = {
-            _id: "STATUS-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9),
-            delivery_order_id: deliveryOrderId,
-            status: "PENDING",
-            notes: "Delivery order created from transaction",
-            update_time: new Date(),
-            updated_by: null
+        const deliveryOrder = {
+            _id: deliveryOrderId,
+            transaction_id: transaction._id,
+            customer_id: transaction.customer,
+            store_id: transaction.storeId,
+            delivery_address: transaction.deliveryAddress,
+            delivery_lat: transaction.deliveryLat || null,
+            delivery_lng: transaction.deliveryLng || null,
+            delivery_pincode: transaction.deliveryPincode || null,
+            delivery_phone: transaction.deliveryPhone || null,
+            delivery_instructions: transaction.deliveryInstructions || null,
+            delivery_status: "PENDING",
+            priority_level: transaction.priorityLevel || 1,
+            scheduled_delivery_time: transaction.scheduledDeliveryTime || null,
+            estimated_delivery_time: calculateEstimatedDeliveryTime(transaction.scheduledDeliveryTime),
+            delivery_charge: deliveryCharge,
+            distance_km: transaction.deliveryDistance || 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            sync_version: 1
         };
         
-        deliveryStatusUpdatesDB.insert(statusUpdate, function (err) {
+        deliveryOrdersDB.insert(deliveryOrder, async function (err, deliveryOrder) {
             if (err) {
-                console.error("Failed to create delivery status update:", err);
+                return callback(err);
             }
             
-            callback(null);
+            try {
+                const deliveryStatusUpdatesDB = await dbManager.getDatabase("delivery-status-updates.db");
+                
+                const statusUpdate = {
+                    _id: "STATUS-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9),
+                    delivery_order_id: deliveryOrderId,
+                    status: "PENDING",
+                    notes: "Delivery order created from transaction",
+                    update_time: new Date(),
+                    updated_by: null
+                };
+                
+                deliveryStatusUpdatesDB.insert(statusUpdate, function (err) {
+                    if (err) {
+                        console.error("Failed to create delivery status update:", err);
+                    }
+                    
+                    callback(null);
+                });
+            } catch (error) {
+                console.error("Error accessing delivery status updates DB:", error);
+                callback(null);
+            }
         });
-    });
+    } catch (error) {
+        callback(error);
+    }
 }
+
 
 /**
  * Helper function to calculate estimated delivery time

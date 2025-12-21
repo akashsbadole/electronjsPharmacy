@@ -3,53 +3,53 @@
  * Handles custom report creation, management, and execution
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize custom reports when custom reports tab is shown
-    $('a[href="#customReportsTab"]').on('shown.bs.tab', function() {
+    $('a[href="#customReportsTab"]').on('shown.bs.tab', function () {
         initializeCustomReports();
     });
-    
+
     // Handle report builder wizard navigation
-    $('.wizard-next').on('click', function() {
+    $('.wizard-next').on('click', function () {
         nextWizardStep();
     });
-    
-    $('.wizard-prev').on('click', function() {
+
+    $('.wizard-prev').on('click', function () {
         prevWizardStep();
     });
-    
+
     // Handle data source selection
-    $('#dataSource').on('change', function() {
+    $('#dataSource').on('change', function () {
         loadDataSourceFields();
     });
-    
+
     // Handle field selection
-    $('#availableFields').on('change', 'input[type="checkbox"]', function() {
+    $('#availableFields').on('change', 'input[type="checkbox"]', function () {
         updateSelectedFields();
     });
-    
+
     // Handle template selection
-    $('#reportTemplate').on('change', function() {
+    $('#reportTemplate').on('change', function () {
         loadTemplateConfiguration();
     });
-    
+
     // Handle report type selection
-    $('#reportType').on('change', function() {
+    $('#reportType').on('change', function () {
         updateReportTypeOptions();
     });
-    
+
     // Handle grouping enable/disable
-    $('#enableGrouping').on('change', function() {
+    $('#enableGrouping').on('change', function () {
         const isChecked = $(this).is(':checked');
         $('#groupBySection').toggle(isChecked);
-        
+
         if (isChecked) {
             populateGroupByOptions();
         }
     });
-    
+
     // Handle schedule type change in modal
-    $('#scheduleType').on('change', function() {
+    $('#scheduleType').on('change', function () {
         const scheduleType = $(this).val();
         if (scheduleType === 'custom') {
             $('#customCronSection').show();
@@ -57,7 +57,7 @@ $(document).ready(function() {
             $('#customCronSection').hide();
         }
     });
-    
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 });
@@ -90,12 +90,12 @@ function resetWizard() {
  */
 function nextWizardStep() {
     const currentStep = $('.wizard-step:visible').attr('id');
-    
+
     // Validate current step before proceeding
     if (!validateCurrentStep(currentStep)) {
         return;
     }
-    
+
     switch (currentStep) {
         case 'step1-dataSource':
             $('#step1-dataSource').hide();
@@ -123,7 +123,7 @@ function nextWizardStep() {
             $('#step5-indicator').addClass('active');
             $('.wizard-next').hide();
             $('.wizard-finish').show();
-            
+
             // Populate configuration options
             populateConfigurationOptions();
             break;
@@ -135,7 +135,7 @@ function nextWizardStep() {
  */
 function prevWizardStep() {
     const currentStep = $('.wizard-step:visible').attr('id');
-    
+
     switch (currentStep) {
         case 'step2-fields':
             $('#step2-fields').hide();
@@ -195,21 +195,21 @@ function validateCurrentStep(step) {
  */
 function loadDataSourceOptions() {
     $.ajax({
-        url: '/api/report-execution/data-sources',
+        url: './api/report-execution/data-sources',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const dataSourceSelect = $('#dataSource');
             dataSourceSelect.empty();
             dataSourceSelect.append('<option value="">Select Data Source</option>');
-            
+
             response.dataSources.forEach(ds => {
                 dataSourceSelect.append(`<option value="${ds.id}">${ds.name}</option>`);
             });
-            
+
             // Store data sources for later use
             window.availableDataSources = response.dataSources;
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading data sources:', error);
             showNotification('Error loading data sources', 'error');
         }
@@ -221,20 +221,20 @@ function loadDataSourceOptions() {
  */
 function loadDataSourceFields() {
     const dataSourceId = $('#dataSource').val();
-    
+
     if (!dataSourceId) {
         $('#availableFields').empty();
         return;
     }
-    
+
     const dataSource = window.availableDataSources.find(ds => ds.id === dataSourceId);
     if (!dataSource) {
         return;
     }
-    
+
     const availableFieldsContainer = $('#availableFields');
     availableFieldsContainer.empty();
-    
+
     dataSource.fields.forEach(field => {
         const fieldHtml = `
             <div class="field-item">
@@ -260,11 +260,11 @@ function loadDataSourceFields() {
 function updateSelectedFields() {
     const selectedFieldsList = $('#selectedFieldsList');
     selectedFieldsList.empty();
-    
-    $('.field-checkbox:checked').each(function() {
+
+    $('.field-checkbox:checked').each(function () {
         const fieldData = JSON.parse($(this).attr('data-field'));
         const fieldKey = $(this).val();
-        
+
         const fieldItem = `
             <div class="field-item selected-field" data-field-key="${fieldKey}">
                 <div class="d-flex justify-content-between align-items-center">
@@ -303,16 +303,16 @@ function removeField(fieldKey) {
  */
 function loadReportTemplates() {
     $.ajax({
-        url: '/api/report-templates/templates',
+        url: './api/report-templates/templates',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const templateSelect = $('#reportTemplate');
             templateSelect.empty();
             templateSelect.append('<option value="">Create Custom Report</option>');
-            
+
             // Store templates globally
             window.reportTemplates = response.templates;
-            
+
             // Group templates by category
             const templatesByCategory = {};
             response.templates.forEach(template => {
@@ -321,17 +321,17 @@ function loadReportTemplates() {
                 }
                 templatesByCategory[template.category].push(template);
             });
-            
+
             Object.keys(templatesByCategory).sort().forEach(category => {
                 const optgroup = `<optgroup label="${category}">`;
                 templateSelect.append(optgroup);
-                
+
                 templatesByCategory[category].forEach(template => {
                     templateSelect.append(`<option value="${template._id}">${template.name}</option>`);
                 });
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading report templates:', error);
             showNotification('Error loading report templates', 'error');
         }
@@ -345,12 +345,12 @@ function showTemplateGallery() {
     // Hide wizard and show gallery
     $('.wizard-container').hide();
     $('#templateGallery').show();
-    
+
     if (!window.reportTemplates || window.reportTemplates.length === 0) {
         $('#templateGalleryContent').html('<p class="text-muted">No templates available</p>');
         return;
     }
-    
+
     // Group templates by category
     const templatesByCategory = {};
     window.reportTemplates.forEach(template => {
@@ -359,16 +359,16 @@ function showTemplateGallery() {
         }
         templatesByCategory[template.category].push(template);
     });
-    
+
     let galleryHtml = '';
-    
+
     Object.keys(templatesByCategory).sort().forEach(category => {
         galleryHtml += `
             <div class="mb-4">
                 <h4 class="mb-3">${category}</h4>
                 <div class="row">
         `;
-        
+
         templatesByCategory[category].forEach(template => {
             galleryHtml += `
                 <div class="col-md-4 mb-3">
@@ -388,13 +388,13 @@ function showTemplateGallery() {
                 </div>
             `;
         });
-        
+
         galleryHtml += `
                 </div>
             </div>
         `;
     });
-    
+
     $('#templateGalleryContent').html(galleryHtml);
 }
 
@@ -414,17 +414,17 @@ function selectTemplateFromGallery(templateId) {
     if (!template) {
         return;
     }
-    
+
     // Highlight selected template
     $('.template-card').removeClass('selected');
     $(`.template-card:has([onclick*="${templateId}"])`).addClass('selected');
-    
+
     // Set template in dropdown
     $('#reportTemplate').val(templateId);
-    
+
     // Load template configuration
     loadTemplateConfiguration();
-    
+
     // Hide gallery and show wizard after a short delay
     setTimeout(() => {
         hideTemplateGallery();
@@ -439,7 +439,7 @@ function createReportFromTemplate(templateId) {
     if (!template) {
         return;
     }
-    
+
     // Create a copy of the template as a new report
     const reportData = {
         name: `${template.name} (Copy)`,
@@ -451,18 +451,18 @@ function createReportFromTemplate(templateId) {
         sortBy: template.sortBy || { field: '', direction: 'asc' },
         createdBy: 'current_user'
     };
-    
+
     $.ajax({
-        url: '/api/custom-reports/reports',
+        url: './api/custom-reports/reports',
         method: 'POST',
         data: JSON.stringify(reportData),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             showNotification('Report created from template successfully', 'success');
             loadExistingReports();
             hideTemplateGallery();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error creating report from template:', error);
             showNotification('Error creating report: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -474,28 +474,28 @@ function createReportFromTemplate(templateId) {
  */
 function loadTemplateConfiguration() {
     const templateId = $('#reportTemplate').val();
-    
+
     if (!templateId) {
         resetWizard();
         return;
     }
-    
+
     $.ajax({
         url: `/api/report-templates/templates/${templateId}`,
         method: 'GET',
-        success: function(template) {
+        success: function (template) {
             // Populate form with template data
             $('#reportName').val(template.name);
             $('#reportDescription').val(template.description);
             $('#dataSource').val(template.dataSource).trigger('change');
-            
+
             // Wait for fields to load, then select template fields
             setTimeout(() => {
                 template.fields.forEach(field => {
                     $(`#field_${field.key}`).prop('checked', true);
                 });
                 updateSelectedFields();
-                
+
                 // Set field formats
                 template.fields.forEach(field => {
                     if (field.format) {
@@ -503,12 +503,12 @@ function loadTemplateConfiguration() {
                     }
                 });
             }, 500);
-            
+
             // Set filters
             if (template.filters) {
                 populateFilters(template.filters);
             }
-            
+
             // Set grouping
             if (template.groupBy && template.groupBy.length > 0) {
                 $('#enableGrouping').prop('checked', true);
@@ -517,14 +517,14 @@ function loadTemplateConfiguration() {
                     $(`#groupBy option[value="${field}"]`).prop('selected', true);
                 });
             }
-            
+
             // Set sorting
             if (template.sortBy) {
                 $('#sortBy').val(template.sortBy.field);
                 $('#sortDirection').val(template.sortBy.direction);
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading template:', error);
             showNotification('Error loading template configuration', 'error');
         }
@@ -554,17 +554,17 @@ function populateFilters(filters) {
  */
 function loadExistingReports() {
     $.ajax({
-        url: '/api/custom-reports/reports',
+        url: './api/custom-reports/reports',
         method: 'GET',
-        success: function(response) {
+        success: function (response) {
             const reportsList = $('#existingReportsList');
             reportsList.empty();
-            
+
             if (response.reports.length === 0) {
                 reportsList.html('<p class="text-muted">No custom reports found. Create your first report!</p>');
                 return;
             }
-            
+
             response.reports.forEach(report => {
                 const reportItem = `
                     <div class="card mb-2">
@@ -599,7 +599,7 @@ function loadExistingReports() {
                 reportsList.append(reportItem);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading existing reports:', error);
             showNotification('Error loading existing reports', 'error');
         }
@@ -612,11 +612,11 @@ function loadExistingReports() {
 function populateGroupByOptions() {
     const groupBySelect = $('#groupBy');
     groupBySelect.empty();
-    
-    $('.field-checkbox:checked').each(function() {
+
+    $('.field-checkbox:checked').each(function () {
         const fieldData = JSON.parse($(this).attr('data-field'));
         const fieldKey = $(this).val();
-        
+
         // Only add text/date fields as grouping options
         if (fieldData.type === 'text' || fieldData.type === 'date') {
             groupBySelect.append(`<option value="${fieldKey}">${fieldData.label}</option>`);
@@ -631,19 +631,19 @@ function populateConfigurationOptions() {
     const sortBySelect = $('#sortBy');
     const chartXAxisSelect = $('#chartXAxis');
     const chartYAxisSelect = $('#chartYAxis');
-    
+
     // Clear existing options
     sortBySelect.empty();
     chartXAxisSelect.empty();
     chartYAxisSelect.empty();
-    
+
     // Populate with selected fields
-    $('.field-checkbox:checked').each(function() {
+    $('.field-checkbox:checked').each(function () {
         const fieldData = JSON.parse($(this).attr('data-field'));
         const fieldKey = $(this).val();
-        
+
         sortBySelect.append(`<option value="${fieldKey}">${fieldData.label}</option>`);
-        
+
         // For chart axes, add all fields
         chartXAxisSelect.append(`<option value="${fieldKey}">${fieldData.label}</option>`);
         chartYAxisSelect.append(`<option value="${fieldKey}">${fieldData.label}</option>`);
@@ -655,7 +655,7 @@ function populateConfigurationOptions() {
  */
 function updateReportTypeOptions() {
     const reportType = $('#reportType').val();
-    
+
     // Show/hide chart configuration based on report type
     if (reportType === 'chart') {
         $('.chart-configuration').show();
@@ -671,30 +671,30 @@ function saveCustomReport() {
     const reportName = $('#reportName').val().trim();
     const reportDescription = $('#reportDescription').val().trim();
     const dataSource = $('#dataSource').val();
-    
+
     if (!reportName || !dataSource) {
         showNotification('Report name and data source are required', 'error');
         return;
     }
-    
+
     // Collect selected fields
     const selectedFields = [];
-    $('.field-checkbox:checked').each(function() {
+    $('.field-checkbox:checked').each(function () {
         const fieldData = JSON.parse($(this).attr('data-field'));
         const fieldKey = $(this).val();
         const format = $(`.field-format[data-field="${fieldKey}"]`).val();
-        
+
         selectedFields.push({
             ...fieldData,
             format: format || undefined
         });
     });
-    
+
     if (selectedFields.length === 0) {
         showNotification('Please select at least one field', 'error');
         return;
     }
-    
+
     // Collect filters
     const filters = {
         dateRange: $('#enableDateFilter').is(':checked'),
@@ -702,28 +702,28 @@ function saveCustomReport() {
         store: $('#enableStoreFilter').is(':checked'),
         category: $('#enableCategoryFilter').is(':checked')
     };
-    
+
     // Collect grouping
     const groupBy = [];
     if ($('#enableGrouping').is(':checked')) {
-        $('#groupBy option:selected').each(function() {
+        $('#groupBy option:selected').each(function () {
             groupBy.push($(this).val());
         });
     }
-    
+
     // Collect sorting
     const sortBy = {
         field: $('#sortBy').val(),
         direction: $('#sortDirection').val()
     };
-    
+
     // Collect chart configuration
     const chartConfig = $('#chartType').val() ? {
         type: $('#chartType').val(),
         xAxis: $('#chartXAxis').val(),
         yAxis: $('#chartYAxis').val()
     } : null;
-    
+
     const reportData = {
         name: reportName,
         description: reportDescription,
@@ -735,23 +735,23 @@ function saveCustomReport() {
         chartConfig: chartConfig,
         createdBy: 'current_user' // This should come from authentication
     };
-    
+
     const saveBtn = $('.wizard-finish');
     const originalText = saveBtn.html();
     saveBtn.html('<i class="fa fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
-    
+
     $.ajax({
-        url: '/api/custom-reports/reports',
+        url: './api/custom-reports/reports',
         method: 'POST',
         data: JSON.stringify(reportData),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             showNotification('Report saved successfully', 'success');
             resetWizard();
             loadExistingReports();
             saveBtn.html(originalText).prop('disabled', false);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error saving report:', error);
             showNotification('Error saving report: ' + (xhr.responseJSON?.message || error), 'error');
             saveBtn.html(originalText).prop('disabled', false);
@@ -765,30 +765,30 @@ function saveCustomReport() {
 function executeReport(reportId) {
     // Show report execution modal
     $('#reportExecutionModal').modal('show');
-    
+
     // Load report configuration
     $.ajax({
         url: `/api/custom-reports/reports/${reportId}`,
         method: 'GET',
-        success: function(report) {
+        success: function (report) {
             // Set up execution form
             $('#executionReportName').text(report.name);
             $('#executionReportId').val(reportId);
-            
+
             // Show filter options based on report configuration
             if (report.filters.dateRange) {
                 $('#dateFilterSection').show();
             } else {
                 $('#dateFilterSection').hide();
             }
-            
+
             // Set default date range
             const today = new Date();
             const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
             $('#executionStartDate').val(lastMonth.toISOString().split('T')[0]);
             $('#executionEndDate').val(today.toISOString().split('T')[0]);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading report:', error);
             showNotification('Error loading report configuration', 'error');
             $('#reportExecutionModal').modal('hide');
@@ -805,18 +805,18 @@ function runReportExecution() {
     const endDate = $('#executionEndDate').val();
     const page = $('#executionPage').val() || 1;
     const limit = $('#executionLimit').val() || 50;
-    
+
     const filters = {};
     if (startDate && endDate) {
         filters.dateRange = { start: startDate, end: endDate };
     }
-    
+
     const executeBtn = $('#executeReportBtn');
     const originalText = executeBtn.html();
     executeBtn.html('<i class="fa fa-spinner fa-spin"></i> Executing...').prop('disabled', true);
-    
+
     $.ajax({
-        url: '/api/report-execution/execute',
+        url: './api/report-execution/execute',
         method: 'POST',
         data: JSON.stringify({
             reportId: reportId,
@@ -825,13 +825,13 @@ function runReportExecution() {
             limit: limit
         }),
         contentType: 'application/json',
-        success: function(response) {
+        success: function (response) {
             displayReportResults(response);
             $('#reportExecutionModal').modal('hide');
             $('#reportResultsModal').modal('show');
             executeBtn.html(originalText).prop('disabled', false);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error executing report:', error);
             showNotification('Error executing report: ' + (xhr.responseJSON?.message || error), 'error');
             executeBtn.html(originalText).prop('disabled', false);
@@ -845,22 +845,22 @@ function runReportExecution() {
 function displayReportResults(response) {
     // Store result for export
     window.currentReportResult = response.result;
-    
+
     // Set report info in modal
     $('#resultsReportName').text(response.result.name || 'Custom Report');
     $('#resultsReportDescription').text(response.result.description || '');
     $('#executionTime').text(response.result.executionTime || 'N/A');
     $('#recordCount').text(response.result.totalRecords || response.result.data?.length || 0);
     $('#executionDate').text(new Date().toLocaleString());
-    
+
     // Show appropriate view based on report type
     const reportType = response.result.type || 'tabular';
-    
+
     // Hide all views first
     $('#tabularResults').hide();
     $('#chartResults').hide();
     $('#summaryResults').hide();
-    
+
     switch (reportType) {
         case 'tabular':
             displayTabularResults(response.result.data);
@@ -885,7 +885,7 @@ function displayTabularResults(data) {
         $('#tabularResults').show();
         return;
     }
-    
+
     // Build table headers
     const fields = Object.keys(data[0]);
     let headerHtml = '';
@@ -893,7 +893,7 @@ function displayTabularResults(data) {
         headerHtml += `<th>${field}</th>`;
     });
     $('#resultsTableHeader').html(headerHtml);
-    
+
     // Build table rows
     let bodyHtml = '';
     data.forEach(row => {
@@ -910,7 +910,7 @@ function displayTabularResults(data) {
         bodyHtml += '</tr>';
     });
     $('#resultsTableBody').html(bodyHtml);
-    
+
     $('#tabularResults').show();
 }
 
@@ -924,7 +924,7 @@ function displayChartResults(data) {
         displayTabularResults(data);
         return;
     }
-    
+
     // Default to bar chart
     const chartType = $('#chartTypeSelector').val() || 'bar';
     renderChart(data, chartType);
@@ -941,7 +941,7 @@ function displaySummaryResults(result) {
         displayTabularResults(result.data || []);
         return;
     }
-    
+
     let summaryHtml = '<div class="row">';
     Object.keys(result.summary).forEach(key => {
         const value = result.summary[key];
@@ -957,7 +957,7 @@ function displaySummaryResults(result) {
         `;
     });
     summaryHtml += '</div>';
-    
+
     // Also show detailed data if available
     if (result.data && result.data.length > 0) {
         summaryHtml += `
@@ -969,18 +969,18 @@ function displaySummaryResults(result) {
                             <thead>
                                 <tr>
         `;
-        
+
         const fields = Object.keys(result.data[0]);
         fields.forEach(field => {
             summaryHtml += `<th>${field}</th>`;
         });
-        
+
         summaryHtml += `
                                 </tr>
                             </thead>
                             <tbody>
         `;
-        
+
         result.data.forEach(row => {
             summaryHtml += '<tr>';
             fields.forEach(field => {
@@ -988,7 +988,7 @@ function displaySummaryResults(result) {
             });
             summaryHtml += '</tr>';
         });
-        
+
         summaryHtml += `
                             </tbody>
                         </table>
@@ -997,7 +997,7 @@ function displaySummaryResults(result) {
             </div>
         `;
     }
-    
+
     $('#summaryContent').html(summaryHtml);
     $('#summaryResults').show();
 }
@@ -1017,15 +1017,15 @@ function deleteReport(reportId) {
     if (!confirm('Are you sure you want to delete this report?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/custom-reports/reports/${reportId}`,
         method: 'DELETE',
-        success: function(response) {
+        success: function (response) {
             showNotification('Report deleted successfully', 'success');
             loadExistingReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error deleting report:', error);
             showNotification('Error deleting report: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -1040,11 +1040,11 @@ function exportReportData(format) {
         showNotification('No data available for export', 'error');
         return;
     }
-    
+
     const reportName = $('#resultsReportName').text() || 'report';
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const filename = `${reportName}_${timestamp}`;
-    
+
     switch (format) {
         case 'csv':
             exportToCSV(window.currentReportResult.data, filename);
@@ -1071,10 +1071,10 @@ function exportToCSV(data, filename) {
         showNotification('No data to export', 'error');
         return;
     }
-    
+
     const headers = Object.keys(data[0]);
     let csvContent = headers.join(',') + '\n';
-    
+
     data.forEach(row => {
         const values = headers.map(header => {
             const value = row[header];
@@ -1086,7 +1086,7 @@ function exportToCSV(data, filename) {
         });
         csvContent += values.join(',') + '\n';
     });
-    
+
     downloadFile(csvContent, `${filename}.csv`, 'text/csv');
 }
 
@@ -1098,19 +1098,19 @@ function exportToExcel(data, filename) {
         showNotification('No data to export', 'error');
         return;
     }
-    
+
     $.ajax({
-        url: '/api/report-export/excel',
+        url: './api/report-export/excel',
         method: 'POST',
         data: JSON.stringify({ data: data }),
         contentType: 'application/json',
         xhrFields: {
             responseType: 'blob'
         },
-        success: function(blob) {
+        success: function (blob) {
             downloadFile(blob, `${filename}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error exporting to Excel:', error);
             showNotification('Error exporting to Excel: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -1125,19 +1125,19 @@ function exportToPDF(data, filename) {
         showNotification('No data to export', 'error');
         return;
     }
-    
+
     $.ajax({
-        url: '/api/report-export/pdf',
+        url: './api/report-export/pdf',
         method: 'POST',
         data: JSON.stringify({ data: data }),
         contentType: 'application/json',
         xhrFields: {
             responseType: 'blob'
         },
-        success: function(blob) {
+        success: function (blob) {
             downloadFile(blob, `${filename}.pdf`, 'application/pdf');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error exporting to PDF:', error);
             showNotification('Error exporting to PDF: ' + (xhr.responseJSON?.message || error), 'error');
         }
@@ -1152,7 +1152,7 @@ function exportToJSON(data, filename) {
         showNotification('No data to export', 'error');
         return;
     }
-    
+
     const jsonContent = JSON.stringify(data, null, 2);
     downloadFile(jsonContent, `${filename}.json`, 'application/json');
 }
@@ -1190,7 +1190,7 @@ function updateChartType() {
     if (!window.currentReportResult || !window.currentReportResult.data) {
         return;
     }
-    
+
     // Update chart with new type
     renderChart(window.currentReportResult.data, chartType);
 }
@@ -1203,14 +1203,14 @@ function renderChart(data, chartType) {
     if (!canvas) {
         return;
     }
-    
+
     // Destroy existing chart if it exists
     if (window.currentChart) {
         window.currentChart.destroy();
     }
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     // Prepare chart data based on type
     let chartConfig = {
         type: chartType,
@@ -1229,7 +1229,7 @@ function renderChart(data, chartType) {
             }
         }
     };
-    
+
     // Add specific options based on chart type
     if (chartType === 'pie' || chartType === 'doughnut') {
         chartConfig.options.plugins.legend.position = 'right';
@@ -1240,7 +1240,7 @@ function renderChart(data, chartType) {
             }
         };
     }
-    
+
     window.currentChart = new Chart(ctx, chartConfig);
 }
 
@@ -1251,12 +1251,12 @@ function prepareChartData(data, chartType) {
     if (!data || data.length === 0) {
         return { labels: [], datasets: [] };
     }
-    
+
     // For simplicity, use first two columns for chart
     const keys = Object.keys(data[0]);
     const labelKey = keys[0];
     const valueKey = keys[1] || keys[0];
-    
+
     if (chartType === 'pie' || chartType === 'doughnut') {
         // Aggregate data for pie/doughnut charts
         const aggregated = {};
@@ -1264,7 +1264,7 @@ function prepareChartData(data, chartType) {
             const key = row[labelKey];
             aggregated[key] = (aggregated[key] || 0) + parseFloat(row[valueKey] || 0);
         });
-        
+
         return {
             labels: Object.keys(aggregated),
             datasets: [{
@@ -1300,9 +1300,9 @@ function downloadChart() {
         showNotification('No chart to download', 'error');
         return;
     }
-    
+
     // Convert canvas to blob and download
-    canvas.toBlob(function(blob) {
+    canvas.toBlob(function (blob) {
         const filename = `chart_${new Date().toISOString().slice(0, 10)}.png`;
         downloadFile(blob, filename, 'image/png');
     });
@@ -1338,12 +1338,12 @@ function switchView(viewType) {
     $('#tabularResults').hide();
     $('#chartResults').hide();
     $('#summaryResults').hide();
-    
+
     // Remove active class from all view buttons
     $('#tabularViewBtn').removeClass('active');
     $('#chartViewBtn').removeClass('active');
     $('#summaryViewBtn').removeClass('active');
-    
+
     // Show selected view and activate button
     switch (viewType) {
         case 'tabular':

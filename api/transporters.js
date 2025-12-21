@@ -1,31 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
-const path = require("path");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "transporters.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let transportersDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let transportersDB;
 
-transportersDB.ensureIndex({ fieldName: "_id", unique: true });
-transportersDB.ensureIndex({ fieldName: "transporter_id", unique: true, sparse: true });
+// Initialize the database when the module loads
+(async function() {
+    try {
+        transportersDB = await dbManager.getDatabase("transporters.db");
+        transportersDB.ensureIndex({ fieldName: "_id", unique: true });
+        transportersDB.ensureIndex({ fieldName: "transporter_id", unique: true, sparse: true });
+        console.log("Transporters database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize transporters database:", error);
+    }
+})();
+
 
 /**
  * GET endpoint: Get the welcome message for the Transporter API.

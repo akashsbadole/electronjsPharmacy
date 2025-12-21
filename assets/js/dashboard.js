@@ -3,17 +3,17 @@
  * Handles executive dashboard functionality and KPI widgets
  */
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize dashboard when dashboard tab is shown
-    $('a[href="#dashboardTab"]').on('shown.bs.tab', function() {
+    $('a[href="#dashboardTab"]').on('shown.bs.tab', function () {
         loadDashboardKPIs();
         loadSalesChart();
         loadTopProductsChart();
         loadRecentTransactions();
     });
-    
+
     // Handle period change
-    $('#dashboardPeriod').on('change', function() {
+    $('#dashboardPeriod').on('change', function () {
         loadDashboardKPIs();
         loadSalesChart();
         loadTopProductsChart();
@@ -25,15 +25,15 @@ $(document).ready(function() {
  */
 function loadDashboardKPIs() {
     const period = $('#dashboardPeriod').val();
-    
+
     $.ajax({
-        url: '/api/dashboard/kpi',
+        url: './api/dashboard/kpi',
         method: 'GET',
         data: { period: period },
-        success: function(response) {
+        success: function (response) {
             renderKPIWidgets(response);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading dashboard KPIs:', error);
             showNotification('Error loading dashboard data', 'error');
         }
@@ -45,15 +45,15 @@ function loadDashboardKPIs() {
  */
 function loadSalesChart() {
     const period = $('#dashboardPeriod').val();
-    
+
     $.ajax({
-        url: '/api/dashboard/sales-chart',
+        url: './api/dashboard/sales-chart',
         method: 'GET',
         data: { period: period },
-        success: function(response) {
+        success: function (response) {
             renderSalesChart(response.labels, response.data);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading sales chart:', error);
         }
     });
@@ -64,15 +64,15 @@ function loadSalesChart() {
  */
 function loadTopProductsChart() {
     const period = $('#dashboardPeriod').val();
-    
+
     $.ajax({
-        url: '/api/dashboard/top-products-chart',
+        url: './api/dashboard/top-products-chart',
         method: 'GET',
         data: { period: period, limit: 5 },
-        success: function(response) {
+        success: function (response) {
             renderTopProductsChart(response.labels, response.data);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading top products chart:', error);
         }
     });
@@ -83,13 +83,13 @@ function loadTopProductsChart() {
  */
 function loadRecentTransactions() {
     $.ajax({
-        url: '/api/dashboard/recent-transactions',
+        url: './api/dashboard/recent-transactions',
         method: 'GET',
         data: { limit: 10 },
-        success: function(response) {
+        success: function (response) {
             renderRecentTransactionsTable(response);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading recent transactions:', error);
         }
     });
@@ -103,7 +103,7 @@ function renderKPIWidgets(dashboardData) {
     const inventory = dashboardData.inventory;
     const customers = dashboardData.customers;
     const growth = sales.growth;
-    
+
     const kpisHtml = `
         <div class="col-md-3">
             <div class="kpi-widget">
@@ -146,7 +146,7 @@ function renderKPIWidgets(dashboardData) {
             </div>
         </div>
     `;
-    
+
     $('#dashboardKPIs').html(kpisHtml);
 }
 
@@ -155,12 +155,12 @@ function renderKPIWidgets(dashboardData) {
  */
 function renderSalesChart(labels, data) {
     const ctx = document.getElementById('salesChart').getContext('2d');
-    
+
     // Destroy existing chart if it exists
     if (window.dashboardSalesChart) {
         window.dashboardSalesChart.destroy();
     }
-    
+
     window.dashboardSalesChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -183,7 +183,7 @@ function renderSalesChart(labels, data) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return 'Sales: ' + formatCurrency(context.parsed.y);
                         }
                     }
@@ -193,7 +193,7 @@ function renderSalesChart(labels, data) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             return formatCurrency(value);
                         }
                     }
@@ -208,12 +208,12 @@ function renderSalesChart(labels, data) {
  */
 function renderTopProductsChart(labels, data) {
     const ctx = document.getElementById('topProductsChart').getContext('2d');
-    
+
     // Destroy existing chart if it exists
     if (window.dashboardTopProductsChart) {
         window.dashboardTopProductsChart.destroy();
     }
-    
+
     window.dashboardTopProductsChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -239,7 +239,7 @@ function renderTopProductsChart(labels, data) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return context.label + ': ' + formatCurrency(context.parsed);
                         }
                     }
@@ -255,12 +255,12 @@ function renderTopProductsChart(labels, data) {
 function renderRecentTransactionsTable(transactions) {
     const tbody = $('#recentTransactionsBody');
     tbody.empty();
-    
+
     if (transactions.length === 0) {
         tbody.append('<tr><td colspan="5" class="text-center">No recent transactions</td></tr>');
         return;
     }
-    
+
     transactions.forEach(transaction => {
         const date = new Date(transaction.date).toLocaleDateString();
         const paymentMethod = transaction.paymentMethod || 'Cash';
@@ -298,9 +298,9 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
+
     $('body').prepend(notification);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
         notification.alert('close');

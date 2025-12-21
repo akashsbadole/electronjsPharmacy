@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize date pickers
     $('.datepicker').datepicker({
         format: 'dd/mm/yyyy',
@@ -12,7 +12,7 @@ $(document).ready(function() {
     loadRecentReports();
     initializeCharts();
     updateCharts();
-    
+
     // Event handlers
     $('#reportType').change(updateAdditionalFilters);
     $('#dateRange').change(handleDateRangeChange);
@@ -20,7 +20,7 @@ $(document).ready(function() {
     $('#resetFiltersBtn').click(resetFilters);
     $('#scheduleReportBtn').click(showScheduleModal);
     $('#saveScheduleBtn').click(saveSchedule);
-    
+
     // Auto-refresh recent reports every 60 seconds
     setInterval(loadRecentReports, 60000);
 });
@@ -30,19 +30,19 @@ let varianceDistributionChart = null;
 
 function loadStores() {
     $.ajax({
-        url: '/api/stores/all',
+        url: './api/stores/all',
         method: 'GET',
-        success: function(stores) {
+        success: function (stores) {
             const storeSelect = $('#storeFilter');
-            
+
             storeSelect.empty();
             storeSelect.append('<option value="">All Stores</option>');
-            
+
             stores.forEach(store => {
                 storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading stores:', error);
         }
     });
@@ -50,12 +50,12 @@ function loadStores() {
 
 function loadScheduledReports() {
     $.ajax({
-        url: '/api/reports/scheduled',
+        url: './api/reports/scheduled',
         method: 'GET',
-        success: function(reports) {
+        success: function (reports) {
             displayScheduledReports(reports);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading scheduled reports:', error);
             $('#scheduledReportsList').html(`
                 <tr>
@@ -71,7 +71,7 @@ function loadScheduledReports() {
 function displayScheduledReports(reports) {
     const tbody = $('#scheduledReportsList');
     tbody.empty();
-    
+
     if (reports.length === 0) {
         tbody.html(`
             <tr>
@@ -82,12 +82,12 @@ function displayScheduledReports(reports) {
         `);
         return;
     }
-    
+
     reports.forEach(report => {
-        const statusBadge = report.isActive ? 
-            '<span class="label label-success">Active</span>' : 
+        const statusBadge = report.isActive ?
+            '<span class="label label-success">Active</span>' :
             '<span class="label label-default">Inactive</span>';
-        
+
         const row = `
             <tr>
                 <td>
@@ -132,13 +132,13 @@ function displayScheduledReports(reports) {
 
 function loadRecentReports() {
     $.ajax({
-        url: '/api/reports/recent',
+        url: './api/reports/recent',
         method: 'GET',
         data: { limit: 10 },
-        success: function(reports) {
+        success: function (reports) {
             displayRecentReports(reports);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading recent reports:', error);
             $('#recentReportsList').html(`
                 <tr>
@@ -154,7 +154,7 @@ function loadRecentReports() {
 function displayRecentReports(reports) {
     const tbody = $('#recentReportsList');
     tbody.empty();
-    
+
     if (reports.length === 0) {
         tbody.html(`
             <tr>
@@ -165,10 +165,10 @@ function displayRecentReports(reports) {
         `);
         return;
     }
-    
+
     reports.forEach(report => {
         const statusBadge = getStatusBadge(report.status);
-        
+
         const row = `
             <tr>
                 <td>
@@ -187,11 +187,11 @@ function displayRecentReports(reports) {
                 <td>${statusBadge}</td>
                 <td>
                     <div class="btn-group">
-                        ${report.status === 'COMPLETED' ? 
-                            `<button class="btn btn-sm btn-success" onclick="downloadReport('${report._id}')" title="Download">
+                        ${report.status === 'COMPLETED' ?
+                `<button class="btn btn-sm btn-success" onclick="downloadReport('${report._id}')" title="Download">
                                 <i class="md md-file-download"></i>
                             </button>` : ''
-                        }
+            }
                         <button class="btn btn-sm btn-info" onclick="viewReportDetails('${report._id}')" title="View Details">
                             <i class="fa fa-eye"></i>
                         </button>
@@ -210,15 +210,15 @@ function updateAdditionalFilters() {
     const reportType = $('#reportType').val();
     const additionalFilters = $('#additionalFilters');
     const filterOptions = $('#filterOptions');
-    
+
     if (!reportType) {
         additionalFilters.hide();
         return;
     }
-    
+
     additionalFilters.show();
     filterOptions.empty();
-    
+
     switch (reportType) {
         case 'variance-analysis':
             filterOptions.html(`
@@ -251,7 +251,7 @@ function updateAdditionalFilters() {
                 </div>
             `);
             break;
-            
+
         case 'counter-performance':
             filterOptions.html(`
                 <div class="row">
@@ -276,7 +276,7 @@ function updateAdditionalFilters() {
             `);
             loadCounters();
             break;
-            
+
         case 'expiry-analysis':
             filterOptions.html(`
                 <div class="row">
@@ -315,7 +315,7 @@ function updateAdditionalFilters() {
             `);
             loadCategories();
             break;
-            
+
         default:
             filterOptions.html(`
                 <div class="row">
@@ -330,7 +330,7 @@ function updateAdditionalFilters() {
 function handleDateRangeChange() {
     const dateRange = $('#dateRange').val();
     const customDateRange = $('#customDateRange');
-    
+
     if (dateRange === 'custom') {
         customDateRange.show();
     } else {
@@ -343,17 +343,17 @@ function generateReport() {
     const dateRange = $('#dateRange').val();
     const storeId = $('#storeFilter').val();
     const format = $('#format').val();
-    
+
     if (!reportType) {
         showError('Please select a report type.');
         return;
     }
-    
+
     if (!dateRange) {
         showError('Please select a date range.');
         return;
     }
-    
+
     // Build report parameters
     const parameters = {
         reportType: reportType,
@@ -361,34 +361,34 @@ function generateReport() {
         storeId: storeId,
         format: format
     };
-    
+
     // Add custom date range if selected
     if (dateRange === 'custom') {
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
-        
+
         if (!startDate || !endDate) {
             showError('Please select both start and end dates for custom range.');
             return;
         }
-        
+
         parameters.startDate = startDate;
         parameters.endDate = endDate;
     }
-    
+
     // Add additional filters based on report type
     addAdditionalFilters(parameters);
-    
+
     // Generate report
     $.ajax({
-        url: '/api/reports/generate',
+        url: './api/reports/generate',
         method: 'POST',
         data: parameters,
-        success: function(response) {
+        success: function (response) {
             showSuccess('Report generation started! You will be notified when it\'s ready.');
             loadRecentReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error generating report:', error);
             showError(xhr.responseJSON ? xhr.responseJSON.message : 'Failed to generate report.');
         }
@@ -397,36 +397,36 @@ function generateReport() {
 
 function addAdditionalFilters(parameters) {
     const reportType = $('#reportType').val();
-    
+
     switch (reportType) {
         case 'variance-analysis':
             const varianceType = $('#varianceTypeFilter').val();
             const minValue = $('#minValueFilter').val();
             const maxValue = $('#maxValueFilter').val();
             const includeApproved = $('#includeApprovedFilter').val();
-            
+
             if (varianceType) parameters.varianceType = varianceType;
             if (minValue) parameters.minValue = minValue;
             if (maxValue) parameters.maxValue = maxValue;
             if (includeApproved && includeApproved !== 'all') parameters.includeApproved = includeApproved;
             break;
-            
+
         case 'counter-performance':
             const counter = $('#counterFilter').val();
             const minAccuracy = $('#minAccuracyFilter').val();
             const includeInactive = $('#includeInactiveFilter').val();
-            
+
             if (counter) parameters.counterId = counter;
             if (minAccuracy) parameters.minAccuracy = minAccuracy;
             if (includeInactive === 'yes') parameters.includeInactive = true;
             break;
-            
+
         case 'expiry-analysis':
             const expiryPeriod = $('#expiryPeriodFilter').val();
             const category = $('#categoryFilter').val();
             const includeExpired = $('#includeExpiredFilter').val();
             const valueRange = $('#valueRangeFilter').val();
-            
+
             if (expiryPeriod) parameters.expiryPeriod = expiryPeriod;
             if (category) parameters.categoryId = category;
             if (includeExpired === 'yes') parameters.includeExpired = true;
@@ -453,12 +453,12 @@ function saveSchedule() {
     const format = $('#scheduleFormat').val();
     const recipients = $('#scheduleRecipients').val();
     const filters = $('#scheduleFilters').val();
-    
+
     if (!name || !reportType || !frequency || !recipients) {
         showError('Please fill in all required fields.');
         return;
     }
-    
+
     const schedule = {
         name: name,
         reportType: reportType,
@@ -467,18 +467,18 @@ function saveSchedule() {
         recipients: recipients.split(',').map(r => r.trim()),
         filters: filters ? JSON.parse(filters) : {}
     };
-    
+
     $.ajax({
-        url: '/api/reports/schedule',
+        url: './api/reports/schedule',
         method: 'POST',
         data: schedule,
-        success: function(response) {
+        success: function (response) {
             showSuccess('Report scheduled successfully!');
             $('#scheduleReportModal').modal('hide');
             resetScheduleForm();
             loadScheduledReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error scheduling report:', error);
             showError(xhr.responseJSON ? xhr.responseJSON.message : 'Failed to schedule report.');
         }
@@ -503,15 +503,15 @@ function deleteReport(reportId) {
     if (!confirm('Are you sure you want to delete this report?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/reports/${reportId}`,
         method: 'DELETE',
-        success: function(response) {
+        success: function (response) {
             showSuccess('Report deleted successfully!');
             loadRecentReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error deleting report:', error);
             showError('Failed to delete report.');
         }
@@ -527,15 +527,15 @@ function runScheduledReport(reportId) {
     if (!confirm('Are you sure you want to run this scheduled report now?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/reports/scheduled/${reportId}/run`,
         method: 'POST',
-        success: function(response) {
+        success: function (response) {
             showSuccess('Report execution started!');
             loadRecentReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error running scheduled report:', error);
             showError('Failed to run scheduled report.');
         }
@@ -546,11 +546,11 @@ function toggleScheduledReport(reportId) {
     $.ajax({
         url: `/api/reports/scheduled/${reportId}/toggle`,
         method: 'PUT',
-        success: function(response) {
+        success: function (response) {
             showSuccess(`Report ${response.isActive ? 'activated' : 'deactivated'} successfully!`);
             loadScheduledReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error toggling scheduled report:', error);
             showError('Failed to toggle scheduled report.');
         }
@@ -561,15 +561,15 @@ function deleteScheduledReport(reportId) {
     if (!confirm('Are you sure you want to delete this scheduled report?')) {
         return;
     }
-    
+
     $.ajax({
         url: `/api/reports/scheduled/${reportId}`,
         method: 'DELETE',
-        success: function(response) {
+        success: function (response) {
             showSuccess('Scheduled report deleted successfully!');
             loadScheduledReports();
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error deleting scheduled report:', error);
             showError('Failed to delete scheduled report.');
         }
@@ -578,16 +578,16 @@ function deleteScheduledReport(reportId) {
 
 function loadCounters() {
     $.ajax({
-        url: '/api/users/counters',
+        url: './api/users/counters',
         method: 'GET',
-        success: function(counters) {
+        success: function (counters) {
             const counterSelect = $('#counterFilter');
-            
+
             counters.forEach(counter => {
                 counterSelect.append(`<option value="${counter._id}">${counter.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading counters:', error);
         }
     });
@@ -595,16 +595,16 @@ function loadCounters() {
 
 function loadCategories() {
     $.ajax({
-        url: '/api/categories',
+        url: './api/categories',
         method: 'GET',
-        success: function(categories) {
+        success: function (categories) {
             const categorySelect = $('#categoryFilter');
-            
+
             categories.forEach(category => {
                 categorySelect.append(`<option value="${category._id}">${category.name}</option>`);
             });
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading categories:', error);
         }
     });
@@ -639,7 +639,7 @@ function initializeCharts() {
             }
         });
     }
-    
+
     // Variance Distribution Chart
     const varianceCtx = document.getElementById('varianceDistributionChart');
     if (varianceCtx) {
@@ -672,17 +672,17 @@ function updateCharts() {
 
 function updateAccuracyTrendChart() {
     $.ajax({
-        url: '/api/reports/analytics/accuracy-trend',
+        url: './api/reports/analytics/accuracy-trend',
         method: 'GET',
         data: { period: 'month' },
-        success: function(data) {
+        success: function (data) {
             if (accuracyTrendChart) {
                 accuracyTrendChart.data.labels = data.labels;
                 accuracyTrendChart.data.datasets[0].data = data.data;
                 accuracyTrendChart.update();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading accuracy trend:', error);
         }
     });
@@ -690,17 +690,17 @@ function updateAccuracyTrendChart() {
 
 function updateVarianceDistributionChart() {
     $.ajax({
-        url: '/api/reports/analytics/variance-distribution',
+        url: './api/reports/analytics/variance-distribution',
         method: 'GET',
         data: { period: 'month' },
-        success: function(data) {
+        success: function (data) {
             if (varianceDistributionChart) {
                 varianceDistributionChart.data.labels = data.labels;
                 varianceDistributionChart.data.datasets[0].data = data.data;
                 varianceDistributionChart.update();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading variance distribution:', error);
         }
     });
@@ -743,30 +743,30 @@ function getStatusBadge(status) {
 
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString();
 }
 
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
 function showSuccess(message) {
     $('.alert').remove();
-    
+
     const alertHtml = `
         <div class="alert alert-success alert-dismissible" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Success!</strong> ${message}
         </div>
     `;
-    
+
     $('body').append(alertHtml);
-    
+
     setTimeout(() => {
         $('.alert-success').fadeOut();
     }, 5000);
@@ -774,16 +774,16 @@ function showSuccess(message) {
 
 function showError(message) {
     $('.alert').remove();
-    
+
     const alertHtml = `
         <div class="alert alert-danger alert-dismissible" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Error!</strong> ${message}
         </div>
     `;
-    
+
     $('body').append(alertHtml);
-    
+
     setTimeout(() => {
         $('.alert-danger').fadeOut();
     }, 10000);

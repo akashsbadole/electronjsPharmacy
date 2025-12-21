@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Communication - PharmaSpot</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
 </head>
+
 <body>
     <div class="wrapper">
         <!-- Top Navigation -->
         <nav class="navbar navbar-default navbar-fixed-top">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false">
                         <i class="ti-menu"></i>
                     </button>
                     <a class="navbar-brand" href="index.html">PharmaSpot</a>
@@ -31,7 +34,8 @@
                             <a class="nav-link" href="customers.html"><i class="ti-user"></i> Customers</a>
                         </li>
                         <li class="nav-item active">
-                            <a class="nav-link" href="customer-communication.html"><i class="ti-email"></i> Communication</a>
+                            <a class="nav-link" href="customer-communication.html"><i class="ti-email"></i>
+                                Communication</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="loyalty-management.html"><i class="ti-gift"></i> Loyalty</a>
@@ -123,7 +127,8 @@
                                                 <div class="form-group">
                                                     <label>Type *</label>
                                                     <select class="form-control" id="type-select" required>
-                                                        <option value="APPOINTMENT_REMINDER">Appointment Reminder</option>
+                                                        <option value="APPOINTMENT_REMINDER">Appointment Reminder
+                                                        </option>
                                                         <option value="PRESCRIPTION_REFILL">Prescription Refill</option>
                                                         <option value="PROMOTIONAL">Promotional</option>
                                                         <option value="TRANSACTIONAL">Transactional</option>
@@ -156,7 +161,8 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label>Schedule</label>
-                                                    <input type="datetime-local" class="form-control" id="schedule-datetime">
+                                                    <input type="datetime-local" class="form-control"
+                                                        id="schedule-datetime">
                                                 </div>
                                             </div>
                                         </div>
@@ -164,7 +170,8 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>Subject</label>
-                                                    <input type="text" class="form-control" id="subject-input" placeholder="Enter subject">
+                                                    <input type="text" class="form-control" id="subject-input"
+                                                        placeholder="Enter subject">
                                                 </div>
                                             </div>
                                         </div>
@@ -172,7 +179,8 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>Message *</label>
-                                                    <textarea class="form-control" id="message-input" rows="4" placeholder="Enter message content" required></textarea>
+                                                    <textarea class="form-control" id="message-input" rows="4"
+                                                        placeholder="Enter message content" required></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -183,13 +191,17 @@
                                                     <div class="personalization-variables">
                                                         <div class="row">
                                                             <div class="col-md-4">
-                                                                <input type="text" class="form-control" id="var-customer-name" placeholder="Customer Name">
+                                                                <input type="text" class="form-control"
+                                                                    id="var-customer-name" placeholder="Customer Name">
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <input type="text" class="form-control" id="var-prescription-number" placeholder="Prescription Number">
+                                                                <input type="text" class="form-control"
+                                                                    id="var-prescription-number"
+                                                                    placeholder="Prescription Number">
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <input type="text" class="form-control" id="var-pharmacy-name" placeholder="Pharmacy Name">
+                                                                <input type="text" class="form-control"
+                                                                    id="var-pharmacy-name" placeholder="Pharmacy Name">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -198,8 +210,10 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" class="btn btn-primary" onclick="sendCommunication()">Send Communication</button>
-                                                <button type="button" class="btn btn-secondary" onclick="previewCommunication()">Preview</button>
+                                                <button type="button" class="btn btn-primary"
+                                                    onclick="sendCommunication()">Send Communication</button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    onclick="previewCommunication()">Preview</button>
                                             </div>
                                         </div>
                                     </form>
@@ -216,7 +230,8 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h4 class="card-title">Communication Templates</h4>
-                                    <button type="button" class="btn btn-sm btn-primary float-right" onclick="showTemplateModal()">Create Template</button>
+                                    <button type="button" class="btn btn-sm btn-primary float-right"
+                                        onclick="showTemplateModal()">Create Template</button>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -251,7 +266,8 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h4 class="card-title">Communication Campaigns</h4>
-                                    <button type="button" class="btn btn-sm btn-primary float-right" onclick="showCampaignModal()">Create Campaign</button>
+                                    <button type="button" class="btn btn-sm btn-primary float-right"
+                                        onclick="showCampaignModal()">Create Campaign</button>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -292,7 +308,8 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Select Customer</label>
-                                                <select class="form-control" id="preferences-customer-select" onchange="loadCustomerPreferences()">
+                                                <select class="form-control" id="preferences-customer-select"
+                                                    onchange="loadCustomerPreferences()">
                                                     <option value="">Select Customer</option>
                                                 </select>
                                             </div>
@@ -305,16 +322,22 @@
                                                 <div class="form-group">
                                                     <label>SMS</label>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="sms-enabled">
-                                                        <label class="form-check-label" for="sms-enabled">Enable SMS</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="sms-enabled">
+                                                        <label class="form-check-label" for="sms-enabled">Enable
+                                                            SMS</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="sms-marketing">
-                                                        <label class="form-check-label" for="sms-marketing">Marketing Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="sms-marketing">
+                                                        <label class="form-check-label" for="sms-marketing">Marketing
+                                                            Messages</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="sms-transactional" checked>
-                                                        <label class="form-check-label" for="sms-transactional">Transactional Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="sms-transactional" checked>
+                                                        <label class="form-check-label"
+                                                            for="sms-transactional">Transactional Messages</label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -322,16 +345,22 @@
                                                 <div class="form-group">
                                                     <label>Email</label>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="email-enabled" checked>
-                                                        <label class="form-check-label" for="email-enabled">Enable Email</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="email-enabled" checked>
+                                                        <label class="form-check-label" for="email-enabled">Enable
+                                                            Email</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="email-marketing">
-                                                        <label class="form-check-label" for="email-marketing">Marketing Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="email-marketing">
+                                                        <label class="form-check-label" for="email-marketing">Marketing
+                                                            Messages</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="email-transactional" checked>
-                                                        <label class="form-check-label" for="email-transactional">Transactional Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="email-transactional" checked>
+                                                        <label class="form-check-label"
+                                                            for="email-transactional">Transactional Messages</label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -341,16 +370,22 @@
                                                 <div class="form-group">
                                                     <label>WhatsApp</label>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="whatsapp-enabled">
-                                                        <label class="form-check-label" for="whatsapp-enabled">Enable WhatsApp</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="whatsapp-enabled">
+                                                        <label class="form-check-label" for="whatsapp-enabled">Enable
+                                                            WhatsApp</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="whatsapp-marketing">
-                                                        <label class="form-check-label" for="whatsapp-marketing">Marketing Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="whatsapp-marketing">
+                                                        <label class="form-check-label"
+                                                            for="whatsapp-marketing">Marketing Messages</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="whatsapp-transactional" checked>
-                                                        <label class="form-check-label" for="whatsapp-transactional">Transactional Messages</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="whatsapp-transactional" checked>
+                                                        <label class="form-check-label"
+                                                            for="whatsapp-transactional">Transactional Messages</label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -358,15 +393,19 @@
                                                 <div class="form-group">
                                                     <label>Quiet Hours</label>
                                                     <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="quiet-hours-enabled" checked>
-                                                        <label class="form-check-label" for="quiet-hours-enabled">Enable Quiet Hours</label>
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="quiet-hours-enabled" checked>
+                                                        <label class="form-check-label" for="quiet-hours-enabled">Enable
+                                                            Quiet Hours</label>
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-6">
-                                                            <input type="time" class="form-control" id="quiet-hours-start" value="22:00">
+                                                            <input type="time" class="form-control"
+                                                                id="quiet-hours-start" value="22:00">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <input type="time" class="form-control" id="quiet-hours-end" value="08:00">
+                                                            <input type="time" class="form-control" id="quiet-hours-end"
+                                                                value="08:00">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -374,7 +413,8 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" class="btn btn-primary" onclick="saveCustomerPreferences()">Save Preferences</button>
+                                                <button type="button" class="btn btn-primary"
+                                                    onclick="saveCustomerPreferences()">Save Preferences</button>
                                             </div>
                                         </div>
                                     </div>
@@ -554,7 +594,8 @@
                         </div>
                         <div class="form-group">
                             <label>Variables (comma-separated)</label>
-                            <input type="text" class="form-control" id="template-variables" placeholder="customerName, prescriptionNumber, pharmacyName">
+                            <input type="text" class="form-control" id="template-variables"
+                                placeholder="customerName, prescriptionNumber, pharmacyName">
                         </div>
                     </form>
                 </div>
@@ -627,11 +668,12 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-    <script src="assets/js/customer-communication.js"></script>
-    <script src="assets/js/communication-templates.js"></script>
-    <script src="assets/js/communication-campaigns.js"></script>
-    <script src="assets/js/communication-analytics.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/customer-communication.js"></script>
+    <script src="./assets/js/communication-templates.js"></script>
+    <script src="./assets/js/communication-campaigns.js"></script>
+    <script src="./assets/js/communication-analytics.js"></script>
 </body>
+
 </html>

@@ -15,16 +15,26 @@ const dbPath = path.join(
     "stores.db",
 );
 
+const dbUtils = require('./db-utils');
+const dbManager = require('./db-manager');
+
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let storesDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
+// Initialize database asynchronously
+let storesDB;
 
-storesDB.ensureIndex({ fieldName: "_id", unique: true });
+// Initialize the database when the module loads
+(async function() {
+    try {
+        storesDB = await dbManager.getDatabase("stores.db");
+        storesDB.ensureIndex({ fieldName: "_id", unique: true });
+        console.log("Stores database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize stores database:", error);
+    }
+})();
 
 /**
  * GET endpoint: Get the welcome message for the Stores API.

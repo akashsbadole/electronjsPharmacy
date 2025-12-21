@@ -1,33 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const validator = require("validator");
 const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "batches.db",
-);
+const dbManager = require('./db-manager');
 
 router.use(bodyParser.json());
 
 module.exports = router;
 
-let batchesDB = new Datastore({
-    filename: dbPath,
-    autoload: true,
-});
 
-batchesDB.ensureIndex({ fieldName: "_id", unique: true });
-batchesDB.ensureIndex({ fieldName: "productId" });
-batchesDB.ensureIndex({ fieldName: "expiryDate" });
-batchesDB.ensureIndex({ fieldName: "batchNumber" });
+// Database instances
+let batchesDB, inventoryDB, storeInventoryDB, stockCountingDB;
+
+// Initialize databases asynchronously
+(async function() {
+    try {
+        batchesDB = await dbManager.getDatabase("batches.db");
+        inventoryDB = await dbManager.getDatabase("inventory.db");
+        storeInventoryDB = await dbManager.getDatabase("store-inventory.db");
+        stockCountingDB = await dbManager.getDatabase("stock-counting.db");
+        
+        // Ensure indexes are created
+        batchesDB.ensureIndex({ fieldName: "_id", unique: true });
+        batchesDB.ensureIndex({ fieldName: "productId" });
+        batchesDB.ensureIndex({ fieldName: "expiryDate" });
+        batchesDB.ensureIndex({ fieldName: "batchNumber" });
+        
+        console.log("Batches database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize Batches database:", error);
+    }
+})();
+
 
 /**
  * GET endpoint: Get the welcome message for the Batches API.
@@ -464,21 +470,6 @@ router.get("/product/:productId", function (req, res) {
  * @returns {void}
  */
 function updateInventoryWithBatch(batch) {
-    const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    const inventoryDbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "inventory.db",
-    );
-    
-    const inventoryDB = new Datastore({
-        filename: inventoryDbPath,
-        autoload: true,
-    });
-    
     // Update product with batch-related information
     inventoryDB.update(
         { _id: batch.productId },
@@ -513,20 +504,6 @@ router.get("/stock-count/:sessionId", function (req, res) {
     }
     
     const sessionId = parseInt(req.params.sessionId);
-    
-    // Get stock count session details
-    const stockCountingDBPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "stock-counting.db",
-    );
-    
-    const stockCountingDB = new Datastore({
-        filename: stockCountingDBPath,
-        autoload: true,
-    });
     
     stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
         if (err) {
@@ -592,19 +569,6 @@ router.get("/stock-count/:sessionId", function (req, res) {
                     });
                 }
                 
-                const inventoryDbPath = path.join(
-                    process.env.APPDATA,
-                    process.env.APPNAME,
-                    "server",
-                    "databases",
-                    "inventory.db",
-                );
-                
-                const inventoryDB = new Datastore({
-                    filename: inventoryDbPath,
-                    autoload: true,
-                });
-                
                 inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
                     if (err) {
                         console.error(err);
@@ -613,20 +577,6 @@ router.get("/stock-count/:sessionId", function (req, res) {
                             message: "Failed to load product details.",
                         });
                     }
-                    
-                    // Get store inventory quantities
-                    const storeInventoryDBPath = path.join(
-                        process.env.APPDATA,
-                        process.env.APPNAME,
-                        "server",
-                        "databases",
-                        "store-inventory.db",
-                    );
-                    
-                    const storeInventoryDB = new Datastore({
-                        filename: storeInventoryDBPath,
-                        autoload: true,
-                    });
                     
                     storeInventoryDB.find({
                         productId: { $in: productIds },
@@ -692,20 +642,6 @@ router.post("/update-from-stock-count", function (req, res) {
     
     const sessionId = parseInt(req.body.sessionId);
     const batchUpdates = req.body.batches;
-    
-    // Verify stock count session
-    const stockCountingDBPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "stock-counting.db",
-    );
-    
-    const stockCountingDB = new Datastore({
-        filename: stockCountingDBPath,
-        autoload: true,
-    });
     
     stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
         if (err) {

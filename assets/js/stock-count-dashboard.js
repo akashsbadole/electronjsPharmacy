@@ -1,10 +1,10 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize dashboard
     loadDashboardData();
-    
+
     // Auto-refresh every 30 seconds
     setInterval(loadDashboardData, 30000);
-    
+
     // Initialize charts
     initializeCharts();
 });
@@ -22,9 +22,9 @@ function loadDashboardData() {
 
 function loadSummaryStats() {
     $.ajax({
-        url: '/api/stock-counts/dashboard/summary',
+        url: './api/stock-counts/dashboard/summary',
         method: 'GET',
-        success: function(summary) {
+        success: function (summary) {
             $('#activeCounts').text(summary.activeCounts);
             $('#activeCounters').text(summary.activeCounters);
             $('#completedToday').text(summary.completedToday);
@@ -33,7 +33,7 @@ function loadSummaryStats() {
             $('#highValueVariances').text(summary.highValueVariances);
             $('#accuracyRate').text(summary.accuracyRate + '%');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading summary stats:', error);
         }
     });
@@ -41,13 +41,13 @@ function loadSummaryStats() {
 
 function loadActiveCounts() {
     $.ajax({
-        url: '/api/stock-counts',
+        url: './api/stock-counts',
         method: 'GET',
         data: { status: 'ACTIVE', limit: 10 },
-        success: function(response) {
+        success: function (response) {
             displayActiveCounts(response.stockCounts);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading active counts:', error);
             $('#activeCountsList').html(`
                 <tr>
@@ -63,7 +63,7 @@ function loadActiveCounts() {
 function displayActiveCounts(counts) {
     const tbody = $('#activeCountsList');
     tbody.empty();
-    
+
     if (counts.length === 0) {
         tbody.html(`
             <tr>
@@ -74,19 +74,19 @@ function displayActiveCounts(counts) {
         `);
         return;
     }
-    
+
     counts.forEach(count => {
-        const progressPercent = count.totalItems > 0 ? 
+        const progressPercent = count.totalItems > 0 ?
             Math.round((count.countedItems / count.totalItems) * 100) : 0;
-        
+
         const progressClass = progressPercent >= 75 ? 'progress-bar-success' :
-                             progressPercent >= 50 ? 'progress-bar-info' :
-                             progressPercent >= 25 ? 'progress-bar-warning' : 'progress-bar-danger';
-        
-        const assignedTo = count.assignedTo && count.assignedTo.length > 0 ? 
-            count.assignedTo.slice(0, 2).join(', ') + 
+            progressPercent >= 50 ? 'progress-bar-info' :
+                progressPercent >= 25 ? 'progress-bar-warning' : 'progress-bar-danger';
+
+        const assignedTo = count.assignedTo && count.assignedTo.length > 0 ?
+            count.assignedTo.slice(0, 2).join(', ') +
             (count.assignedTo.length > 2 ? ` (+${count.assignedTo.length - 2})` : '') : 'Unassigned';
-        
+
         const row = `
             <tr>
                 <td>
@@ -129,12 +129,12 @@ function displayActiveCounts(counts) {
 
 function loadCounterPerformance() {
     $.ajax({
-        url: '/api/users/counters/performance',
+        url: './api/users/counters/performance',
         method: 'GET',
-        success: function(performance) {
+        success: function (performance) {
             displayCounterPerformance(performance);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading counter performance:', error);
             $('#counterPerformanceList').html(`
                 <tr>
@@ -150,7 +150,7 @@ function loadCounterPerformance() {
 function displayCounterPerformance(performance) {
     const tbody = $('#counterPerformanceList');
     tbody.empty();
-    
+
     if (performance.length === 0) {
         tbody.html(`
             <tr>
@@ -161,15 +161,15 @@ function displayCounterPerformance(performance) {
         `);
         return;
     }
-    
+
     performance.forEach(counter => {
         const accuracyClass = counter.accuracy >= 95 ? 'text-success' :
-                              counter.accuracy >= 90 ? 'text-warning' : 'text-danger';
-        
+            counter.accuracy >= 90 ? 'text-warning' : 'text-danger';
+
         const statusBadge = counter.status === 'ACTIVE' ? '<span class="label label-success">Active</span>' :
-                            counter.status === 'IDLE' ? '<span class="label label-warning">Idle</span>' :
-                            '<span class="label label-default">Offline</span>';
-        
+            counter.status === 'IDLE' ? '<span class="label label-warning">Idle</span>' :
+                '<span class="label label-default">Offline</span>';
+
         const row = `
             <tr>
                 <td>
@@ -193,13 +193,13 @@ function displayCounterPerformance(performance) {
 
 function loadRecentActivities() {
     $.ajax({
-        url: '/api/stock-counts/activities/recent',
+        url: './api/stock-counts/activities/recent',
         method: 'GET',
         data: { limit: 10 },
-        success: function(activities) {
+        success: function (activities) {
             displayRecentActivities(activities);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading recent activities:', error);
             $('#recentActivitiesList').html(`
                 <li class="text-center text-danger">
@@ -213,7 +213,7 @@ function loadRecentActivities() {
 function displayRecentActivities(activities) {
     const list = $('#recentActivitiesList');
     list.empty();
-    
+
     if (activities.length === 0) {
         list.html(`
             <li class="text-center text-muted">
@@ -222,11 +222,11 @@ function displayRecentActivities(activities) {
         `);
         return;
     }
-    
+
     activities.forEach(activity => {
         const iconClass = getActivityIcon(activity.type);
         const timeAgo = getTimeAgo(activity.timestamp);
-        
+
         const activityHtml = `
             <li>
                 <div class="timeline-item">
@@ -259,7 +259,7 @@ function getActivityIcon(type) {
         'VARIANCE_APPROVED': { class: 'timeline-point-success', icon: 'md-thumb-up' },
         'VARIANCE_REJECTED': { class: 'timeline-point-danger', icon: 'md-thumb-down' }
     };
-    
+
     return icons[type] || { class: 'timeline-point-default', icon: 'md-info' };
 }
 
@@ -270,12 +270,12 @@ function getTimeAgo(timestamp) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    
+
     return activityTime.toLocaleDateString();
 }
 
@@ -312,7 +312,7 @@ function initializeCharts() {
             }
         });
     }
-    
+
     // Count Type Chart
     const typeCtx = document.getElementById('countTypeChart');
     if (typeCtx) {
@@ -346,10 +346,10 @@ function updateCharts() {
 
 function updateCountTrendChart(period) {
     $.ajax({
-        url: '/api/stock-counts/analytics/trends',
+        url: './api/stock-counts/analytics/trends',
         method: 'GET',
         data: { period: period },
-        success: function(trends) {
+        success: function (trends) {
             if (countTrendChart) {
                 countTrendChart.data.labels = trends.labels;
                 countTrendChart.data.datasets[0].data = trends.completed;
@@ -357,7 +357,7 @@ function updateCountTrendChart(period) {
                 countTrendChart.update();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading count trends:', error);
         }
     });
@@ -365,16 +365,16 @@ function updateCountTrendChart(period) {
 
 function updateCountTypeChart() {
     $.ajax({
-        url: '/api/stock-counts/analytics/types',
+        url: './api/stock-counts/analytics/types',
         method: 'GET',
-        success: function(types) {
+        success: function (types) {
             if (countTypeChart) {
                 countTypeChart.data.labels = types.labels;
                 countTypeChart.data.datasets[0].data = types.data;
                 countTypeChart.update();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading count types:', error);
         }
     });
@@ -405,25 +405,25 @@ function viewCounterDetails(counterId) {
     $.ajax({
         url: `/api/users/${counterId}/counters/details`,
         method: 'GET',
-        success: function(details) {
+        success: function (details) {
             // Populate modal with counter details
             $('#counterName').text(details.name);
             $('#counterActiveCounts').text(details.activeCounts);
             $('#counterTotalItems').text(details.totalItemsCounted);
             $('#counterAccuracy').text(details.accuracy + '%');
-            
+
             // Load assigned counts
             const assignedCountsList = $('#assignedCountsList');
             assignedCountsList.empty();
-            
+
             if (details.assignedCounts.length === 0) {
                 assignedCountsList.html('<p class="text-muted">No assigned counts</p>');
             } else {
                 let listHtml = '<ul class="list-group">';
                 details.assignedCounts.forEach(count => {
-                    const progress = count.totalItems > 0 ? 
+                    const progress = count.totalItems > 0 ?
                         Math.round((count.countedItems / count.totalItems) * 100) : 0;
-                    
+
                     listHtml += `
                         <li class="list-group-item">
                             <div>
@@ -439,10 +439,10 @@ function viewCounterDetails(counterId) {
                 listHtml += '</ul>';
                 assignedCountsList.html(listHtml);
             }
-            
+
             $('#counterDetailsModal').modal('show');
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading counter details:', error);
             showError('Failed to load counter details.');
         }
@@ -463,16 +463,16 @@ function getTypeBadge(type) {
 
 function showSuccess(message) {
     $('.alert').remove();
-    
+
     const alertHtml = `
         <div class="alert alert-success alert-dismissible" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Success!</strong> ${message}
         </div>
     `;
-    
+
     $('body').append(alertHtml);
-    
+
     setTimeout(() => {
         $('.alert-success').fadeOut();
     }, 5000);
@@ -480,16 +480,16 @@ function showSuccess(message) {
 
 function showError(message) {
     $('.alert').remove();
-    
+
     const alertHtml = `
         <div class="alert alert-danger alert-dismissible" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <strong>Error!</strong> ${message}
         </div>
     `;
-    
+
     $('body').append(alertHtml);
-    
+
     setTimeout(() => {
         $('.alert-danger').fadeOut();
     }, 10000);

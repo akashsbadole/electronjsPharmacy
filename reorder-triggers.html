@@ -1,40 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reorder Triggers - PharmaSpot</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/core.css">
-    <link rel="stylesheet" href="assets/css/icons.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/icons.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/pages.css">
     <style>
         .trigger-card {
             transition: all 0.3s ease;
             border-left: 4px solid #ddd;
             margin-bottom: 15px;
         }
+
         .trigger-card.active {
             border-left-color: #4caf50;
         }
+
         .trigger-card.inactive {
             border-left-color: #f44336;
         }
+
         .trigger-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .trigger-type-badge {
             font-size: 0.8em;
             padding: 3px 8px;
             border-radius: 12px;
         }
+
         .trigger-frequency-badge {
             font-size: 0.8em;
             padding: 3px 8px;
             border-radius: 12px;
         }
+
         .status-indicator {
             width: 12px;
             height: 12px;
@@ -42,24 +49,29 @@
             display: inline-block;
             margin-right: 8px;
         }
+
         .status-active {
             background-color: #4caf50;
         }
+
         .status-inactive {
             background-color: #f44336;
         }
+
         .filter-section {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         .form-section {
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         .condition-row {
             border: 1px solid #ddd;
             padding: 15px;
@@ -67,6 +79,7 @@
             margin-bottom: 10px;
             background-color: white;
         }
+
         .action-row {
             border: 1px solid #ddd;
             padding: 15px;
@@ -74,6 +87,7 @@
             margin-bottom: 10px;
             background-color: white;
         }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -86,6 +100,7 @@
             align-items: center;
             z-index: 9999;
         }
+
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -94,15 +109,23 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .trigger-stats {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
         }
+
         .stat-item {
             text-align: center;
             padding: 10px;
@@ -111,29 +134,33 @@
             flex: 1;
             margin: 0 5px;
         }
+
         .stat-value {
             font-size: 1.2em;
             font-weight: bold;
         }
+
         .stat-label {
             font-size: 0.8em;
             color: #666;
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="topbar">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="navbar-header">
                 <a class="navbar-brand" href="index.html">
-                    <img src="assets/images/logo.svg" alt="PharmaSpot" height="30">
+                    <img src="./images/logo.svg" alt="PharmaSpot" height="30">
                 </a>
             </div>
             <div class="navbar-collapse">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reorder-suggestions.html">Reorder Suggestions</a>
+                    </li>
                     <li class="nav-item active"><a class="nav-link" href="reorder-triggers.html">Triggers</a></li>
                     <li class="nav-item"><a class="nav-link" href="reorder-automation.html">Automation</a></li>
                     <li class="nav-item"><a class="nav-link" href="reorder-analytics.html">Analytics</a></li>
@@ -226,15 +253,18 @@
                             </div>
                             <div class="col-md-3">
                                 <label for="searchInput">Search</label>
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search triggers...">
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Search triggers...">
                             </div>
                         </div>
                         <div class="row mt-3">
                             <div class="col-12">
                                 <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
                                 <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
-                                <button class="btn btn-success float-right" id="createNewTrigger">Create New Trigger</button>
-                                <button class="btn btn-warning float-right mr-2" id="checkAllTriggers">Check All Triggers</button>
+                                <button class="btn btn-success float-right" id="createNewTrigger">Create New
+                                    Trigger</button>
+                                <button class="btn btn-warning float-right mr-2" id="checkAllTriggers">Check All
+                                    Triggers</button>
                             </div>
                         </div>
                     </div>
@@ -282,7 +312,8 @@
     </section>
 
     <!-- Create/Edit Trigger Modal -->
-    <div class="modal fade" id="triggerModal" tabindex="-1" role="dialog" aria-labelledby="triggerModalLabel" aria-hidden="true">
+    <div class="modal fade" id="triggerModal" tabindex="-1" role="dialog" aria-labelledby="triggerModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -314,7 +345,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -333,7 +364,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -357,7 +388,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-section">
                             <h5>Trigger Conditions</h5>
                             <div id="conditionsContainer">
@@ -384,14 +415,16 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label for="conditionValue">Value</label>
-                                            <input type="text" class="form-control condition-value" placeholder="Enter value">
+                                            <input type="text" class="form-control condition-value"
+                                                placeholder="Enter value">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-sm btn-secondary" id="addCondition">Add Condition</button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="addCondition">Add
+                                Condition</button>
                         </div>
-                        
+
                         <div class="form-section">
                             <h5>Actions</h5>
                             <div id="actionsContainer">
@@ -407,7 +440,8 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label for="actionValue">Action Value</label>
-                                            <input type="text" class="form-control action-value" placeholder="Enter action value">
+                                            <input type="text" class="form-control action-value"
+                                                placeholder="Enter action value">
                                         </div>
                                     </div>
                                 </div>
@@ -425,7 +459,8 @@
     </div>
 
     <!-- Trigger Details Modal -->
-    <div class="modal fade" id="triggerDetailsModal" tabindex="-1" role="dialog" aria-labelledby="triggerDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="triggerDetailsModal" tabindex="-1" role="dialog"
+        aria-labelledby="triggerDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -450,177 +485,177 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             let allTriggers = [];
             let filteredTriggers = [];
             let currentTriggerId = null;
-            
+
             // Initialize
             loadStores();
             loadProducts();
             loadTriggers();
-            
+
             // Event handlers
-            $('#applyFilters').click(function() {
+            $('#applyFilters').click(function () {
                 applyFilters();
             });
-            
-            $('#resetFilters').click(function() {
+
+            $('#resetFilters').click(function () {
                 resetFilters();
             });
-            
-            $('#createNewTrigger').click(function() {
+
+            $('#createNewTrigger').click(function () {
                 openCreateTriggerModal();
             });
-            
-            $('#checkAllTriggers').click(function() {
+
+            $('#checkAllTriggers').click(function () {
                 checkAllTriggers();
             });
-            
-            $('#refreshData').click(function() {
+
+            $('#refreshData').click(function () {
                 loadTriggers();
             });
-            
-            $('#saveTrigger').click(function() {
+
+            $('#saveTrigger').click(function () {
                 saveTrigger();
             });
-            
-            $('#addCondition').click(function() {
+
+            $('#addCondition').click(function () {
                 addConditionRow();
             });
-            
-            $('#addAction').click(function() {
+
+            $('#addAction').click(function () {
                 addActionRow();
             });
-            
-            $('#searchInput').on('input', function() {
+
+            $('#searchInput').on('input', function () {
                 applyFilters();
             });
-            
+
             // Functions
             function loadStores() {
                 $.ajax({
-                    url: '/api/stores',
+                    url: './api/stores',
                     type: 'GET',
-                    success: function(stores) {
+                    success: function (stores) {
                         const storeSelect = $('#storeId');
                         const storeFilter = $('#storeFilter');
-                        
+
                         storeSelect.empty().append('<option value="">All Stores</option>');
                         storeFilter.empty().append('<option value="">All Stores</option>');
-                        
-                        stores.forEach(function(store) {
+
+                        stores.forEach(function (store) {
                             storeSelect.append(`<option value="${store._id}">${store.name}</option>`);
                             storeFilter.append(`<option value="${store._id}">${store.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load stores');
                     }
                 });
             }
-            
+
             function loadProducts() {
                 $.ajax({
-                    url: '/api/inventory',
+                    url: './api/inventory',
                     type: 'GET',
-                    success: function(products) {
+                    success: function (products) {
                         const productSelect = $('#productId');
-                        
+
                         productSelect.empty().append('<option value="">All Products</option>');
-                        
-                        products.forEach(function(product) {
+
+                        products.forEach(function (product) {
                             productSelect.append(`<option value="${product._id}">${product.name}</option>`);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load products');
                     }
                 });
             }
-            
+
             function loadTriggers() {
                 showLoading();
-                
+
                 $.ajax({
-                    url: '/api/reorder-triggers',
+                    url: './api/reorder-triggers',
                     type: 'GET',
-                    success: function(data) {
+                    success: function (data) {
                         allTriggers = data.triggers || [];
                         filteredTriggers = [...allTriggers];
                         renderTriggers();
                         updateSummaryCards();
                         hideLoading();
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Failed to load triggers');
                         hideLoading();
                     }
                 });
             }
-            
+
             function applyFilters() {
                 const storeFilter = $('#storeFilter').val();
                 const triggerTypeFilter = $('#triggerTypeFilter').val();
                 const statusFilter = $('#statusFilter').val();
                 const searchTerm = $('#searchInput').val().toLowerCase();
-                
-                filteredTriggers = allTriggers.filter(function(trigger) {
+
+                filteredTriggers = allTriggers.filter(function (trigger) {
                     let matches = true;
-                    
+
                     if (storeFilter && trigger.storeId != storeFilter) {
                         matches = false;
                     }
-                    
+
                     if (triggerTypeFilter && trigger.triggerType !== triggerTypeFilter) {
                         matches = false;
                     }
-                    
+
                     if (statusFilter && trigger.isActive !== (statusFilter === 'ACTIVE')) {
                         matches = false;
                     }
-                    
+
                     if (searchTerm && trigger.name.toLowerCase().indexOf(searchTerm) === -1) {
                         matches = false;
                     }
-                    
+
                     return matches;
                 });
-                
+
                 renderTriggers();
             }
-            
+
             function resetFilters() {
                 $('#storeFilter').val('');
                 $('#triggerTypeFilter').val('');
                 $('#statusFilter').val('');
                 $('#searchInput').val('');
-                
+
                 filteredTriggers = [...allTriggers];
                 renderTriggers();
             }
-            
+
             function renderTriggers() {
                 const tbody = $('#triggersTableBody');
                 tbody.empty();
-                
+
                 if (filteredTriggers.length === 0) {
                     $('#noDataMessage').show();
                     $('#triggersTable').hide();
                     return;
                 }
-                
+
                 $('#noDataMessage').hide();
                 $('#triggersTable').show();
-                
-                filteredTriggers.forEach(function(trigger) {
+
+                filteredTriggers.forEach(function (trigger) {
                     const statusClass = trigger.isActive ? 'status-active' : 'status-inactive';
                     const statusText = trigger.isActive ? 'Active' : 'Inactive';
                     const triggerTypeClass = getTriggerTypeClass(trigger.triggerType);
-                    
+
                     const row = `
                         <tr class="trigger-card ${trigger.isActive ? 'active' : 'inactive'}">
                             <td>
@@ -645,32 +680,32 @@
                             </td>
                         </tr>
                     `;
-                    
+
                     tbody.append(row);
                 });
-                
+
                 // Add event handlers to new buttons
-                $('.view-trigger').click(function() {
+                $('.view-trigger').click(function () {
                     const triggerId = $(this).data('id');
                     viewTriggerDetails(triggerId);
                 });
-                
-                $('.edit-trigger').click(function() {
+
+                $('.edit-trigger').click(function () {
                     const triggerId = $(this).data('id');
                     editTrigger(triggerId);
                 });
-                
-                $('.toggle-trigger').click(function() {
+
+                $('.toggle-trigger').click(function () {
                     const triggerId = $(this).data('id');
                     toggleTrigger(triggerId);
                 });
-                
-                $('.delete-trigger').click(function() {
+
+                $('.delete-trigger').click(function () {
                     const triggerId = $(this).data('id');
                     deleteTrigger(triggerId);
                 });
             }
-            
+
             function updateSummaryCards() {
                 const totalTriggers = filteredTriggers.length;
                 const activeTriggers = filteredTriggers.filter(t => t.isActive).length;
@@ -680,16 +715,16 @@
                     const today = new Date();
                     return lastTriggered.toDateString() === today.toDateString();
                 }).length;
-                
+
                 // Calculate success rate (simplified)
                 const successRate = totalTriggers > 0 ? Math.round((activeTriggers / totalTriggers) * 100) : 0;
-                
+
                 $('#totalTriggers').text(totalTriggers);
                 $('#activeTriggers').text(activeTriggers);
                 $('#triggeredToday').text(triggeredToday);
                 $('#successRate').text(successRate + '%');
             }
-            
+
             function getTriggerTypeClass(triggerType) {
                 switch (triggerType) {
                     case 'STOCK_LEVEL': return 'badge-primary';
@@ -700,37 +735,37 @@
                     default: return 'badge-secondary';
                 }
             }
-            
+
             function getStoreName(storeId) {
                 // This would normally fetch from a stores cache
                 return storeId ? `Store ${storeId}` : 'All Stores';
             }
-            
+
             function getProductName(productId) {
                 // This would normally fetch from a products cache
                 return productId ? `Product ${productId}` : 'All Products';
             }
-            
+
             function openCreateTriggerModal() {
                 currentTriggerId = null;
                 $('#triggerModalLabel').text('Create New Trigger');
                 $('#triggerForm')[0].reset();
-                
+
                 // Reset conditions and actions to default
                 $('#conditionsContainer').html(getDefaultConditionRow());
                 $('#actionsContainer').html(getDefaultActionRow());
-                
+
                 $('#triggerModal').modal('show');
             }
-            
+
             function editTrigger(triggerId) {
                 currentTriggerId = triggerId;
                 const trigger = allTriggers.find(t => t._id == triggerId);
-                
+
                 if (!trigger) return;
-                
+
                 $('#triggerModalLabel').text('Edit Trigger');
-                
+
                 // Populate form fields
                 $('#triggerName').val(trigger.name);
                 $('#triggerType').val(trigger.triggerType);
@@ -738,14 +773,14 @@
                 $('#productId').val(trigger.productId || '');
                 $('#frequency').val(trigger.frequency);
                 $('#isActive').val(trigger.isActive.toString());
-                
+
                 // Populate conditions and actions
                 populateConditions(trigger.conditions);
                 populateActions(trigger.actions);
-                
+
                 $('#triggerModal').modal('show');
             }
-            
+
             function saveTrigger() {
                 const triggerData = {
                     name: $('#triggerName').val(),
@@ -757,83 +792,83 @@
                     conditions: collectConditions(),
                     actions: collectActions()
                 };
-                
+
                 if (!triggerData.name || !triggerData.triggerType || !triggerData.frequency) {
                     alert('Please fill in all required fields.');
                     return;
                 }
-                
+
                 showLoading();
-                
-                const url = currentTriggerId ? 
-                    `/api/reorder-triggers/${currentTriggerId}` : 
+
+                const url = currentTriggerId ?
+                    `/api/reorder-triggers/${currentTriggerId}` :
                     '/api/reorder-triggers';
                 const method = currentTriggerId ? 'PUT' : 'POST';
-                
+
                 $.ajax({
                     url: url,
                     type: method,
                     data: triggerData,
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         $('#triggerModal').modal('hide');
                         loadTriggers(); // Refresh list
-                        
-                        const message = currentTriggerId ? 
-                            'Trigger updated successfully!' : 
+
+                        const message = currentTriggerId ?
+                            'Trigger updated successfully!' :
                             'Trigger created successfully!';
                         alert(message);
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to save trigger. Please try again.');
                     }
                 });
             }
-            
+
             function toggleTrigger(triggerId) {
                 showLoading();
-                
+
                 $.ajax({
                     url: `/api/reorder-triggers/${triggerId}/toggle`,
                     type: 'POST',
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         loadTriggers(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to toggle trigger. Please try again.');
                     }
                 });
             }
-            
+
             function deleteTrigger(triggerId) {
                 if (!confirm('Are you sure you want to delete this trigger?')) {
                     return;
                 }
-                
+
                 showLoading();
-                
+
                 $.ajax({
                     url: `/api/reorder-triggers/${triggerId}`,
                     type: 'DELETE',
-                    success: function() {
+                    success: function () {
                         hideLoading();
                         loadTriggers(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to delete trigger. Please try again.');
                     }
                 });
             }
-            
+
             function viewTriggerDetails(triggerId) {
                 const trigger = allTriggers.find(t => t._id == triggerId);
-                
+
                 if (!trigger) return;
-                
+
                 const detailsHtml = `
                     <div class="row">
                         <div class="col-md-6">
@@ -857,12 +892,12 @@
                         <div class="col-12">
                             <h6>Conditions</h6>
                             <div class="trigger-stats">
-                                ${trigger.conditions ? trigger.conditions.map(c => 
-                                    `<div class="stat-item">
+                                ${trigger.conditions ? trigger.conditions.map(c =>
+                    `<div class="stat-item">
                                         <div class="stat-value">${c.field} ${c.operator} ${c.value}</div>
                                         <div class="stat-label">Condition</div>
                                     </div>`
-                                ).join('') : 'No conditions defined'}
+                ).join('') : 'No conditions defined'}
                             </div>
                         </div>
                     </div>
@@ -870,49 +905,49 @@
                         <div class="col-12">
                             <h6>Actions</h6>
                             <div class="trigger-stats">
-                                ${trigger.actions ? trigger.actions.map(a => 
-                                    `<div class="stat-item">
+                                ${trigger.actions ? trigger.actions.map(a =>
+                    `<div class="stat-item">
                                         <div class="stat-value">${a.type}</div>
                                         <div class="stat-label">${a.value || 'Default'}</div>
                                     </div>`
-                                ).join('') : 'No actions defined'}
+                ).join('') : 'No actions defined'}
                             </div>
                         </div>
                     </div>
                 `;
-                
+
                 $('#triggerDetailsContent').html(detailsHtml);
                 $('#triggerDetailsModal').modal('show');
             }
-            
+
             function checkAllTriggers() {
                 showLoading();
-                
+
                 $.ajax({
-                    url: '/api/reorder-triggers/check-triggers',
+                    url: './api/reorder-triggers/check-triggers',
                     type: 'POST',
-                    success: function(data) {
+                    success: function (data) {
                         hideLoading();
                         alert(`Trigger check completed. ${data.triggeredCount || 0} triggers fired.`);
                         loadTriggers(); // Refresh list
                     },
-                    error: function() {
+                    error: function () {
                         hideLoading();
                         alert('Failed to check triggers. Please try again.');
                     }
                 });
             }
-            
+
             function addConditionRow() {
                 const conditionRow = getDefaultConditionRow();
                 $('#conditionsContainer').append(conditionRow);
             }
-            
+
             function addActionRow() {
                 const actionRow = getDefaultActionRow();
                 $('#actionsContainer').append(actionRow);
             }
-            
+
             function getDefaultConditionRow() {
                 return `
                     <div class="condition-row">
@@ -944,7 +979,7 @@
                     </div>
                 `;
             }
-            
+
             function getDefaultActionRow() {
                 return `
                     <div class="action-row">
@@ -965,15 +1000,15 @@
                     </div>
                 `;
             }
-            
+
             function collectConditions() {
                 const conditions = [];
-                
-                $('.condition-row').each(function() {
+
+                $('.condition-row').each(function () {
                     const field = $(this).find('.condition-field').val();
                     const operator = $(this).find('.condition-operator').val();
                     const value = $(this).find('.condition-value').val();
-                    
+
                     if (field && operator && value) {
                         conditions.push({
                             field: field,
@@ -982,17 +1017,17 @@
                         });
                     }
                 });
-                
+
                 return conditions;
             }
-            
+
             function collectActions() {
                 const actions = [];
-                
-                $('.action-row').each(function() {
+
+                $('.action-row').each(function () {
                     const type = $(this).find('.action-type').val();
                     const value = $(this).find('.action-value').val();
-                    
+
                     if (type) {
                         actions.push({
                             type: type,
@@ -1000,57 +1035,58 @@
                         });
                     }
                 });
-                
+
                 return actions;
             }
-            
+
             function populateConditions(conditions) {
                 if (!conditions || conditions.length === 0) {
                     $('#conditionsContainer').html(getDefaultConditionRow());
                     return;
                 }
-                
+
                 $('#conditionsContainer').empty();
-                
-                conditions.forEach(function(condition) {
+
+                conditions.forEach(function (condition) {
                     const conditionRow = getDefaultConditionRow();
                     const $row = $(conditionRow);
-                    
+
                     $row.find('.condition-field').val(condition.field);
                     $row.find('.condition-operator').val(condition.operator);
                     $row.find('.condition-value').val(condition.value);
-                    
+
                     $('#conditionsContainer').append($row);
                 });
             }
-            
+
             function populateActions(actions) {
                 if (!actions || actions.length === 0) {
                     $('#actionsContainer').html(getDefaultActionRow());
                     return;
                 }
-                
+
                 $('#actionsContainer').empty();
-                
-                actions.forEach(function(action) {
+
+                actions.forEach(function (action) {
                     const actionRow = getDefaultActionRow();
                     const $row = $(actionRow);
-                    
+
                     $row.find('.action-type').val(action.type);
                     $row.find('.action-value').val(action.value || '');
-                    
+
                     $('#actionsContainer').append($row);
                 });
             }
-            
+
             function showLoading() {
                 $('#loadingOverlay').show();
             }
-            
+
             function hideLoading() {
                 $('#loadingOverlay').hide();
             }
         });
     </script>
 </body>
+
 </html>

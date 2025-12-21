@@ -6,7 +6,7 @@
     <title>Stock Count Management - PharmaSoft</title>
     <link href="assets/dist/css/bundle.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/dashboard.css" rel="stylesheet" type="text/css" />
-    <link href="assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
@@ -14,7 +14,7 @@
         <img src="assets/images/logo.svg" />
         <h1 class="pull-right pt-3"><i class="fa fa-spinner fa-spin"></i> Please wait...</h1>
     </div>
-    
+
     <div id="main_app" style="display: none;">
         <div class="container">
             <div class="row">
@@ -24,7 +24,8 @@
                             <i class="fa fa-arrow-left"></i> Back to Main
                         </button>
                         <div class="btn-group p_one">
-                            <button id="newStockCountBtn" data-toggle="modal" data-target="#newStockCountModal" type="button" class="btn btn-success waves-effect waves-light">
+                            <button id="newStockCountBtn" data-toggle="modal" data-target="#newStockCountModal"
+                                type="button" class="btn btn-success waves-effect waves-light">
                                 <i class="fa fa-plus"></i> New Stock Count
                             </button>
                         </div>
@@ -34,19 +35,21 @@
                             </button>
                         </div>
                         <div class="btn-group p_three">
-                            <button id="varianceReviewBtn" type="button" class="btn btn-warning waves-effect waves-light">
+                            <button id="varianceReviewBtn" type="button"
+                                class="btn btn-warning waves-effect waves-light">
                                 <i class="fa fa-exclamation-triangle"></i> Variance Review
                             </button>
                         </div>
                         <div class="btn-group p_four">
-                            <button id="stockCountReportsBtn" type="button" class="btn btn-primary waves-effect waves-light">
+                            <button id="stockCountReportsBtn" type="button"
+                                class="btn btn-primary waves-effect waves-light">
                                 <i class="fa fa-chart-bar"></i> Reports
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Stock Count Summary Cards -->
             <div class="row m-t-20">
                 <div class="col-md-3">
@@ -86,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Stock Count List -->
             <div class="row m-t-20">
                 <div class="col-md-12">
@@ -95,7 +98,8 @@
                             <h4>Stock Count Sessions</h4>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <button id="filterBtn" data-toggle="modal" data-target="#filterModal" type="button" class="btn btn-sm btn-default">
+                                    <button id="filterBtn" data-toggle="modal" data-target="#filterModal" type="button"
+                                        class="btn btn-sm btn-default">
                                         <i class="fa fa-filter"></i> Filter
                                     </button>
                                     <button id="exportBtn" type="button" class="btn btn-sm btn-success">
@@ -149,7 +153,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <table class="table table-striped table-bordered table-responsive" id="stockCountList">
                                 <thead>
                                     <tr>
@@ -174,12 +178,13 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            
+
                             <!-- Pagination -->
                             <div class="row m-t-15">
                                 <div class="col-md-6">
                                     <div class="dataTables_info">
-                                        Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> entries
+                                        Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of
+                                        <span id="totalRecords">0</span> entries
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -196,7 +201,8 @@
     </div>
 
     <!-- New Stock Count Modal -->
-    <div id="newStockCountModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div id="newStockCountModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog"
+        aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -209,7 +215,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="countName">Count Name *</label>
-                                    <input type="text" required name="countName" class="form-control" placeholder="Enter count name" id="countName">
+                                    <input type="text" required name="countName" class="form-control"
+                                        placeholder="Enter count name" id="countName">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -226,7 +233,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -239,11 +246,12 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="scheduledDate">Scheduled Date *</label>
-                                    <input type="text" required name="scheduledDate" class="form-control datepicker" placeholder="Select date" id="scheduledDate">
+                                    <input type="text" required name="scheduledDate" class="form-control datepicker"
+                                        placeholder="Select date" id="scheduledDate">
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -262,7 +270,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Count Scope Configuration -->
                         <div class="row">
                             <div class="col-md-12">
@@ -271,7 +279,8 @@
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
                                             <h4 class="panel-title">
-                                                <a data-toggle="collapse" data-parent="#scopeAccordion" href="#categoryScope">
+                                                <a data-toggle="collapse" data-parent="#scopeAccordion"
+                                                    href="#categoryScope">
                                                     <i class="fa fa-chevron-down"></i> Category Filter
                                                 </a>
                                             </h4>
@@ -280,18 +289,20 @@
                                             <div class="panel-body">
                                                 <div class="form-group">
                                                     <label>Include Categories</label>
-                                                    <select name="categories" class="form-control" id="categories" multiple>
+                                                    <select name="categories" class="form-control" id="categories"
+                                                        multiple>
                                                         <option value="">All Categories</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
                                             <h4 class="panel-title">
-                                                <a data-toggle="collapse" data-parent="#scopeAccordion" href="#locationScope">
+                                                <a data-toggle="collapse" data-parent="#scopeAccordion"
+                                                    href="#locationScope">
                                                     <i class="fa fa-chevron-down"></i> Location Filter
                                                 </a>
                                             </h4>
@@ -300,16 +311,18 @@
                                             <div class="panel-body">
                                                 <div class="form-group">
                                                     <label>Include Locations</label>
-                                                    <input type="text" name="locations" class="form-control" placeholder="Enter locations (comma-separated)">
+                                                    <input type="text" name="locations" class="form-control"
+                                                        placeholder="Enter locations (comma-separated)">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
                                             <h4 class="panel-title">
-                                                <a data-toggle="collapse" data-parent="#scopeAccordion" href="#valueScope">
+                                                <a data-toggle="collapse" data-parent="#scopeAccordion"
+                                                    href="#valueScope">
                                                     <i class="fa fa-chevron-down"></i> Value Range Filter
                                                 </a>
                                             </h4>
@@ -320,13 +333,15 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Minimum Value</label>
-                                                            <input type="number" name="minValue" class="form-control" placeholder="0.00" step="0.01">
+                                                            <input type="number" name="minValue" class="form-control"
+                                                                placeholder="0.00" step="0.01">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label>Maximum Value</label>
-                                                            <input type="number" name="maxValue" class="form-control" placeholder="999999.99" step="0.01">
+                                                            <input type="number" name="maxValue" class="form-control"
+                                                                placeholder="999999.99" step="0.01">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -336,12 +351,13 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="notes">Notes</label>
-                                    <textarea name="notes" class="form-control" rows="3" placeholder="Enter any additional notes or instructions"></textarea>
+                                    <textarea name="notes" class="form-control" rows="3"
+                                        placeholder="Enter any additional notes or instructions"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -356,7 +372,8 @@
     </div>
 
     <!-- Filter Modal -->
-    <div id="filterModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="myMediumModalLabel" aria-hidden="true">
+    <div id="filterModal" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog"
+        aria-labelledby="myMediumModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -405,10 +422,12 @@
                                 <label for="filterDateRange">Date Range</label>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <input type="text" name="startDate" class="form-control datepicker" placeholder="Start Date">
+                                        <input type="text" name="startDate" class="form-control datepicker"
+                                            placeholder="Start Date">
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="text" name="endDate" class="form-control datepicker" placeholder="End Date">
+                                        <input type="text" name="endDate" class="form-control datepicker"
+                                            placeholder="End Date">
                                     </div>
                                 </div>
                             </div>
@@ -427,7 +446,7 @@
     <!-- Scripts -->
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/bootstrap.min.js"></script>
-    <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/js/bootstrap-datepicker.min.js"></script>
     <script src="assets/js/stock-count-management.js"></script>
 </body>
 
