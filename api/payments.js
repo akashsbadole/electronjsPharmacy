@@ -4,8 +4,8 @@ const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
 const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || "PharmaSoft";
+const appData = process.env.APPDATA || path.join(require('os').homedir(), 'AppData', 'Roaming');
 const dbPath = path.join(
     appData,
     appName,

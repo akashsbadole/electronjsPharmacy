@@ -3,27 +3,12 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
-const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const dbUtils = require('./db-utils');
 
 // Database paths
-const loyaltyRewardsDbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "loyalty-rewards.db",
-);
-
-const loyaltyRewardRedemptionsDbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "loyalty-reward-redemptions.db",
-);
+const loyaltyRewardsDbPath = dbUtils.getDatabasePath('loyalty-rewards.db');
+const loyaltyRewardRedemptionsDbPath = dbUtils.getDatabasePath('loyalty-reward-redemptions.db');
 
 router.use(bodyParser.json());
 
@@ -174,12 +159,12 @@ router.get("/all", function (req, res) {
     const skip = (page - 1) * limit;
     const isActive = req.query.active !== undefined ? req.query.active === 'true' : undefined;
     const customerId = req.query.customerId || null;
-    
+
     let query = {};
     if (isActive !== undefined) {
         query.is_active = isActive;
     }
-    
+
     loyaltyRewardsDB.find(query)
         .sort({ points_required: 1, created_at: -1 })
         .skip(skip)
@@ -192,7 +177,7 @@ router.get("/all", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // If customer ID is provided, check which rewards the customer can afford
             if (customerId) {
                 const customerLoyaltyDbPath = path.join(
@@ -218,14 +203,14 @@ router.get("/all", function (req, res) {
                     }
 
                     const customerPoints = loyaltyAccount ? loyaltyAccount.current_points : 0;
-                    
+
                     // Add affordability information to each reward
                     const rewardsWithAffordability = rewards.map(reward => ({
                         ...reward,
                         can_afford: customerPoints >= reward.points_required,
                         points_short: reward.points_required > customerPoints ? reward.points_required - customerPoints : 0
                     }));
-                    
+
                     // Get total count for pagination
                     loyaltyRewardsDB.count(query, function (err, count) {
                         if (err) {
@@ -235,7 +220,7 @@ router.get("/all", function (req, res) {
                                 message: "An unexpected error occurred.",
                             });
                         }
-                        
+
                         res.json({
                             rewards: rewardsWithAffordability,
                             customer_points: customerPoints,
@@ -258,7 +243,7 @@ router.get("/all", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         rewards: rewards,
                         pagination: {
@@ -752,12 +737,12 @@ router.get("/redemptions/:customerId", function (req, res) {
  */
 router.get("/stats", function (req, res) {
     const rewardId = req.query.rewardId ? parseInt(req.query.rewardId) : null;
-    
+
     let query = {};
     if (rewardId) {
         query.reward_id = rewardId;
     }
-    
+
     loyaltyRewardRedemptionsDB.find(query, function (err, redemptions) {
         if (err) {
             console.error(err);
@@ -766,11 +751,11 @@ router.get("/stats", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         const totalRedemptions = redemptions.length;
         const totalPointsUsed = redemptions.reduce((sum, redemption) => sum + redemption.points_used, 0);
         const uniqueCustomers = new Set(redemptions.map(redemption => redemption.customer_loyalty_id)).size;
-        
+
         // Group by reward type
         const rewardTypeStats = {};
         redemptions.forEach(redemption => {
@@ -787,12 +772,12 @@ router.get("/stats", function (req, res) {
             rewardTypeStats[rewardType].totalPointsUsed += redemption.points_used;
             rewardTypeStats[rewardType].uniqueCustomers.add(redemption.customer_loyalty_id);
         });
-        
+
         // Convert Set objects to counts
         for (const rewardType in rewardTypeStats) {
             rewardTypeStats[rewardType].uniqueCustomers = rewardTypeStats[rewardType].uniqueCustomers.size;
         }
-        
+
         // Group by reward
         const rewardStats = {};
         redemptions.forEach(redemption => {
@@ -807,12 +792,12 @@ router.get("/stats", function (req, res) {
             rewardStats[redemption.reward_id].totalPointsUsed += redemption.points_used;
             rewardStats[redemption.reward_id].uniqueCustomers.add(redemption.customer_loyalty_id);
         });
-        
+
         // Convert Set objects to counts
         for (const rewardId in rewardStats) {
             rewardStats[rewardId].uniqueCustomers = rewardStats[rewardId].uniqueCustomers.size;
         }
-        
+
         res.json({
             totalRedemptions: totalRedemptions,
             totalPointsUsed: totalPointsUsed,

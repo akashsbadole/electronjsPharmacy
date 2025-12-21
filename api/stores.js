@@ -2,18 +2,9 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const path = require("path");
 const validator = require("validator");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "stores.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('stores.db');
 
 const dbUtils = require('./db-utils');
 const dbManager = require('./db-manager');
@@ -26,7 +17,7 @@ module.exports = router;
 let storesDB;
 
 // Initialize the database when the module loads
-(async function() {
+(async function () {
     try {
         storesDB = await dbManager.getDatabase("stores.db");
         storesDB.ensureIndex({ fieldName: "_id", unique: true });
@@ -92,14 +83,14 @@ router.get("/:storeId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!store) {
                 return res.status(404).json({
                     error: "Not Found",
                     message: "Store not found.",
                 });
             }
-            
+
             res.send(store);
         }
     );
@@ -160,7 +151,7 @@ router.post("/create", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             res.status(201).send(store);
         });
     });
@@ -229,8 +220,8 @@ router.put("/:storeId", function (req, res) {
                 phone: req.body.phone !== undefined ? validator.escape(req.body.phone) : store.phone,
                 email: req.body.email !== undefined ? validator.escape(req.body.email) : store.email,
                 manager: req.body.manager !== undefined ? validator.escape(req.body.manager) : store.manager,
-                isMainStore: req.body.isMainStore !== undefined ? 
-                    (req.body.isMainStore === true || req.body.isMainStore === "true") : 
+                isMainStore: req.body.isMainStore !== undefined ?
+                    (req.body.isMainStore === true || req.body.isMainStore === "true") :
                     store.isMainStore,
                 updatedAt: new Date()
             };
@@ -247,7 +238,7 @@ router.put("/:storeId", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({ message: "Store updated successfully." });
                 }
             );
@@ -307,7 +298,7 @@ router.delete("/:storeId", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({ message: "Store deactivated successfully." });
             }
         );
@@ -330,14 +321,14 @@ router.get("/main", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!store) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Main store not found.",
             });
         }
-        
+
         res.send(store);
     });
 });
@@ -403,7 +394,7 @@ router.post("/set-main", function (req, res) {
                                 message: "An unexpected error occurred.",
                             });
                         }
-                        
+
                         res.json({ message: "Main store updated successfully." });
                     }
                 );

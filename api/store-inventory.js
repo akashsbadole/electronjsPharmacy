@@ -2,18 +2,9 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const path = require("path");
 const validator = require("validator");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "store-inventory.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('store-inventory.db');
 
 router.use(bodyParser.json());
 
@@ -192,7 +183,7 @@ router.post("/update", function (req, res) {
                 // Create new record
                 inventoryData._id = Math.floor(Date.now() / 1000);
                 inventoryData.createdAt = new Date();
-                
+
                 storeInventoryDB.insert(inventoryData, function (err, newInventory) {
                     if (err) {
                         console.error(err);
@@ -278,7 +269,7 @@ router.post("/adjust", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         message: "Inventory adjusted successfully.",
                         previousQuantity: existingInventory.quantity,
@@ -316,7 +307,7 @@ router.get("/store/:storeId/low-stock", function (req, res) {
                 });
             }
 
-            const lowStockItems = docs.filter(function(item) {
+            const lowStockItems = docs.filter(function (item) {
                 return item.quantity <= item.minStock;
             });
 
@@ -344,7 +335,7 @@ router.get("/summary", function (req, res) {
 
         // Group by product ID
         const summary = {};
-        docs.forEach(function(item) {
+        docs.forEach(function (item) {
             if (!summary[item.productId]) {
                 summary[item.productId] = {
                     productId: item.productId,
@@ -353,7 +344,7 @@ router.get("/summary", function (req, res) {
                     stores: []
                 };
             }
-            
+
             summary[item.productId].totalQuantity += item.quantity;
             summary[item.productId].storeCount++;
             summary[item.productId].stores.push({
@@ -391,7 +382,7 @@ router.post("/initialize-store", function (req, res) {
         "databases",
         "inventory.db",
     );
-    
+
     const inventoryDB = new Datastore({
         filename: inventoryDBPath,
         autoload: true,
@@ -410,7 +401,7 @@ router.post("/initialize-store", function (req, res) {
         let errorCount = 0;
 
         // Create inventory records for each product
-        products.forEach(function(product) {
+        products.forEach(function (product) {
             storeInventoryDB.findOne(
                 {
                     storeId: storeId,
@@ -440,9 +431,9 @@ router.post("/initialize-store", function (req, res) {
                                 console.error(err);
                                 errorCount++;
                             }
-                            
+
                             processedCount++;
-                            
+
                             // Check if all products have been processed
                             if (processedCount === products.length) {
                                 res.json({
@@ -455,7 +446,7 @@ router.post("/initialize-store", function (req, res) {
                         });
                     } else {
                         processedCount++;
-                        
+
                         // Check if all products have been processed
                         if (processedCount === products.length) {
                             res.json({
@@ -489,7 +480,7 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
 
     const storeId = parseInt(req.params.storeId);
     const suggestionType = req.query.suggestionType || null;
-    
+
     // Get store inventory
     storeInventoryDB.find({ storeId: storeId }, function (err, storeItems) {
         if (err) {
@@ -499,12 +490,12 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
                 message: "Failed to retrieve store inventory.",
             });
         }
-        
+
         // Filter items that need reordering
         const itemsNeedingReorder = storeItems.filter(item =>
             item.quantity <= item.minStock && item.reorderQuantity > 0
         );
-        
+
         if (itemsNeedingReorder.length === 0) {
             return res.json({
                 storeId: storeId,
@@ -512,7 +503,7 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
                 message: "No items need reordering for this store."
             });
         }
-        
+
         // Get product details
         const inventoryDbPath = path.join(
             appData,
@@ -521,15 +512,15 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
             "databases",
             "inventory.db",
         );
-        
+
         const inventoryDB = new Datastore({
             filename: inventoryDbPath,
             autoload: true,
         });
-        
+
         const productIds = itemsNeedingReorder.map(item => item.productId);
-        
-        inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
+
+        inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -537,11 +528,11 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
                     message: "Failed to retrieve product details.",
                 });
             }
-            
+
             // Create reorder suggestions
             const suggestions = itemsNeedingReorder.map(storeItem => {
                 const product = products.find(p => p._id === storeItem.productId);
-                
+
                 return {
                     _id: Math.floor(Date.now() / 1000) + Math.random(),
                     storeId: storeId,
@@ -561,15 +552,15 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
                     status: 'PENDING'
                 };
             });
-            
+
             // Calculate total values
             suggestions.forEach(suggestion => {
                 suggestion.estimatedTotalValue = suggestion.suggestedQuantity * suggestion.estimatedUnitPrice;
             });
-            
+
             // Sort by priority (high to low)
             suggestions.sort((a, b) => b.priority - a.priority);
-            
+
             res.json({
                 storeId: storeId,
                 suggestions: suggestions,
@@ -595,7 +586,7 @@ router.get("/store/:storeId/reorder-suggestions", function (req, res) {
 router.get("/reorder-suggestions", function (req, res) {
     const suggestionType = req.query.suggestionType || null;
     const priority = req.query.priority ? parseInt(req.query.priority) : null;
-    
+
     // Get all store inventory
     storeInventoryDB.find({}, function (err, allStoreItems) {
         if (err) {
@@ -605,19 +596,19 @@ router.get("/reorder-suggestions", function (req, res) {
                 message: "Failed to retrieve store inventory.",
             });
         }
-        
+
         // Filter items that need reordering
         const itemsNeedingReorder = allStoreItems.filter(item =>
             item.quantity <= item.minStock && item.reorderQuantity > 0
         );
-        
+
         if (itemsNeedingReorder.length === 0) {
             return res.json({
                 suggestions: [],
                 message: "No items need reordering across any stores."
             });
         }
-        
+
         // Get product details
         const inventoryDbPath = path.join(
             appData,
@@ -626,15 +617,15 @@ router.get("/reorder-suggestions", function (req, res) {
             "databases",
             "inventory.db",
         );
-        
+
         const inventoryDB = new Datastore({
             filename: inventoryDbPath,
             autoload: true,
         });
-        
+
         const productIds = itemsNeedingReorder.map(item => item.productId);
-        
-        inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
+
+        inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -642,11 +633,11 @@ router.get("/reorder-suggestions", function (req, res) {
                     message: "Failed to retrieve product details.",
                 });
             }
-            
+
             // Create reorder suggestions
             const suggestions = itemsNeedingReorder.map(storeItem => {
                 const product = products.find(p => p._id === storeItem.productId);
-                
+
                 return {
                     _id: Math.floor(Date.now() / 1000) + Math.random(),
                     storeId: storeItem.storeId,
@@ -666,20 +657,20 @@ router.get("/reorder-suggestions", function (req, res) {
                     status: 'PENDING'
                 };
             });
-            
+
             // Calculate total values and apply filters
             let filteredSuggestions = suggestions.map(suggestion => {
                 suggestion.estimatedTotalValue = suggestion.suggestedQuantity * suggestion.estimatedUnitPrice;
                 return suggestion;
             });
-            
+
             if (priority !== null) {
                 filteredSuggestions = filteredSuggestions.filter(s => s.priority >= priority);
             }
-            
+
             // Sort by priority (high to low)
             filteredSuggestions.sort((a, b) => b.priority - a.priority);
-            
+
             // Group by store for summary
             const storeGroups = {};
             filteredSuggestions.forEach(suggestion => {
@@ -693,7 +684,7 @@ router.get("/reorder-suggestions", function (req, res) {
                 storeGroups[suggestion.storeId].suggestions.push(suggestion);
                 storeGroups[suggestion.storeId].totalEstimatedValue += suggestion.estimatedTotalValue;
             });
-            
+
             res.json({
                 suggestions: filteredSuggestions,
                 storeGroups: Object.values(storeGroups),
@@ -724,17 +715,17 @@ router.post("/consolidated-purchase-order", function (req, res) {
             message: "Suggestions array is required.",
         });
     }
-    
+
     if (!req.body.supplierId) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Supplier ID is required.",
         });
     }
-    
+
     const Datastore = require("@seald-io/nedb");
     const async = require("async");
-    
+
     // Group suggestions by product to consolidate quantities
     const productGroups = {};
     req.body.suggestions.forEach(suggestion => {
@@ -754,7 +745,7 @@ router.post("/consolidated-purchase-order", function (req, res) {
             currentStock: suggestion.currentStock
         });
     });
-    
+
     // Get product details
     const inventoryDbPath = path.join(
         appData,
@@ -763,15 +754,15 @@ router.post("/consolidated-purchase-order", function (req, res) {
         "databases",
         "inventory.db",
     );
-    
+
     const inventoryDB = new Datastore({
         filename: inventoryDbPath,
         autoload: true,
     });
-    
+
     const productIds = Object.keys(productGroups).map(id => parseInt(id));
-    
-    inventoryDB.find({ _id: { $in: productIds } }, function(err, products) {
+
+    inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
         if (err) {
             console.error(err);
             return res.status(500).json({
@@ -779,7 +770,7 @@ router.post("/consolidated-purchase-order", function (req, res) {
                 message: "Failed to retrieve product details.",
             });
         }
-        
+
         // Create purchase order items
         const items = Object.values(productGroups).map(group => {
             const product = products.find(p => p._id === group.productId);
@@ -792,7 +783,7 @@ router.post("/consolidated-purchase-order", function (req, res) {
                 stores: group.stores
             };
         });
-        
+
         // Create purchase order
         const purchaseOrdersDbPath = path.join(
             appData,
@@ -801,28 +792,28 @@ router.post("/consolidated-purchase-order", function (req, res) {
             "databases",
             "purchase-orders.db",
         );
-        
+
         const purchaseOrdersDB = new Datastore({
             filename: purchaseOrdersDbPath,
             autoload: true,
         });
-        
+
         // Generate unique order number
         const orderNumber = generateConsolidatedOrderNumber();
-        
+
         // Calculate totals
         let subtotal = 0;
         let totalGst = 0;
-        
-        items.forEach(function(item) {
+
+        items.forEach(function (item) {
             const itemTotal = parseFloat(item.unitPrice) * parseInt(item.quantity);
             const itemGst = itemTotal * (parseFloat(item.gstRate || 0) / 100);
             subtotal += itemTotal;
             totalGst += itemGst;
         });
-        
+
         const totalAmount = subtotal + totalGst;
-        
+
         const newPurchaseOrder = {
             _id: Math.floor(Date.now() / 1000),
             orderNumber: orderNumber,
@@ -840,7 +831,7 @@ router.post("/consolidated-purchase-order", function (req, res) {
             createdAt: new Date(),
             updatedAt: new Date()
         };
-        
+
         purchaseOrdersDB.insert(newPurchaseOrder, function (err, purchaseOrder) {
             if (err) {
                 console.error(err);
@@ -849,9 +840,9 @@ router.post("/consolidated-purchase-order", function (req, res) {
                     message: "Failed to create consolidated purchase order.",
                 });
             }
-            
+
             // Create purchase order items
-            createConsolidatedPurchaseOrderItems(purchaseOrder._id, items, function(err, items) {
+            createConsolidatedPurchaseOrderItems(purchaseOrder._id, items, function (err, items) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
@@ -859,7 +850,7 @@ router.post("/consolidated-purchase-order", function (req, res) {
                         message: "Failed to create purchase order items.",
                     });
                 }
-                
+
                 res.status(201).json({
                     message: "Consolidated purchase order created successfully.",
                     purchaseOrder: {
@@ -893,7 +884,7 @@ router.get("/product/:productId/distribution", function (req, res) {
     }
 
     const productId = parseInt(req.params.productId);
-    
+
     storeInventoryDB.find(
         {
             productId: productId,
@@ -906,7 +897,7 @@ router.get("/product/:productId/distribution", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (docs.length === 0) {
                 return res.json({
                     productId: productId,
@@ -919,11 +910,11 @@ router.get("/product/:productId/distribution", function (req, res) {
                     }
                 });
             }
-            
+
             const totalQuantity = docs.reduce((sum, item) => sum + item.quantity, 0);
             const averageQuantity = totalQuantity / docs.length;
             const lowStockStores = docs.filter(item => item.quantity <= item.minStock).length;
-            
+
             res.json({
                 productId: productId,
                 stores: docs.map(item => ({
@@ -959,12 +950,12 @@ function calculateSuggestedQuantity(storeItem, product) {
     if (storeItem.reorderQuantity > 0) {
         return storeItem.reorderQuantity;
     }
-    
+
     // Otherwise, calculate based on max stock
     if (storeItem.maxStock > 0) {
         return storeItem.maxStock - storeItem.quantity;
     }
-    
+
     // Default to min stock * 2
     return storeItem.minStock * 2 || 10;
 }
@@ -978,7 +969,7 @@ function calculateSuggestedQuantity(storeItem, product) {
  */
 function calculatePriority(storeItem, product) {
     let priority = 5; // Base priority
-    
+
     // Stock level factor
     if (storeItem.quantity === 0) {
         priority += 3; // Out of stock
@@ -987,7 +978,7 @@ function calculatePriority(storeItem, product) {
     } else if (storeItem.quantity < storeItem.minStock) {
         priority += 1; // Low stock
     }
-    
+
     // Product value factor (higher value = higher priority)
     if (product && product.price) {
         if (product.price > 1000) {
@@ -996,7 +987,7 @@ function calculatePriority(storeItem, product) {
             priority += 0.5;
         }
     }
-    
+
     return Math.min(10, Math.max(1, priority));
 }
 
@@ -1040,7 +1031,7 @@ function generateConsolidatedOrderNumber() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const time = date.getTime();
-    
+
     return `CPO${year}${month}${day}${time.toString().slice(-6)}`;
 }
 
@@ -1055,7 +1046,7 @@ function generateConsolidatedOrderNumber() {
 function createConsolidatedPurchaseOrderItems(orderId, items, callback) {
     const Datastore = require("@seald-io/nedb");
     const path = require("path");
-    
+
     const itemsDbPath = path.join(
         appData,
         appName,
@@ -1063,19 +1054,19 @@ function createConsolidatedPurchaseOrderItems(orderId, items, callback) {
         "databases",
         "purchase-order-items.db",
     );
-    
+
     const itemsDB = new Datastore({
         filename: itemsDbPath,
         autoload: true,
     });
-    
+
     const createdItems = [];
-    
-    items.forEach(function(itemData) {
+
+    items.forEach(function (itemData) {
         const itemTotal = parseFloat(itemData.unitPrice) * parseInt(itemData.quantity);
         const itemGst = itemTotal * (parseFloat(itemData.gstRate || 0) / 100);
         const totalPrice = itemTotal + itemGst - (parseFloat(itemData.discountAmount) || 0);
-        
+
         const newItem = {
             _id: Math.floor(Date.now() / 1000) + Math.random(),
             purchaseOrderId: orderId,
@@ -1091,16 +1082,16 @@ function createConsolidatedPurchaseOrderItems(orderId, items, callback) {
             stores: itemData.stores || [],
             createdAt: new Date()
         };
-        
+
         createdItems.push(newItem);
     });
-    
+
     // Insert all items
-    itemsDB.insert(createdItems, function(err, items) {
+    itemsDB.insert(createdItems, function (err, items) {
         if (err) {
             return callback(err);
         }
-        
+
         callback(null, items);
     });
 }

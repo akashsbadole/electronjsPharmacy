@@ -3,17 +3,9 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
-const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "prescription-items.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('prescription-items.db');
 
 router.use(bodyParser.json());
 
@@ -48,7 +40,7 @@ router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     prescriptionItemsDB
         .find({})
         .sort({ created_at: -1 })
@@ -62,7 +54,7 @@ router.get("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             prescriptionItemsDB.count({}, function (err, totalCount) {
                 if (err) {
                     console.error(err);
@@ -71,7 +63,7 @@ router.get("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     items: items,
                     pagination: {
@@ -100,7 +92,7 @@ router.post("/", function (req, res) {
             message: "Prescription ID, product ID, and quantity are required fields.",
         });
     }
-    
+
     // Check if prescription exists
     const prescriptionsDB = getPrescriptionsDB();
     prescriptionsDB.findOne({ _id: req.body.prescription_id }, function (err, prescription) {
@@ -111,14 +103,14 @@ router.post("/", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!prescription) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Prescription not found.",
             });
         }
-        
+
         // Check if product exists
         const inventoryDB = getInventoryDB();
         inventoryDB.findOne({ _id: parseInt(req.body.product_id) }, function (err, product) {
@@ -129,14 +121,14 @@ router.post("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!product) {
                 return res.status(404).json({
                     error: "Not Found",
                     message: "Product not found.",
                 });
             }
-            
+
             const newPrescriptionItem = {
                 _id: Math.floor(Date.now() / 1000),
                 prescription_id: validator.escape(req.body.prescription_id),
@@ -148,7 +140,7 @@ router.post("/", function (req, res) {
                 instructions: validator.escape(req.body.instructions || ""),
                 created_at: new Date()
             };
-            
+
             prescriptionItemsDB.insert(newPrescriptionItem, function (err, item) {
                 if (err) {
                     console.error(err);
@@ -174,7 +166,7 @@ router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Prescription Item ID is required.");
     }
-    
+
     // Check if prescription item exists
     prescriptionItemsDB.findOne({ _id: req.params.id }, function (err, item) {
         if (err) {
@@ -184,14 +176,14 @@ router.put("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!item) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Prescription item not found.",
             });
         }
-        
+
         const updatedItem = {
             prescription_id: req.body.prescription_id ? validator.escape(req.body.prescription_id) : item.prescription_id,
             product_id: req.body.product_id ? validator.escape(req.body.product_id) : item.product_id,
@@ -201,7 +193,7 @@ router.put("/:id", function (req, res) {
             quantity: req.body.quantity !== undefined ? parseInt(req.body.quantity) : item.quantity,
             instructions: req.body.instructions !== undefined ? validator.escape(req.body.instructions) : item.instructions
         };
-        
+
         prescriptionItemsDB.update(
             { _id: req.params.id },
             { $set: updatedItem },
@@ -214,7 +206,7 @@ router.put("/:id", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     message: "Prescription item updated successfully.",
                     item: { ...item, ...updatedItem }
@@ -235,7 +227,7 @@ router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Prescription Item ID is required.");
     }
-    
+
     // Check if prescription item exists
     prescriptionItemsDB.findOne({ _id: req.params.id }, function (err, item) {
         if (err) {
@@ -245,14 +237,14 @@ router.delete("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!item) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Prescription item not found.",
             });
         }
-        
+
         prescriptionItemsDB.remove(
             { _id: req.params.id },
             {},
@@ -264,7 +256,7 @@ router.delete("/:id", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     message: "Prescription item deleted successfully."
                 });
@@ -284,7 +276,7 @@ router.get("/prescription/:prescriptionId", function (req, res) {
     if (!req.params.prescriptionId) {
         return res.status(400).send("Prescription ID is required.");
     }
-    
+
     // Check if prescription exists
     const prescriptionsDB = getPrescriptionsDB();
     prescriptionsDB.findOne({ _id: req.params.prescriptionId }, function (err, prescription) {
@@ -295,14 +287,14 @@ router.get("/prescription/:prescriptionId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!prescription) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Prescription not found.",
             });
         }
-        
+
         prescriptionItemsDB.find({ prescription_id: req.params.prescriptionId }, function (err, items) {
             if (err) {
                 console.error(err);
@@ -311,23 +303,23 @@ router.get("/prescription/:prescriptionId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Get product details for each item
             const inventoryDB = getInventoryDB();
             let itemsWithProducts = [];
             let processedCount = 0;
-            
+
             if (items.length === 0) {
                 return res.json(items);
             }
-            
+
             items.forEach(function (item, index) {
                 inventoryDB.findOne({ _id: parseInt(item.product_id) }, function (err, product) {
                     itemsWithProducts[index] = {
                         ...item,
                         product: product || null
                     };
-                    
+
                     processedCount++;
                     if (processedCount === items.length) {
                         res.json(itemsWithProducts);
@@ -349,7 +341,7 @@ router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Prescription Item ID is required.");
     }
-    
+
     prescriptionItemsDB.findOne({ _id: req.params.id }, function (err, item) {
         if (err) {
             console.error(err);
@@ -358,14 +350,14 @@ router.get("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!item) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Prescription item not found.",
             });
         }
-        
+
         // Get product details
         const inventoryDB = getInventoryDB();
         inventoryDB.findOne({ _id: parseInt(item.product_id) }, function (err, product) {
@@ -376,7 +368,7 @@ router.get("/:id", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             res.json({
                 ...item,
                 product: product || null
@@ -392,15 +384,8 @@ router.get("/:id", function (req, res) {
  */
 function getPrescriptionsDB() {
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    const dbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "prescriptions.db",
-    );
-    
+    const dbPath = dbUtils.getDatabasePath('prescriptions.db');
+
     return new Datastore({
         filename: dbPath,
         autoload: true,
@@ -414,15 +399,8 @@ function getPrescriptionsDB() {
  */
 function getInventoryDB() {
     const Datastore = require("@seald-io/nedb");
-    const path = require("path");
-    const dbPath = path.join(
-        process.env.APPDATA,
-        process.env.APPNAME,
-        "server",
-        "databases",
-        "inventory.db",
-    );
-    
+    const dbPath = dbUtils.getDatabasePath('inventory.db');
+
     return new Datastore({
         filename: dbPath,
         autoload: true,

@@ -5,8 +5,8 @@ const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || "PharmaSoft";
+const appData = process.env.APPDATA || path.join(require('os').homedir(), 'AppData', 'Roaming');
 
 // Database paths
 const promotionSchemesDbPath = path.join(

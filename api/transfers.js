@@ -2,19 +2,10 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const path = require("path");
 const validator = require("validator");
 const async = require("async");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "transfers.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('transfers.db');
 
 router.use(bodyParser.json());
 
@@ -72,7 +63,7 @@ router.get("/status/:status", function (req, res) {
 
     const status = validator.escape(req.params.status);
     const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'IN_TRANSIT', 'COMPLETED', 'CANCELLED'];
-    
+
     if (!validStatuses.includes(status)) {
         return res.status(400).json({
             error: "Bad Request",
@@ -105,7 +96,7 @@ router.get("/store/:storeId", function (req, res) {
     }
 
     const storeId = parseInt(req.params.storeId);
-    
+
     transfersDB.find({
         $or: [
             { fromStoreId: storeId },
@@ -147,14 +138,14 @@ router.get("/:transferId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!transfer) {
                 return res.status(404).json({
                     error: "Not Found",
                     message: "Transfer not found.",
                 });
             }
-            
+
             res.send(transfer);
         }
     );
@@ -202,20 +193,20 @@ router.post("/create", function (req, res) {
         "databases",
         "stores.db",
     );
-    
+
     const storesDB = new Datastore({
         filename: storesDBPath,
         autoload: true,
     });
 
     async.parallel([
-        function(callback) {
+        function (callback) {
             storesDB.findOne({ _id: parseInt(req.body.fromStoreId), isActive: true }, callback);
         },
-        function(callback) {
+        function (callback) {
             storesDB.findOne({ _id: parseInt(req.body.toStoreId), isActive: true }, callback);
         }
-    ], function(err, results) {
+    ], function (err, results) {
         if (err) {
             console.error(err);
             return res.status(500).json({
@@ -249,15 +240,15 @@ router.post("/create", function (req, res) {
             "databases",
             "store-inventory.db",
         );
-        
+
         const storeInventoryDB = new Datastore({
             filename: storeInventoryDBPath,
             autoload: true,
         });
 
         let inventoryChecks = [];
-        req.body.items.forEach(function(item) {
-            inventoryChecks.push(function(callback) {
+        req.body.items.forEach(function (item) {
+            inventoryChecks.push(function (callback) {
                 storeInventoryDB.findOne({
                     storeId: parseInt(req.body.fromStoreId),
                     productId: parseInt(item.productId)
@@ -265,7 +256,7 @@ router.post("/create", function (req, res) {
             });
         });
 
-        async.parallel(inventoryChecks, function(err, inventoryResults) {
+        async.parallel(inventoryChecks, function (err, inventoryResults) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -278,7 +269,7 @@ router.post("/create", function (req, res) {
             for (let i = 0; i < inventoryResults.length; i++) {
                 const inventory = inventoryResults[i];
                 const requestedQuantity = parseInt(req.body.items[i].quantity);
-                
+
                 if (!inventory || inventory.quantity < requestedQuantity) {
                     return res.status(400).json({
                         error: "Bad Request",
@@ -292,7 +283,7 @@ router.post("/create", function (req, res) {
                 _id: Math.floor(Date.now() / 1000),
                 fromStoreId: parseInt(req.body.fromStoreId),
                 toStoreId: parseInt(req.body.toStoreId),
-                items: req.body.items.map(function(item) {
+                items: req.body.items.map(function (item) {
                     return {
                         productId: parseInt(item.productId),
                         quantity: parseInt(item.quantity),
@@ -315,7 +306,7 @@ router.post("/create", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.status(201).send(transfer);
             });
         });
@@ -344,7 +335,7 @@ router.put("/:transferId/status", function (req, res) {
     const transferId = parseInt(req.params.transferId);
     const status = validator.escape(req.body.status);
     const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'IN_TRANSIT', 'COMPLETED', 'CANCELLED'];
-    
+
     if (!validStatuses.includes(status)) {
         return res.status(400).json({
             error: "Bad Request",
@@ -388,7 +379,7 @@ router.put("/:transferId/status", function (req, res) {
 
         // If completing the transfer, update inventory
         if (status === 'COMPLETED') {
-            updateInventoryForTransfer(transfer, function(err) {
+            updateInventoryForTransfer(transfer, function (err) {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({
@@ -429,7 +420,7 @@ router.put("/:transferId/status", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({ message: "Transfer status updated successfully." });
                 }
             );
@@ -452,33 +443,33 @@ function updateInventoryForTransfer(transfer, callback) {
         "databases",
         "store-inventory.db",
     );
-    
+
     const storeInventoryDB = new Datastore({
         filename: storeInventoryDBPath,
         autoload: true,
     });
 
     let inventoryUpdates = [];
-    
+
     // Prepare inventory updates for each item
-    transfer.items.forEach(function(item) {
+    transfer.items.forEach(function (item) {
         // Decrement from source store
-        inventoryUpdates.push(function(callback) {
+        inventoryUpdates.push(function (callback) {
             storeInventoryDB.findOne({
                 storeId: transfer.fromStoreId,
                 productId: item.productId
-            }, function(err, inventory) {
+            }, function (err, inventory) {
                 if (err) return callback(err);
-                
+
                 if (!inventory) {
                     return callback(new Error("Inventory not found for product " + item.productId + " in store " + transfer.fromStoreId));
                 }
-                
+
                 const newQuantity = inventory.quantity - item.quantity;
                 if (newQuantity < 0) {
                     return callback(new Error("Insufficient inventory for product " + item.productId));
                 }
-                
+
                 storeInventoryDB.update(
                     { _id: inventory._id },
                     { $set: { quantity: newQuantity, lastUpdated: new Date() } },
@@ -487,15 +478,15 @@ function updateInventoryForTransfer(transfer, callback) {
                 );
             });
         });
-        
+
         // Increment to destination store
-        inventoryUpdates.push(function(callback) {
+        inventoryUpdates.push(function (callback) {
             storeInventoryDB.findOne({
                 storeId: transfer.toStoreId,
                 productId: item.productId
-            }, function(err, inventory) {
+            }, function (err, inventory) {
                 if (err) return callback(err);
-                
+
                 if (inventory) {
                     // Update existing inventory
                     const newQuantity = inventory.quantity + item.quantity;
@@ -519,13 +510,13 @@ function updateInventoryForTransfer(transfer, callback) {
                         lastUpdated: new Date(),
                         updatedBy: "transfer_" + transfer._id
                     };
-                    
+
                     storeInventoryDB.insert(newInventory, callback);
                 }
             });
         });
     });
-    
+
     async.series(inventoryUpdates, callback);
 }
 
@@ -542,7 +533,7 @@ router.get("/product/:productId/history", function (req, res) {
     }
 
     const productId = parseInt(req.params.productId);
-    
+
     transfersDB.find({
         "items.productId": productId
     }, function (err, docs) {
@@ -553,13 +544,13 @@ router.get("/product/:productId/history", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         // Filter and format the results to only include relevant items
-        const transferHistory = docs.map(function(transfer) {
-            const relevantItems = transfer.items.filter(function(item) {
+        const transferHistory = docs.map(function (transfer) {
+            const relevantItems = transfer.items.filter(function (item) {
                 return item.productId === productId;
             });
-            
+
             return {
                 transferId: transfer._id,
                 fromStoreId: transfer.fromStoreId,
@@ -570,7 +561,7 @@ router.get("/product/:productId/history", function (req, res) {
                 updatedAt: transfer.updatedAt
             };
         });
-        
+
         res.send(transferHistory);
     });
 });

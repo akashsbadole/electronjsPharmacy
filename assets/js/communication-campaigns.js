@@ -3,9 +3,7 @@
  */
 
 // Global variables
-let campaigns = [];
 let currentCampaignId = null;
-let templates = [];
 
 // Initialize page
 $(document).ready(function () {
@@ -54,7 +52,7 @@ function loadCampaigns() {
         url: './api/communication-campaigns/all',
         method: 'GET',
         success: function (data) {
-            campaigns = data.campaigns || [];
+            window.campaigns = data.campaigns || [];
             populateCampaignsTable();
             updateCampaignStats();
         },
@@ -74,7 +72,7 @@ function loadTemplates() {
         method: 'GET',
         data: { approvalStatus: 'APPROVED' },
         success: function (data) {
-            templates = data.templates || [];
+            window.templates = data.templates || [];
             populateTemplateSelect();
         },
         error: function (xhr, status, error) {
@@ -91,9 +89,11 @@ function populateTemplateSelect() {
     templateSelect.empty();
     templateSelect.append('<option value="">Select Template</option>');
 
-    templates.forEach(function (template) {
-        templateSelect.append(`<option value="${template._id}">${template.name} (${template.type})</option>`);
-    });
+    if (window.templates && window.templates.length > 0) {
+        window.templates.forEach(function (template) {
+            templateSelect.append(`<option value="${template._id}">${template.name} (${template.type})</option>`);
+        });
+    }
 }
 
 /**
@@ -103,12 +103,12 @@ function populateCampaignsTable() {
     const tbody = $('#campaigns-table-body');
     tbody.empty();
 
-    if (campaigns.length === 0) {
+    if (!window.campaigns || window.campaigns.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No campaigns found</td></tr>');
         return;
     }
 
-    campaigns.forEach(function (campaign) {
+    window.campaigns.forEach(function (campaign) {
         const statusClass = getStatusClass(campaign.status);
         const statusText = formatStatus(campaign.status);
         const progress = campaign.performance ?
@@ -159,24 +159,26 @@ function populateCampaignsTable() {
  * Update campaign statistics
  */
 function updateCampaignStats() {
-    let total = campaigns.length;
+    let total = window.campaigns ? window.campaigns.length : 0;
     let running = 0;
     let paused = 0;
     let completed = 0;
 
-    campaigns.forEach(campaign => {
-        switch (campaign.status) {
-            case 'RUNNING':
-                running++;
-                break;
-            case 'PAUSED':
-                paused++;
-                break;
-            case 'COMPLETED':
-                completed++;
-                break;
-        }
-    });
+    if (window.campaigns) {
+        window.campaigns.forEach(campaign => {
+            switch (campaign.status) {
+                case 'RUNNING':
+                    running++;
+                    break;
+                case 'PAUSED':
+                    paused++;
+                    break;
+                case 'COMPLETED':
+                    completed++;
+                    break;
+            }
+        });
+    }
 
     $('#total-campaigns').text(total);
     $('#running-campaigns').text(running);
@@ -195,7 +197,7 @@ function showCampaignModal(campaignId = null) {
 
     if (campaignId) {
         // Load campaign data for editing
-        const campaign = campaigns.find(c => c._id === campaignId);
+        const campaign = window.campaigns.find(c => c._id === campaignId);
         if (campaign) {
             $('#campaign-name').val(campaign.name);
             $('#campaign-description').val(campaign.description || '');
@@ -283,7 +285,7 @@ function saveCampaign() {
  * View campaign
  */
 function viewCampaign(campaignId) {
-    const campaign = campaigns.find(c => c._id === campaignId);
+    const campaign = window.campaigns.find(c => c._id === campaignId);
     if (!campaign) return;
 
     const performance = campaign.performance || {};
@@ -500,7 +502,7 @@ function filterCampaigns() {
                 }
             }
 
-            campaigns = filteredCampaigns;
+            window.campaigns = filteredCampaigns;
             populateCampaignsTable();
         },
         error: function (xhr, status, error) {
@@ -514,7 +516,7 @@ function filterCampaigns() {
  * Filter campaigns by search
  */
 function filterCampaignsBySearch(searchTerm) {
-    const filteredCampaigns = campaigns.filter(campaign => {
+    const filteredCampaigns = window.campaigns.filter(campaign => {
         return campaign.name.toLowerCase().includes(searchTerm) ||
             campaign.description.toLowerCase().includes(searchTerm) ||
             campaign.type.toLowerCase().includes(searchTerm);

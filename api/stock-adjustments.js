@@ -4,16 +4,8 @@ const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const validator = require("validator");
-const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "stock-adjustments.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('stock-adjustments.db');
 
 router.use(bodyParser.json());
 
@@ -51,7 +43,7 @@ router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Build query based on filters
     let query = {};
     if (req.query.productId) {
@@ -66,7 +58,7 @@ router.get("/", function (req, res) {
             $lte: validator.escape(req.query.endDate)
         };
     }
-    
+
     stockAdjustmentsDB.find(query)
         .sort({ adjustmentDate: -1 })
         .skip(skip)
@@ -79,7 +71,7 @@ router.get("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Get total count for pagination
             stockAdjustmentsDB.count(query, function (err, count) {
                 if (err) {
@@ -89,7 +81,7 @@ router.get("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     adjustments: docs,
                     pagination: {
@@ -118,7 +110,7 @@ router.post("/", function (req, res) {
             message: "Product ID, adjustment quantity, and reason are required fields.",
         });
     }
-    
+
     // Check if product exists
     const Datastore = require("@seald-io/nedb");
     const inventoryDbPath = path.join(
@@ -128,12 +120,12 @@ router.post("/", function (req, res) {
         "databases",
         "inventory.db",
     );
-    
+
     const inventoryDB = new Datastore({
         filename: inventoryDbPath,
         autoload: true,
     });
-    
+
     inventoryDB.findOne({ _id: parseInt(req.body.productId) }, function (err, product) {
         if (err) {
             console.error(err);
@@ -142,18 +134,18 @@ router.post("/", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!product) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Product not found.",
             });
         }
-        
+
         const currentQuantity = parseInt(product.quantity) || 0;
         const adjustmentQuantity = parseInt(req.body.adjustmentQuantity);
         const newQuantity = currentQuantity + adjustmentQuantity;
-        
+
         // Check if new quantity would be negative
         if (newQuantity < 0) {
             return res.status(400).json({
@@ -161,7 +153,7 @@ router.post("/", function (req, res) {
                 message: "Adjustment would result in negative stock quantity.",
             });
         }
-        
+
         // Check if batch is specified and exists
         if (req.body.batchId) {
             const batchesDbPath = path.join(
@@ -171,12 +163,12 @@ router.post("/", function (req, res) {
                 "databases",
                 "batches.db",
             );
-            
+
             const batchesDB = new Datastore({
                 filename: batchesDbPath,
                 autoload: true,
             });
-            
+
             batchesDB.findOne({ _id: parseInt(req.body.batchId) }, function (err, batch) {
                 if (err) {
                     console.error(err);
@@ -185,37 +177,37 @@ router.post("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 if (!batch) {
                     return res.status(404).json({
                         error: "Not Found",
                         message: "Batch not found.",
                     });
                 }
-                
+
                 if (batch.productId !== parseInt(req.body.productId)) {
                     return res.status(400).json({
                         error: "Bad Request",
                         message: "Batch does not belong to the specified product.",
                     });
                 }
-                
+
                 const currentBatchQuantity = parseInt(batch.currentQuantity) || 0;
                 const newBatchQuantity = currentBatchQuantity + adjustmentQuantity;
-                
+
                 if (newBatchQuantity < 0) {
                     return res.status(400).json({
                         error: "Bad Request",
                         message: "Adjustment would result in negative batch quantity.",
                     });
                 }
-                
+
                 createAdjustment();
             });
         } else {
             createAdjustment();
         }
-        
+
         function createAdjustment() {
             const newAdjustment = {
                 _id: Math.floor(Date.now() / 1000),
@@ -231,7 +223,7 @@ router.post("/", function (req, res) {
                 createdBy: req.body.createdBy ? parseInt(req.body.createdBy) : null,
                 createdAt: new Date()
             };
-            
+
             stockAdjustmentsDB.insert(newAdjustment, function (err, adjustment) {
                 if (err) {
                     console.error(err);
@@ -240,7 +232,7 @@ router.post("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 // Update inventory quantity
                 inventoryDB.update(
                     { _id: parseInt(req.body.productId) },
@@ -254,10 +246,10 @@ router.post("/", function (req, res) {
                                 message: "Failed to update inventory quantity.",
                             });
                         }
-                        
+
                         // Update batch quantity if specified
                         if (req.body.batchId) {
-                            updateBatchQuantity(parseInt(req.body.batchId), adjustmentQuantity, function(err) {
+                            updateBatchQuantity(parseInt(req.body.batchId), adjustmentQuantity, function (err) {
                                 if (err) {
                                     console.error(err);
                                     return res.status(500).json({
@@ -265,7 +257,7 @@ router.post("/", function (req, res) {
                                         message: "Failed to update batch quantity.",
                                     });
                                 }
-                                
+
                                 res.status(201).json(adjustment);
                             });
                         } else {
@@ -292,7 +284,7 @@ router.get("/:id", function (req, res) {
             message: "Stock adjustment ID is required.",
         });
     }
-    
+
     stockAdjustmentsDB.findOne({ _id: parseInt(req.params.id) }, function (err, adjustment) {
         if (err) {
             console.error(err);
@@ -301,14 +293,14 @@ router.get("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!adjustment) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Stock adjustment not found.",
             });
         }
-        
+
         res.json(adjustment);
     });
 });
@@ -327,9 +319,9 @@ router.put("/:id", function (req, res) {
             message: "Stock adjustment ID is required.",
         });
     }
-    
+
     const adjustmentId = parseInt(req.params.id);
-    
+
     // Check if adjustment exists
     stockAdjustmentsDB.findOne({ _id: adjustmentId }, function (err, existingAdjustment) {
         if (err) {
@@ -339,21 +331,21 @@ router.put("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!existingAdjustment) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Stock adjustment not found.",
             });
         }
-        
+
         // Only allow updating notes and reason for audit purposes
         const updatedAdjustment = {
             reason: req.body.reason !== undefined ? validator.escape(req.body.reason) : existingAdjustment.reason,
             notes: req.body.notes !== undefined ? validator.escape(req.body.notes) : existingAdjustment.notes,
             updatedAt: new Date()
         };
-        
+
         stockAdjustmentsDB.update({ _id: adjustmentId }, { $set: updatedAdjustment }, {}, function (err, numReplaced) {
             if (err) {
                 console.error(err);
@@ -362,7 +354,7 @@ router.put("/:id", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             res.json({ ...updatedAdjustment, _id: adjustmentId });
         });
     });
@@ -382,9 +374,9 @@ router.delete("/:id", function (req, res) {
             message: "Stock adjustment ID is required.",
         });
     }
-    
+
     const adjustmentId = parseInt(req.params.id);
-    
+
     // Check if adjustment exists
     stockAdjustmentsDB.findOne({ _id: adjustmentId }, function (err, adjustment) {
         if (err) {
@@ -394,14 +386,14 @@ router.delete("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!adjustment) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Stock adjustment not found.",
             });
         }
-        
+
         // Reverse the adjustment in inventory
         const Datastore = require("@seald-io/nedb");
         const inventoryDbPath = path.join(
@@ -411,15 +403,15 @@ router.delete("/:id", function (req, res) {
             "databases",
             "inventory.db",
         );
-        
+
         const inventoryDB = new Datastore({
             filename: inventoryDbPath,
             autoload: true,
         });
-        
+
         const reverseQuantity = -adjustment.adjustmentQuantity;
         const newQuantity = adjustment.previousQuantity;
-        
+
         inventoryDB.update(
             { _id: adjustment.productId },
             { $set: { quantity: newQuantity } },
@@ -432,10 +424,10 @@ router.delete("/:id", function (req, res) {
                         message: "Failed to reverse inventory adjustment.",
                     });
                 }
-                
+
                 // Reverse batch quantity if applicable
                 if (adjustment.batchId) {
-                    reverseBatchQuantity(adjustment.batchId, reverseQuantity, function(err) {
+                    reverseBatchQuantity(adjustment.batchId, reverseQuantity, function (err) {
                         if (err) {
                             console.error(err);
                             return res.status(500).json({
@@ -443,13 +435,13 @@ router.delete("/:id", function (req, res) {
                                 message: "Failed to reverse batch adjustment.",
                             });
                         }
-                        
+
                         deleteAdjustment();
                     });
                 } else {
                     deleteAdjustment();
                 }
-                
+
                 function deleteAdjustment() {
                     stockAdjustmentsDB.remove({ _id: adjustmentId }, function (err, numRemoved) {
                         if (err) {
@@ -459,7 +451,7 @@ router.delete("/:id", function (req, res) {
                                 message: "An unexpected error occurred.",
                             });
                         }
-                        
+
                         res.json({ message: "Stock adjustment deleted and inventory reversed successfully." });
                     });
                 }
@@ -482,9 +474,9 @@ router.get("/reason/:reason", function (req, res) {
             message: "Reason is required.",
         });
     }
-    
+
     const reason = validator.escape(req.params.reason);
-    
+
     stockAdjustmentsDB.find({ reason: reason })
         .sort({ adjustmentDate: -1 })
         .exec(function (err, adjustments) {
@@ -495,7 +487,7 @@ router.get("/reason/:reason", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             res.json(adjustments);
         });
 });
@@ -511,7 +503,7 @@ router.get("/reason/:reason", function (req, res) {
 function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
     const Datastore = require("@seald-io/nedb");
     const path = require("path");
-    
+
     const batchesDbPath = path.join(
         process.env.APPDATA,
         process.env.APPNAME,
@@ -519,23 +511,23 @@ function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
         "databases",
         "batches.db",
     );
-    
+
     const batchesDB = new Datastore({
         filename: batchesDbPath,
         autoload: true,
     });
-    
+
     batchesDB.findOne({ _id: batchId }, function (err, batch) {
         if (err) {
             return callback(err);
         }
-        
+
         if (!batch) {
             return callback(new Error("Batch not found"));
         }
-        
+
         const newQuantity = batch.currentQuantity + adjustmentQuantity;
-        
+
         batchesDB.update(
             { _id: batchId },
             { $set: { currentQuantity: newQuantity } },
@@ -544,7 +536,7 @@ function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
                 if (err) {
                     return callback(err);
                 }
-                
+
                 callback(null);
             }
         );
@@ -562,7 +554,7 @@ function updateBatchQuantity(batchId, adjustmentQuantity, callback) {
 function reverseBatchQuantity(batchId, reverseQuantity, callback) {
     const Datastore = require("@seald-io/nedb");
     const path = require("path");
-    
+
     const batchesDbPath = path.join(
         process.env.APPDATA,
         process.env.APPNAME,
@@ -570,23 +562,23 @@ function reverseBatchQuantity(batchId, reverseQuantity, callback) {
         "databases",
         "batches.db",
     );
-    
+
     const batchesDB = new Datastore({
         filename: batchesDbPath,
         autoload: true,
     });
-    
+
     batchesDB.findOne({ _id: batchId }, function (err, batch) {
         if (err) {
             return callback(err);
         }
-        
+
         if (!batch) {
             return callback(new Error("Batch not found"));
         }
-        
+
         const newQuantity = batch.currentQuantity + reverseQuantity;
-        
+
         batchesDB.update(
             { _id: batchId },
             { $set: { currentQuantity: newQuantity } },
@@ -595,7 +587,7 @@ function reverseBatchQuantity(batchId, reverseQuantity, callback) {
                 if (err) {
                     return callback(err);
                 }
-                
+
                 callback(null);
             }
         );
@@ -616,12 +608,12 @@ router.get("/session/:sessionId", function (req, res) {
             message: "Session ID is required.",
         });
     }
-    
+
     const sessionId = parseInt(req.params.sessionId);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 25;
     const skip = (page - 1) * limit;
-    
+
     // Build query for stock count adjustments
     let query = {
         $or: [
@@ -630,7 +622,7 @@ router.get("/session/:sessionId", function (req, res) {
             { referenceId: sessionId }
         ]
     };
-    
+
     if (req.query.type) {
         query.adjustmentType = validator.escape(req.query.type);
     }
@@ -640,7 +632,7 @@ router.get("/session/:sessionId", function (req, res) {
             $lte: validator.escape(req.query.endDate)
         };
     }
-    
+
     stockAdjustmentsDB.find(query)
         .sort({ adjustmentDate: -1 })
         .skip(skip)
@@ -653,10 +645,10 @@ router.get("/session/:sessionId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Get product details for each adjustment
             const productIds = docs.map(adj => adj.productId);
-            
+
             if (productIds.length === 0) {
                 return res.json({
                     adjustments: docs,
@@ -668,7 +660,7 @@ router.get("/session/:sessionId", function (req, res) {
                     }
                 });
             }
-            
+
             const inventoryDbPath = path.join(
                 process.env.APPDATA,
                 process.env.APPNAME,
@@ -676,12 +668,12 @@ router.get("/session/:sessionId", function (req, res) {
                 "databases",
                 "inventory.db",
             );
-            
+
             const inventoryDB = new Datastore({
                 filename: inventoryDbPath,
                 autoload: true,
             });
-            
+
             inventoryDB.find({ _id: { $in: productIds } }, function (err, products) {
                 if (err) {
                     console.error(err);
@@ -690,11 +682,11 @@ router.get("/session/:sessionId", function (req, res) {
                         message: "Failed to load product details.",
                     });
                 }
-                
+
                 // Enrich adjustments with product details
                 const enrichedAdjustments = docs.map(adjustment => {
                     const product = products.find(p => p._id === adjustment.productId);
-                    
+
                     return {
                         ...adjustment,
                         productName: product ? product.name : 'Unknown Product',
@@ -702,7 +694,7 @@ router.get("/session/:sessionId", function (req, res) {
                         productCategory: product ? product.category : null
                     };
                 });
-                
+
                 // Get total count for pagination
                 stockAdjustmentsDB.count(query, function (err, count) {
                     if (err) {
@@ -712,7 +704,7 @@ router.get("/session/:sessionId", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         adjustments: enrichedAdjustments,
                         pagination: {
@@ -741,18 +733,18 @@ router.post("/bulk-from-variances", function (req, res) {
             message: "Session ID and variances array are required.",
         });
     }
-    
+
     const sessionId = parseInt(req.body.sessionId);
     const variances = req.body.variances;
     const approvedBy = req.body.approvedBy ? parseInt(req.body.approvedBy) : null;
-    
+
     if (!approvedBy) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Approved by user ID is required.",
         });
     }
-    
+
     // Verify stock count session is completed
     const stockCountingDBPath = path.join(
         process.env.APPDATA,
@@ -761,12 +753,12 @@ router.post("/bulk-from-variances", function (req, res) {
         "databases",
         "stock-counting.db",
     );
-    
+
     const stockCountingDB = new Datastore({
         filename: stockCountingDBPath,
         autoload: true,
     });
-    
+
     stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
         if (err) {
             console.error(err);
@@ -775,21 +767,21 @@ router.post("/bulk-from-variances", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!stockCount) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Stock count session not found.",
             });
         }
-        
+
         if (stockCount.countStatus !== 'COMPLETED') {
             return res.status(400).json({
                 error: "Bad Request",
                 message: "Adjustments can only be created for completed stock count sessions.",
             });
         }
-        
+
         // Process each variance into a stock adjustment
         const adjustmentPromises = variances.map(varianceData => {
             return new Promise((resolve, reject) => {
@@ -809,12 +801,12 @@ router.post("/bulk-from-variances", function (req, res) {
                     referenceType: 'STOCK_COUNT',
                     referenceId: sessionId
                 };
-                
+
                 stockAdjustmentsDB.insert(adjustment, function (err, newAdjustment) {
                     if (err) {
                         return reject(err);
                     }
-                    
+
                     // Update inventory quantity
                     const inventoryDbPath = path.join(
                         process.env.APPDATA,
@@ -823,12 +815,12 @@ router.post("/bulk-from-variances", function (req, res) {
                         "databases",
                         "inventory.db",
                     );
-                    
+
                     const inventoryDB = new Datastore({
                         filename: inventoryDbPath,
                         autoload: true,
                     });
-                    
+
                     inventoryDB.update(
                         { _id: adjustment.productId },
                         { $set: { quantity: adjustment.newQuantity } },
@@ -837,10 +829,10 @@ router.post("/bulk-from-variances", function (req, res) {
                             if (err) {
                                 return reject(err);
                             }
-                            
+
                             // Update batch quantity if specified
                             if (adjustment.batchId) {
-                                updateBatchQuantity(adjustment.batchId, adjustment.adjustmentQuantity, function(err) {
+                                updateBatchQuantity(adjustment.batchId, adjustment.adjustmentQuantity, function (err) {
                                     if (err) {
                                         return reject(err);
                                     }
@@ -860,7 +852,7 @@ router.post("/bulk-from-variances", function (req, res) {
                 });
             });
         });
-        
+
         Promise.all(adjustmentPromises)
             .then(results => {
                 res.json({
@@ -894,9 +886,9 @@ router.get("/session/:sessionId/summary", function (req, res) {
             message: "Session ID is required.",
         });
     }
-    
+
     const sessionId = parseInt(req.params.sessionId);
-    
+
     // Get all adjustments for the session
     stockAdjustmentsDB.find({
         $or: [
@@ -912,7 +904,7 @@ router.get("/session/:sessionId/summary", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         const summary = {
             totalAdjustments: adjustments.length,
             increases: adjustments.filter(a => a.adjustmentType === 'INCREASE').length,
@@ -924,7 +916,7 @@ router.get("/session/:sessionId/summary", function (req, res) {
             adjustmentByType: {},
             totalValue: 0
         };
-        
+
         // Group by adjustment reason/type
         adjustments.forEach(adjustment => {
             const type = adjustment.reason.split(' - ')[1] || 'OTHER';
@@ -937,11 +929,11 @@ router.get("/session/:sessionId/summary", function (req, res) {
             summary.adjustmentByType[type].count++;
             summary.adjustmentByType[type].quantity += Math.abs(adjustment.adjustmentQuantity);
         });
-        
+
         // Calculate total value (would need product prices for accurate calculation)
         summary.totalValue = adjustments.reduce((sum, a) =>
             sum + Math.abs(a.adjustmentQuantity * (a.unitCost || 0)), 0);
-        
+
         res.json(summary);
     });
 });
@@ -960,19 +952,19 @@ router.post("/reverse-variance-adjustments", function (req, res) {
             message: "Session ID and adjustment IDs array are required.",
         });
     }
-    
+
     const sessionId = parseInt(req.body.sessionId);
     const adjustmentIds = req.body.adjustmentIds.map(id => parseInt(id));
     const rejectedBy = req.body.rejectedBy ? parseInt(req.body.rejectedBy) : null;
     const rejectionReason = req.body.rejectionReason ? validator.escape(req.body.rejectionReason) : null;
-    
+
     if (!rejectedBy || !rejectionReason) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Rejected by user ID and rejection reason are required.",
         });
     }
-    
+
     // Get adjustments to reverse
     stockAdjustmentsDB.find({ _id: { $in: adjustmentIds } }, function (err, adjustments) {
         if (err) {
@@ -982,14 +974,14 @@ router.post("/reverse-variance-adjustments", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (adjustments.length === 0) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "No adjustments found to reverse.",
             });
         }
-        
+
         // Process reversals
         const reversalPromises = adjustments.map(adjustment => {
             return new Promise((resolve, reject) => {
@@ -1001,15 +993,15 @@ router.post("/reverse-variance-adjustments", function (req, res) {
                     "databases",
                     "inventory.db",
                 );
-                
+
                 const inventoryDB = new Datastore({
                     filename: inventoryDbPath,
                     autoload: true,
                 });
-                
+
                 const reverseQuantity = -adjustment.adjustmentQuantity;
                 const originalQuantity = adjustment.previousQuantity;
-                
+
                 inventoryDB.update(
                     { _id: adjustment.productId },
                     { $set: { quantity: originalQuantity } },
@@ -1018,16 +1010,16 @@ router.post("/reverse-variance-adjustments", function (req, res) {
                         if (err) {
                             return reject(err);
                         }
-                        
+
                         // Reverse batch quantity if applicable
                         if (adjustment.batchId) {
-                            reverseBatchQuantity(adjustment.batchId, reverseQuantity, function(err) {
+                            reverseBatchQuantity(adjustment.batchId, reverseQuantity, function (err) {
                                 if (err) {
                                     return reject(err);
                                 }
-                                
+
                                 // Create reversal record
-                                createReversalRecord(adjustment, rejectedBy, rejectionReason, function(err, reversal) {
+                                createReversalRecord(adjustment, rejectedBy, rejectionReason, function (err, reversal) {
                                     if (err) {
                                         return reject(err);
                                     }
@@ -1040,7 +1032,7 @@ router.post("/reverse-variance-adjustments", function (req, res) {
                             });
                         } else {
                             // Create reversal record
-                            createReversalRecord(adjustment, rejectedBy, rejectionReason, function(err, reversal) {
+                            createReversalRecord(adjustment, rejectedBy, rejectionReason, function (err, reversal) {
                                 if (err) {
                                     return reject(err);
                                 }
@@ -1055,7 +1047,7 @@ router.post("/reverse-variance-adjustments", function (req, res) {
                 );
             });
         });
-        
+
         Promise.all(reversalPromises)
             .then(results => {
                 res.json({
@@ -1098,7 +1090,7 @@ function createReversalRecord(originalAdjustment, rejectedBy, rejectionReason, c
         referenceType: 'STOCK_COUNT_REVERSAL',
         referenceId: originalAdjustment.referenceId
     };
-    
+
     // Store in a separate reversals database
     const reversalsDbPath = path.join(
         process.env.APPDATA,
@@ -1107,12 +1099,12 @@ function createReversalRecord(originalAdjustment, rejectedBy, rejectionReason, c
         "databases",
         "stock-adjustment-reversals.db",
     );
-    
+
     const reversalsDB = new Datastore({
         filename: reversalsDbPath,
         autoload: true,
     });
-    
+
     reversalsDB.insert(reversal, function (err, newReversal) {
         if (err) {
             return callback(err);

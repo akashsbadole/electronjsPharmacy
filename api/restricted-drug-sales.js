@@ -3,17 +3,9 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
-const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "restricted-drug-sales.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('restricted-drug-sales.db');
 
 router.use(bodyParser.json());
 
@@ -50,7 +42,7 @@ router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     restrictedDrugSalesDB
         .find({})
         .sort({ sale_date: -1 })
@@ -64,7 +56,7 @@ router.get("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             restrictedDrugSalesDB.count({}, function (err, totalCount) {
                 if (err) {
                     console.error(err);
@@ -73,12 +65,12 @@ router.get("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 // Get product details for each sale
                 const inventoryDB = getInventoryDB();
                 let salesWithProducts = [];
                 let processedCount = 0;
-                
+
                 if (sales.length === 0) {
                     return res.json({
                         sales: sales,
@@ -90,14 +82,14 @@ router.get("/", function (req, res) {
                         }
                     });
                 }
-                
+
                 sales.forEach(function (sale, index) {
                     inventoryDB.findOne({ _id: parseInt(sale.product_id) }, function (err, product) {
                         salesWithProducts[index] = {
                             ...sale,
                             product: product || null
                         };
-                        
+
                         processedCount++;
                         if (processedCount === sales.length) {
                             res.json({
@@ -125,14 +117,14 @@ router.get("/", function (req, res) {
  */
 router.post("/", function (req, res) {
     // Validate required fields
-    if (!req.body.transaction_id || !req.body.product_id || !req.body.quantity_sold || 
+    if (!req.body.transaction_id || !req.body.product_id || !req.body.quantity_sold ||
         !req.body.customer_name || !req.body.customer_address) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Transaction ID, product ID, quantity sold, customer name, and customer address are required fields.",
         });
     }
-    
+
     // Check if product exists and is a restricted drug
     const inventoryDB = getInventoryDB();
     inventoryDB.findOne({ _id: parseInt(req.body.product_id) }, function (err, product) {
@@ -143,14 +135,14 @@ router.post("/", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!product) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Product not found.",
             });
         }
-        
+
         // Check if product is a restricted drug
         const restrictedDrugsDB = getRestrictedDrugsDB();
         restrictedDrugsDB.findOne({ product_id: req.body.product_id }, function (err, restrictedDrug) {
@@ -161,14 +153,14 @@ router.post("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!restrictedDrug) {
                 return res.status(400).json({
                     error: "Bad Request",
                     message: "Product is not a restricted drug.",
                 });
             }
-            
+
             // Check if transaction exists
             const transactionsDB = getTransactionsDB();
             transactionsDB.findOne({ _id: req.body.transaction_id }, function (err, transaction) {
@@ -179,14 +171,14 @@ router.post("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 if (!transaction) {
                     return res.status(404).json({
                         error: "Not Found",
                         message: "Transaction not found.",
                     });
                 }
-                
+
                 // Validate additional requirements based on restricted drug settings
                 if (restrictedDrug.valid_prescription_required && !req.body.prescription_number) {
                     return res.status(400).json({
@@ -194,21 +186,21 @@ router.post("/", function (req, res) {
                         message: "Prescription number is required for this restricted drug.",
                     });
                 }
-                
+
                 if (restrictedDrug.photo_id_required && (!req.body.customer_id_proof || !req.body.id_proof_number)) {
                     return res.status(400).json({
                         error: "Bad Request",
                         message: "Customer ID proof and ID proof number are required for this restricted drug.",
                     });
                 }
-                
+
                 if (restrictedDrug.max_purchase_quantity && parseInt(req.body.quantity_sold) > restrictedDrug.max_purchase_quantity) {
                     return res.status(400).json({
                         error: "Bad Request",
                         message: `Maximum purchase quantity for this drug is ${restrictedDrug.max_purchase_quantity}.`,
                     });
                 }
-                
+
                 const newSale = {
                     _id: Math.floor(Date.now() / 1000),
                     transaction_id: validator.escape(req.body.transaction_id),
@@ -225,7 +217,7 @@ router.post("/", function (req, res) {
                     sale_date: new Date(),
                     created_at: new Date()
                 };
-                
+
                 restrictedDrugSalesDB.insert(newSale, function (err, sale) {
                     if (err) {
                         console.error(err);
@@ -234,7 +226,7 @@ router.post("/", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.status(201).json({
                         ...sale,
                         product: product,
@@ -257,7 +249,7 @@ router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Sale ID is required.");
     }
-    
+
     restrictedDrugSalesDB.findOne({ _id: req.params.id }, function (err, sale) {
         if (err) {
             console.error(err);
@@ -266,18 +258,18 @@ router.get("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!sale) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Restricted drug sale not found.",
             });
         }
-        
+
         // Get product and transaction details
         const inventoryDB = getInventoryDB();
         const transactionsDB = getTransactionsDB();
-        
+
         inventoryDB.findOne({ _id: parseInt(sale.product_id) }, function (err, product) {
             transactionsDB.findOne({ _id: sale.transaction_id }, function (err, transaction) {
                 res.json({
@@ -301,12 +293,12 @@ router.get("/drug/:drugId", function (req, res) {
     if (!req.params.drugId) {
         return res.status(400).send("Drug ID is required.");
     }
-    
+
     const drugId = req.params.drugId;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Check if product exists and is a restricted drug
     const inventoryDB = getInventoryDB();
     inventoryDB.findOne({ _id: parseInt(drugId) }, function (err, product) {
@@ -317,14 +309,14 @@ router.get("/drug/:drugId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!product) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Product not found.",
             });
         }
-        
+
         restrictedDrugSalesDB
             .find({ product_id: drugId })
             .sort({ sale_date: -1 })
@@ -338,7 +330,7 @@ router.get("/drug/:drugId", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 restrictedDrugSalesDB.count({ product_id: drugId }, function (err, totalCount) {
                     if (err) {
                         console.error(err);
@@ -347,7 +339,7 @@ router.get("/drug/:drugId", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         product: product,
                         sales: sales,
@@ -374,12 +366,12 @@ router.get("/customer/:customerId", function (req, res) {
     if (!req.params.customerId) {
         return res.status(400).send("Customer ID is required.");
     }
-    
+
     const customerId = req.params.customerId;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Check if customer exists
     const customersDB = getCustomersDB();
     customersDB.findOne({ _id: customerId }, function (err, customer) {
@@ -390,14 +382,14 @@ router.get("/customer/:customerId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!customer) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Customer not found.",
             });
         }
-        
+
         // Find sales by customer name (since we don't have customer_id in the sales record)
         restrictedDrugSalesDB
             .find({ customer_name: customer.name })
@@ -412,7 +404,7 @@ router.get("/customer/:customerId", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 restrictedDrugSalesDB.count({ customer_name: customer.name }, function (err, totalCount) {
                     if (err) {
                         console.error(err);
@@ -421,12 +413,12 @@ router.get("/customer/:customerId", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     // Get product details for each sale
                     const inventoryDB = getInventoryDB();
                     let salesWithProducts = [];
                     let processedCount = 0;
-                    
+
                     if (sales.length === 0) {
                         return res.json({
                             customer: customer,
@@ -439,14 +431,14 @@ router.get("/customer/:customerId", function (req, res) {
                             }
                         });
                     }
-                    
+
                     sales.forEach(function (sale, index) {
                         inventoryDB.findOne({ _id: parseInt(sale.product_id) }, function (err, product) {
                             salesWithProducts[index] = {
                                 ...sale,
                                 product: product || null
                             };
-                            
+
                             processedCount++;
                             if (processedCount === sales.length) {
                                 res.json({
@@ -478,18 +470,18 @@ router.get("/by-date", function (req, res) {
     if (!req.query.start || !req.query.end) {
         return res.status(400).send("Start and end dates are required.");
     }
-    
+
     const startDate = new Date(req.query.start);
     const endDate = new Date(req.query.end);
-    
+
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return res.status(400).send("Invalid date format.");
     }
-    
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     restrictedDrugSalesDB
         .find({
             sale_date: { $gte: startDate, $lte: endDate }
@@ -505,7 +497,7 @@ router.get("/by-date", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             restrictedDrugSalesDB.count({
                 sale_date: { $gte: startDate, $lte: endDate }
             }, function (err, totalCount) {
@@ -516,7 +508,7 @@ router.get("/by-date", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     sales: sales,
                     date_range: {
@@ -549,7 +541,7 @@ function getInventoryDB() {
         "databases",
         "inventory.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,
@@ -571,7 +563,7 @@ function getRestrictedDrugsDB() {
         "databases",
         "restricted-drugs.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,
@@ -593,7 +585,7 @@ function getTransactionsDB() {
         "databases",
         "transactions.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,
@@ -615,7 +607,7 @@ function getCustomersDB() {
         "databases",
         "customers.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,

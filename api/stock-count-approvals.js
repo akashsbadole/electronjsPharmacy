@@ -4,16 +4,8 @@ const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
 const validator = require("validator");
-const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "stock-count-approvals.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('stock-count-approvals.db');
 
 router.use(bodyParser.json());
 
@@ -95,15 +87,15 @@ router.get("/session/:sessionId", function (req, res) {
             message: "Session ID is required.",
         });
     }
-    
+
     const sessionId = parseInt(req.params.sessionId);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Build query based on filters
     let query = { countSessionId: sessionId };
-    
+
     if (req.query.status) {
         query.approvalStatus = validator.escape(req.query.status);
     }
@@ -113,7 +105,7 @@ router.get("/session/:sessionId", function (req, res) {
     if (req.query.approver) {
         query.approverId = parseInt(req.query.approver);
     }
-    
+
     stockCountApprovalsDB.find(query)
         .sort({ approvalLevel: 1, createdAt: 1 })
         .skip(skip)
@@ -126,10 +118,10 @@ router.get("/session/:sessionId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Get user details for approvers
             const approverIds = docs.filter(approval => approval.approverId).map(approval => approval.approverId);
-            
+
             if (approverIds.length === 0) {
                 return res.json({
                     approvals: docs,
@@ -141,7 +133,7 @@ router.get("/session/:sessionId", function (req, res) {
                     }
                 });
             }
-            
+
             usersDB.find({ _id: { $in: approverIds } }, function (err, users) {
                 if (err) {
                     console.error(err);
@@ -150,18 +142,18 @@ router.get("/session/:sessionId", function (req, res) {
                         message: "Failed to load user details.",
                     });
                 }
-                
+
                 // Enrich approvals with user details
                 const enrichedApprovals = docs.map(approval => {
                     const approver = users.find(u => u._id === approval.approverId);
-                    
+
                     return {
                         ...approval,
                         approverName: approver ? approver.name : 'Unknown User',
                         approverRole: approver ? approver.role : null
                     };
                 });
-                
+
                 // Get total count for pagination
                 stockCountApprovalsDB.count(query, function (err, count) {
                     if (err) {
@@ -171,7 +163,7 @@ router.get("/session/:sessionId", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         approvals: enrichedApprovals,
                         pagination: {
@@ -200,9 +192,9 @@ router.post("/session/:sessionId/initialize", function (req, res) {
             message: "Session ID is required.",
         });
     }
-    
+
     const sessionId = parseInt(req.params.sessionId);
-    
+
     // Check if stock count session exists and is completed
     stockCountingDB.findOne({ _id: sessionId }, function (err, stockCount) {
         if (err) {
@@ -212,21 +204,21 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!stockCount) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Stock count session not found.",
             });
         }
-        
+
         if (stockCount.countStatus !== 'COMPLETED') {
             return res.status(400).json({
                 error: "Bad Request",
                 message: "Approval workflow can only be initialized for completed stock count sessions.",
             });
         }
-        
+
         // Check if approval workflow already exists
         stockCountApprovalsDB.findOne({ countSessionId: sessionId }, function (err, existingApproval) {
             if (err) {
@@ -236,14 +228,14 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (existingApproval) {
                 return res.status(400).json({
                     error: "Bad Request",
                     message: "Approval workflow already initialized for this session.",
                 });
             }
-            
+
             // Get variances for the session to determine required approval levels
             stockVariancesDB.find({ countSessionId: sessionId }, function (err, variances) {
                 if (err) {
@@ -253,15 +245,15 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                         message: "Failed to load variances.",
                     });
                 }
-                
+
                 // Determine maximum approval level required
                 let maxApprovalLevel = 1; // Default to supervisor level
-                
+
                 variances.forEach(variance => {
                     if (variance.thresholdExceeded) {
                         const variancePercentage = parseFloat(variance.variancePercentage) || 0;
                         const varianceValue = Math.abs(variance.varianceValue) || 0;
-                        
+
                         if (variancePercentage > 50 || varianceValue > 5000) {
                             maxApprovalLevel = 3; // Owner level
                         } else if (variancePercentage > 25 || varianceValue > 1000) {
@@ -271,16 +263,16 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                         }
                     }
                 });
-                
+
                 // Create approval workflow records
                 const approvalLevels = [
                     { level: 1, role: 'SUPERVISOR' },
                     { level: 2, role: 'MANAGER' },
                     { level: 3, role: 'OWNER' }
                 ];
-                
+
                 const requiredApprovals = approvalLevels.filter(level => level.level <= maxApprovalLevel);
-                
+
                 const approvalRecords = requiredApprovals.map(level => ({
                     _id: Math.floor(Date.now() / 1000) + Math.random(),
                     countSessionId: sessionId,
@@ -294,7 +286,7 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                     createdAt: new Date(),
                     updatedAt: new Date()
                 }));
-                
+
                 // Insert approval records
                 if (approvalRecords.length > 0) {
                     stockCountApprovalsDB.insert(approvalRecords, function (err, approvals) {
@@ -305,7 +297,7 @@ router.post("/session/:sessionId/initialize", function (req, res) {
                                 message: "Failed to create approval workflow.",
                             });
                         }
-                        
+
                         res.json({
                             message: "Approval workflow initialized successfully.",
                             approvalWorkflow: approvals,
@@ -338,7 +330,7 @@ router.get("/:id", function (req, res) {
             message: "Approval ID is required.",
         });
     }
-    
+
     stockCountApprovalsDB.findOne({ _id: parseInt(req.params.id) }, function (err, approval) {
         if (err) {
             console.error(err);
@@ -347,14 +339,14 @@ router.get("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!approval) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Approval record not found.",
             });
         }
-        
+
         // Get approver details
         if (approval.approverId) {
             usersDB.findOne({ _id: approval.approverId }, function (err, user) {
@@ -365,13 +357,13 @@ router.get("/:id", function (req, res) {
                         message: "Failed to load approver details.",
                     });
                 }
-                
+
                 const enrichedApproval = {
                     ...approval,
                     approverName: user ? user.name : 'Unknown User',
                     approverRole: user ? user.role : null
                 };
-                
+
                 res.json(enrichedApproval);
             });
         } else {
@@ -394,18 +386,18 @@ router.put("/:id/approve", function (req, res) {
             message: "Approval ID is required.",
         });
     }
-    
+
     const approvalId = parseInt(req.params.id);
     const approverId = req.body.approverId ? parseInt(req.body.approverId) : null;
     const comments = req.body.comments ? validator.escape(req.body.comments) : null;
-    
+
     if (!approverId) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Approver ID is required.",
         });
     }
-    
+
     stockCountApprovalsDB.findOne({ _id: approvalId }, function (err, approval) {
         if (err) {
             console.error(err);
@@ -414,21 +406,21 @@ router.put("/:id/approve", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!approval) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Approval record not found.",
             });
         }
-        
+
         if (approval.approvalStatus !== 'PENDING') {
             return res.status(400).json({
                 error: "Bad Request",
                 message: "Only pending approvals can be approved.",
             });
         }
-        
+
         // Verify approver role
         usersDB.findOne({ _id: approverId }, function (err, user) {
             if (err) {
@@ -438,14 +430,14 @@ router.put("/:id/approve", function (req, res) {
                     message: "Failed to verify approver role.",
                 });
             }
-            
+
             if (!user || user.role !== approval.requiredApproverRole) {
                 return res.status(403).json({
                     error: "Forbidden",
                     message: `User does not have required role: ${approval.requiredApproverRole}`,
                 });
             }
-            
+
             const updatedApproval = {
                 approverId: approverId,
                 approvalStatus: 'APPROVED',
@@ -453,7 +445,7 @@ router.put("/:id/approve", function (req, res) {
                 comments: comments,
                 updatedAt: new Date()
             };
-            
+
             stockCountApprovalsDB.update({ _id: approvalId }, { $set: updatedApproval }, {}, function (err, numReplaced) {
                 if (err) {
                     console.error(err);
@@ -462,13 +454,13 @@ router.put("/:id/approve", function (req, res) {
                         message: "Failed to update approval record.",
                     });
                 }
-                
+
                 // Check if this approval unlocks the next level
-                checkAndUnlockNextApproval(approval.countSessionId, approval.approvalLevel, function(err, nextApprovalUnlocked) {
+                checkAndUnlockNextApproval(approval.countSessionId, approval.approvalLevel, function (err, nextApprovalUnlocked) {
                     if (err) {
                         console.error("Error checking next approval:", err);
                     }
-                    
+
                     res.json({
                         message: "Approval recorded successfully.",
                         approval: { ...approval, ...updatedApproval },
@@ -494,26 +486,26 @@ router.put("/:id/reject", function (req, res) {
             message: "Approval ID is required.",
         });
     }
-    
+
     const approvalId = parseInt(req.params.id);
     const approverId = req.body.approverId ? parseInt(req.body.approverId) : null;
     const rejectionReason = req.body.rejectionReason ? validator.escape(req.body.rejectionReason) : null;
     const comments = req.body.comments ? validator.escape(req.body.comments) : null;
-    
+
     if (!approverId) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Approver ID is required.",
         });
     }
-    
+
     if (!rejectionReason) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Rejection reason is required.",
         });
     }
-    
+
     stockCountApprovalsDB.findOne({ _id: approvalId }, function (err, approval) {
         if (err) {
             console.error(err);
@@ -522,21 +514,21 @@ router.put("/:id/reject", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!approval) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Approval record not found.",
             });
         }
-        
+
         if (approval.approvalStatus !== 'PENDING') {
             return res.status(400).json({
                 error: "Bad Request",
                 message: "Only pending approvals can be rejected.",
             });
         }
-        
+
         // Verify approver role
         usersDB.findOne({ _id: approverId }, function (err, user) {
             if (err) {
@@ -546,14 +538,14 @@ router.put("/:id/reject", function (req, res) {
                     message: "Failed to verify approver role.",
                 });
             }
-            
+
             if (!user || user.role !== approval.requiredApproverRole) {
                 return res.status(403).json({
                     error: "Forbidden",
                     message: `User does not have required role: ${approval.requiredApproverRole}`,
                 });
             }
-            
+
             const updatedApproval = {
                 approverId: approverId,
                 approvalStatus: 'REJECTED',
@@ -561,7 +553,7 @@ router.put("/:id/reject", function (req, res) {
                 comments: comments,
                 updatedAt: new Date()
             };
-            
+
             stockCountApprovalsDB.update({ _id: approvalId }, { $set: updatedApproval }, {}, function (err, numReplaced) {
                 if (err) {
                     console.error(err);
@@ -570,13 +562,13 @@ router.put("/:id/reject", function (req, res) {
                         message: "Failed to update approval record.",
                     });
                 }
-                
+
                 // Cancel all subsequent approvals in the workflow
-                cancelSubsequentApprovals(approval.countSessionId, approval.approvalLevel, function(err, cancelledApprovals) {
+                cancelSubsequentApprovals(approval.countSessionId, approval.approvalLevel, function (err, cancelledApprovals) {
                     if (err) {
                         console.error("Error cancelling subsequent approvals:", err);
                     }
-                    
+
                     res.json({
                         message: "Approval rejected and workflow cancelled.",
                         approval: { ...approval, ...updatedApproval },
@@ -602,9 +594,9 @@ router.get("/session/:sessionId/status", function (req, res) {
             message: "Session ID is required.",
         });
     }
-    
+
     const sessionId = parseInt(req.params.sessionId);
-    
+
     stockCountApprovalsDB.find({ countSessionId: sessionId }, function (err, approvals) {
         if (err) {
             console.error(err);
@@ -613,7 +605,7 @@ router.get("/session/:sessionId/status", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         const status = {
             totalApprovals: approvals.length,
             pending: approvals.filter(a => a.approvalStatus === 'PENDING').length,
@@ -623,20 +615,20 @@ router.get("/session/:sessionId/status", function (req, res) {
             workflowComplete: false,
             currentLevel: null
         };
-        
+
         // Determine if workflow is complete and current level
         if (approvals.length > 0) {
             const sortedApprovals = approvals.sort((a, b) => a.approvalLevel - b.approvalLevel);
             const lastApproval = sortedApprovals[sortedApprovals.length - 1];
-            
-            status.workflowComplete = lastApproval.approvalStatus === 'APPROVED' || 
-                                  lastApproval.approvalStatus === 'REJECTED';
-            
+
+            status.workflowComplete = lastApproval.approvalStatus === 'APPROVED' ||
+                lastApproval.approvalStatus === 'REJECTED';
+
             // Find current pending level
             const currentPending = sortedApprovals.find(a => a.approvalStatus === 'PENDING');
             status.currentLevel = currentPending ? currentPending.approvalLevel : null;
         }
-        
+
         res.json(status);
     });
 });
@@ -650,7 +642,7 @@ router.get("/session/:sessionId/status", function (req, res) {
  * @returns {void}
  */
 function checkAndUnlockNextApproval(sessionId, currentLevel, callback) {
-    stockCountApprovalsDB.find({ 
+    stockCountApprovalsDB.find({
         countSessionId: sessionId,
         approvalLevel: currentLevel + 1,
         approvalStatus: 'SKIPPED'
@@ -658,7 +650,7 @@ function checkAndUnlockNextApproval(sessionId, currentLevel, callback) {
         if (err) {
             return callback(err);
         }
-        
+
         if (nextApproval.length > 0) {
             // Unlock the next approval
             stockCountApprovalsDB.update(
@@ -688,7 +680,7 @@ function checkAndUnlockNextApproval(sessionId, currentLevel, callback) {
  * @returns {void}
  */
 function cancelSubsequentApprovals(sessionId, rejectedLevel, callback) {
-    stockCountApprovalsDB.find({ 
+    stockCountApprovalsDB.find({
         countSessionId: sessionId,
         approvalLevel: { $gt: rejectedLevel },
         approvalStatus: 'PENDING'
@@ -696,13 +688,13 @@ function cancelSubsequentApprovals(sessionId, rejectedLevel, callback) {
         if (err) {
             return callback(err);
         }
-        
+
         if (subsequentApprovals.length === 0) {
             return callback(null, []);
         }
-        
+
         const approvalIds = subsequentApprovals.map(a => a._id);
-        
+
         stockCountApprovalsDB.update(
             { _id: { $in: approvalIds } },
             { $set: { approvalStatus: 'CANCELLED', updatedAt: new Date() } },

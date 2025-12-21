@@ -2,16 +2,8 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-  appData,
-  appName,
-  "server",
-  "databases",
-  "templates.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('templates.db');
 
 router.use(bodyParser.json());
 
@@ -47,12 +39,12 @@ router.get("/all", function (req, res) {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const type = req.query.type || null;
-  
+
   let query = {};
   if (type) {
     query.type = type;
   }
-  
+
   templatesDB.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -64,7 +56,7 @@ router.get("/all", function (req, res) {
           message: "An unexpected error occurred.",
         });
       }
-      
+
       templatesDB.count(query, function (err, count) {
         if (err) {
           return res.status(500).json({
@@ -72,7 +64,7 @@ router.get("/all", function (req, res) {
             message: "An unexpected error occurred.",
           });
         }
-        
+
         res.json({
           templates: docs,
           pagination: {

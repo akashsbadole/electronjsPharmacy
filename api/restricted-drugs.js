@@ -3,17 +3,9 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const async = require("async");
-const path = require("path");
 const validator = require("validator");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "restricted-drugs.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('restricted-drugs.db');
 
 router.use(bodyParser.json());
 
@@ -49,7 +41,7 @@ router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     restrictedDrugsDB
         .find({})
         .sort({ schedule_category: 1, created_at: -1 })
@@ -63,7 +55,7 @@ router.get("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             restrictedDrugsDB.count({}, function (err, totalCount) {
                 if (err) {
                     console.error(err);
@@ -72,12 +64,12 @@ router.get("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 // Get product details for each restricted drug
                 const inventoryDB = getInventoryDB();
                 let restrictedDrugsWithProducts = [];
                 let processedCount = 0;
-                
+
                 if (restrictedDrugs.length === 0) {
                     return res.json({
                         restricted_drugs: restrictedDrugs,
@@ -89,14 +81,14 @@ router.get("/", function (req, res) {
                         }
                     });
                 }
-                
+
                 restrictedDrugs.forEach(function (restrictedDrug, index) {
                     inventoryDB.findOne({ _id: parseInt(restrictedDrug.product_id) }, function (err, product) {
                         restrictedDrugsWithProducts[index] = {
                             ...restrictedDrug,
                             product: product || null
                         };
-                        
+
                         processedCount++;
                         if (processedCount === restrictedDrugs.length) {
                             res.json({
@@ -130,7 +122,7 @@ router.post("/", function (req, res) {
             message: "Product ID and schedule category are required fields.",
         });
     }
-    
+
     // Validate schedule category
     const validSchedules = ['H', 'H1', 'X'];
     if (!validSchedules.includes(req.body.schedule_category.toUpperCase())) {
@@ -139,7 +131,7 @@ router.post("/", function (req, res) {
             message: "Schedule category must be one of: H, H1, X.",
         });
     }
-    
+
     // Check if product exists
     const inventoryDB = getInventoryDB();
     inventoryDB.findOne({ _id: parseInt(req.body.product_id) }, function (err, product) {
@@ -150,14 +142,14 @@ router.post("/", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!product) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Product not found.",
             });
         }
-        
+
         // Check if product is already marked as restricted
         restrictedDrugsDB.findOne({ product_id: req.body.product_id }, function (err, existingRestrictedDrug) {
             if (err) {
@@ -167,14 +159,14 @@ router.post("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (existingRestrictedDrug) {
                 return res.status(409).json({
                     error: "Conflict",
                     message: "This product is already marked as a restricted drug.",
                 });
             }
-            
+
             const newRestrictedDrug = {
                 _id: Math.floor(Date.now() / 1000),
                 product_id: validator.escape(req.body.product_id),
@@ -187,7 +179,7 @@ router.post("/", function (req, res) {
                 created_at: new Date(),
                 updated_at: new Date()
             };
-            
+
             restrictedDrugsDB.insert(newRestrictedDrug, function (err, restrictedDrug) {
                 if (err) {
                     console.error(err);
@@ -196,7 +188,7 @@ router.post("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.status(201).json({
                     ...restrictedDrug,
                     product: product
@@ -217,7 +209,7 @@ router.get("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
-    
+
     restrictedDrugsDB.findOne({ _id: req.params.id }, function (err, restrictedDrug) {
         if (err) {
             console.error(err);
@@ -226,14 +218,14 @@ router.get("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!restrictedDrug) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Restricted drug not found.",
             });
         }
-        
+
         // Get product details
         const inventoryDB = getInventoryDB();
         inventoryDB.findOne({ _id: parseInt(restrictedDrug.product_id) }, function (err, product) {
@@ -256,7 +248,7 @@ router.put("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
-    
+
     // Check if restricted drug exists
     restrictedDrugsDB.findOne({ _id: req.params.id }, function (err, restrictedDrug) {
         if (err) {
@@ -266,14 +258,14 @@ router.put("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!restrictedDrug) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Restricted drug not found.",
             });
         }
-        
+
         // Validate schedule category if provided
         if (req.body.schedule_category) {
             const validSchedules = ['H', 'H1', 'X'];
@@ -284,7 +276,7 @@ router.put("/:id", function (req, res) {
                 });
             }
         }
-        
+
         const updatedRestrictedDrug = {
             schedule_category: req.body.schedule_category ? req.body.schedule_category.toUpperCase() : restrictedDrug.schedule_category,
             storage_requirements: req.body.storage_requirements !== undefined ? validator.escape(req.body.storage_requirements) : restrictedDrug.storage_requirements,
@@ -294,7 +286,7 @@ router.put("/:id", function (req, res) {
             register_maintenance: req.body.register_maintenance !== undefined ? req.body.register_maintenance : restrictedDrug.register_maintenance,
             updated_at: new Date()
         };
-        
+
         restrictedDrugsDB.update(
             { _id: req.params.id },
             { $set: updatedRestrictedDrug },
@@ -307,7 +299,7 @@ router.put("/:id", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     message: "Restricted drug updated successfully.",
                     restricted_drug: { ...restrictedDrug, ...updatedRestrictedDrug }
@@ -328,7 +320,7 @@ router.delete("/:id", function (req, res) {
     if (!req.params.id) {
         return res.status(400).send("Restricted Drug ID is required.");
     }
-    
+
     // Check if restricted drug exists
     restrictedDrugsDB.findOne({ _id: req.params.id }, function (err, restrictedDrug) {
         if (err) {
@@ -338,14 +330,14 @@ router.delete("/:id", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!restrictedDrug) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Restricted drug not found.",
             });
         }
-        
+
         // Check if there are any sales records for this restricted drug
         const restrictedDrugSalesDB = getRestrictedDrugSalesDB();
         restrictedDrugSalesDB.findOne({ product_id: restrictedDrug.product_id }, function (err, sale) {
@@ -356,14 +348,14 @@ router.delete("/:id", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (sale) {
                 return res.status(409).json({
                     error: "Conflict",
                     message: "Cannot delete restricted drug. There are sales records associated with this drug.",
                 });
             }
-            
+
             restrictedDrugsDB.remove(
                 { _id: req.params.id },
                 {},
@@ -375,7 +367,7 @@ router.delete("/:id", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.json({
                         message: "Restricted drug deleted successfully."
                     });
@@ -396,22 +388,22 @@ router.get("/schedule/:schedule", function (req, res) {
     if (!req.params.schedule) {
         return res.status(400).send("Schedule category is required.");
     }
-    
+
     // Validate schedule category
     const validSchedules = ['H', 'H1', 'X'];
     const schedule = req.params.schedule.toUpperCase();
-    
+
     if (!validSchedules.includes(schedule)) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Schedule category must be one of: H, H1, X.",
         });
     }
-    
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     restrictedDrugsDB
         .find({ schedule_category: schedule })
         .sort({ created_at: -1 })
@@ -425,7 +417,7 @@ router.get("/schedule/:schedule", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             restrictedDrugsDB.count({ schedule_category: schedule }, function (err, totalCount) {
                 if (err) {
                     console.error(err);
@@ -434,12 +426,12 @@ router.get("/schedule/:schedule", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 // Get product details for each restricted drug
                 const inventoryDB = getInventoryDB();
                 let restrictedDrugsWithProducts = [];
                 let processedCount = 0;
-                
+
                 if (restrictedDrugs.length === 0) {
                     return res.json({
                         restricted_drugs: restrictedDrugs,
@@ -451,14 +443,14 @@ router.get("/schedule/:schedule", function (req, res) {
                         }
                     });
                 }
-                
+
                 restrictedDrugs.forEach(function (restrictedDrug, index) {
                     inventoryDB.findOne({ _id: parseInt(restrictedDrug.product_id) }, function (err, product) {
                         restrictedDrugsWithProducts[index] = {
                             ...restrictedDrug,
                             product: product || null
                         };
-                        
+
                         processedCount++;
                         if (processedCount === restrictedDrugs.length) {
                             res.json({
@@ -488,9 +480,9 @@ router.get("/check/:productId", function (req, res) {
     if (!req.params.productId) {
         return res.status(400).send("Product ID is required.");
     }
-    
+
     const productId = req.params.productId;
-    
+
     restrictedDrugsDB.findOne({ product_id: productId }, function (err, restrictedDrug) {
         if (err) {
             console.error(err);
@@ -499,14 +491,14 @@ router.get("/check/:productId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!restrictedDrug) {
             return res.json({
                 is_restricted: false,
                 message: "Product is not a restricted drug."
             });
         }
-        
+
         // Get product details
         const inventoryDB = getInventoryDB();
         inventoryDB.findOne({ _id: parseInt(productId) }, function (err, product) {
@@ -534,7 +526,7 @@ function getInventoryDB() {
         "databases",
         "inventory.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,
@@ -556,7 +548,7 @@ function getRestrictedDrugSalesDB() {
         "databases",
         "restricted-drug-sales.db",
     );
-    
+
     return new Datastore({
         filename: dbPath,
         autoload: true,

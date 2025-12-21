@@ -3,8 +3,8 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
+const appName = process.env.APPNAME || "PharmaSoft";
+const appData = process.env.APPDATA || path.join(require('os').homedir(), 'AppData', 'Roaming');
 
 // Database paths
 const deliveryOrdersDbPath = path.join(

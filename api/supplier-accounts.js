@@ -3,16 +3,8 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
 const validator = require("validator");
-const path = require("path");
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "supplier-accounts.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('supplier-accounts.db');
 
 router.use(bodyParser.json());
 
@@ -48,7 +40,7 @@ router.get("/", function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Build query based on filters
     let query = {};
     if (req.query.supplierId) {
@@ -63,7 +55,7 @@ router.get("/", function (req, res) {
             query.balance = 0;
         }
     }
-    
+
     supplierAccountsDB.find(query)
         .sort({ updatedAt: -1 })
         .skip(skip)
@@ -76,7 +68,7 @@ router.get("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Get total count for pagination
             supplierAccountsDB.count(query, function (err, count) {
                 if (err) {
@@ -86,7 +78,7 @@ router.get("/", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     supplierAccounts: docs,
                     pagination: {
@@ -115,9 +107,9 @@ router.post("/", function (req, res) {
             message: "Supplier ID is a required field.",
         });
     }
-    
+
     const supplierId = parseInt(req.body.supplierId);
-    
+
     // Check if supplier exists
     const Datastore = require("@seald-io/nedb");
     const suppliersDbPath = path.join(
@@ -127,12 +119,12 @@ router.post("/", function (req, res) {
         "databases",
         "suppliers.db",
     );
-    
+
     const suppliersDB = new Datastore({
         filename: suppliersDbPath,
         autoload: true,
     });
-    
+
     suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
         if (err) {
             console.error(err);
@@ -141,14 +133,14 @@ router.post("/", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!supplier) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Supplier not found.",
             });
         }
-        
+
         // Check if account already exists
         supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, existingAccount) {
             if (err) {
@@ -158,7 +150,7 @@ router.post("/", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (existingAccount) {
                 // Update existing account
                 const updatedAccount = {
@@ -167,7 +159,7 @@ router.post("/", function (req, res) {
                     paymentTermId: req.body.paymentTermId !== undefined ? req.body.paymentTermId : existingAccount.paymentTermId,
                     updatedAt: new Date()
                 };
-                
+
                 supplierAccountsDB.update(
                     { supplierId: supplierId },
                     { $set: updatedAccount },
@@ -180,7 +172,7 @@ router.post("/", function (req, res) {
                                 message: "An unexpected error occurred.",
                             });
                         }
-                        
+
                         res.json({
                             ...updatedAccount,
                             _id: existingAccount._id,
@@ -199,7 +191,7 @@ router.post("/", function (req, res) {
                     createdAt: new Date(),
                     updatedAt: new Date()
                 };
-                
+
                 supplierAccountsDB.insert(newAccount, function (err, account) {
                     if (err) {
                         console.error(err);
@@ -208,7 +200,7 @@ router.post("/", function (req, res) {
                             message: "An unexpected error occurred.",
                         });
                     }
-                    
+
                     res.status(201).json(account);
                 });
             }
@@ -230,9 +222,9 @@ router.get("/supplier/:supplierId", function (req, res) {
             message: "Supplier ID is required.",
         });
     }
-    
+
     const supplierId = parseInt(req.params.supplierId);
-    
+
     supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, account) {
         if (err) {
             console.error(err);
@@ -241,14 +233,14 @@ router.get("/supplier/:supplierId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!account) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Supplier account not found.",
             });
         }
-        
+
         res.json(account);
     });
 });
@@ -267,9 +259,9 @@ router.put("/supplier/:supplierId", function (req, res) {
             message: "Supplier ID is required.",
         });
     }
-    
+
     const supplierId = parseInt(req.params.supplierId);
-    
+
     // Check if account exists
     supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, existingAccount) {
         if (err) {
@@ -279,21 +271,21 @@ router.put("/supplier/:supplierId", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!existingAccount) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Supplier account not found.",
             });
         }
-        
+
         const updatedAccount = {
             creditLimit: req.body.creditLimit !== undefined ? parseFloat(req.body.creditLimit) : existingAccount.creditLimit,
             balance: req.body.balance !== undefined ? parseFloat(req.body.balance) : existingAccount.balance,
             paymentTermId: req.body.paymentTermId !== undefined ? req.body.paymentTermId : existingAccount.paymentTermId,
             updatedAt: new Date()
         };
-        
+
         supplierAccountsDB.update(
             { supplierId: supplierId },
             { $set: updatedAccount },
@@ -306,7 +298,7 @@ router.put("/supplier/:supplierId", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     ...updatedAccount,
                     _id: existingAccount._id,
@@ -331,17 +323,17 @@ router.post("/supplier/:supplierId/update-balance", function (req, res) {
             message: "Supplier ID is required.",
         });
     }
-    
+
     if (req.body.amount === undefined) {
         return res.status(400).json({
             error: "Bad Request",
             message: "Amount is required.",
         });
     }
-    
+
     const supplierId = parseInt(req.params.supplierId);
     const amount = parseFloat(req.body.amount);
-    
+
     // Check if account exists
     supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, existingAccount) {
         if (err) {
@@ -351,19 +343,19 @@ router.post("/supplier/:supplierId/update-balance", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!existingAccount) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Supplier account not found.",
             });
         }
-        
+
         const newBalance = existingAccount.balance + amount;
-        
+
         supplierAccountsDB.update(
             { supplierId: supplierId },
-            { 
+            {
                 $set: {
                     balance: newBalance,
                     updatedAt: new Date()
@@ -378,7 +370,7 @@ router.post("/supplier/:supplierId/update-balance", function (req, res) {
                         message: "An unexpected error occurred.",
                     });
                 }
-                
+
                 res.json({
                     _id: existingAccount._id,
                     supplierId: supplierId,
@@ -406,9 +398,9 @@ router.get("/supplier/:supplierId/with-details", function (req, res) {
             message: "Supplier ID is required.",
         });
     }
-    
+
     const supplierId = parseInt(req.params.supplierId);
-    
+
     supplierAccountsDB.findOne({ supplierId: supplierId }, function (err, account) {
         if (err) {
             console.error(err);
@@ -417,14 +409,14 @@ router.get("/supplier/:supplierId/with-details", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         if (!account) {
             return res.status(404).json({
                 error: "Not Found",
                 message: "Supplier account not found.",
             });
         }
-        
+
         // Get supplier details
         const Datastore = require("@seald-io/nedb");
         const suppliersDbPath = path.join(
@@ -434,12 +426,12 @@ router.get("/supplier/:supplierId/with-details", function (req, res) {
             "databases",
             "suppliers.db",
         );
-        
+
         const suppliersDB = new Datastore({
             filename: suppliersDbPath,
             autoload: true,
         });
-        
+
         suppliersDB.findOne({ _id: supplierId }, function (err, supplier) {
             if (err) {
                 console.error(err);
@@ -448,14 +440,14 @@ router.get("/supplier/:supplierId/with-details", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!supplier) {
                 return res.status(404).json({
                     error: "Not Found",
                     message: "Supplier not found.",
                 });
             }
-            
+
             // Get payment terms if available
             let paymentTerms = null;
             if (account.paymentTermId) {
@@ -466,17 +458,17 @@ router.get("/supplier/:supplierId/with-details", function (req, res) {
                     "databases",
                     "payment-terms.db",
                 );
-                
+
                 const paymentTermsDB = new Datastore({
                     filename: paymentTermsDbPath,
                     autoload: true,
                 });
-                
+
                 paymentTermsDB.findOne({ _id: account.paymentTermId }, function (err, terms) {
                     if (!err && terms) {
                         paymentTerms = terms;
                     }
-                    
+
                     res.json({
                         account: account,
                         supplier: supplier,
@@ -511,7 +503,7 @@ router.get("/aging-report", function (req, res) {
                 message: "An unexpected error occurred.",
             });
         }
-        
+
         // Get supplier invoices for aging calculation
         const Datastore = require("@seald-io/nedb");
         const invoicesDbPath = path.join(
@@ -521,12 +513,12 @@ router.get("/aging-report", function (req, res) {
             "databases",
             "supplier-invoices.db",
         );
-        
+
         const invoicesDB = new Datastore({
             filename: invoicesDbPath,
             autoload: true,
         });
-        
+
         invoicesDB.find({ balanceAmount: { $gt: 0 } }, function (err, invoices) {
             if (err) {
                 console.error(err);
@@ -535,7 +527,7 @@ router.get("/aging-report", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             // Calculate aging
             const agingReport = {
                 current: { total: 0, count: 0, items: [] },
@@ -544,17 +536,17 @@ router.get("/aging-report", function (req, res) {
                 days61to90: { total: 0, count: 0, items: [] },
                 over90: { total: 0, count: 0, items: [] }
             };
-            
+
             const today = new Date();
-            
+
             accounts.forEach(account => {
                 const accountInvoices = invoices.filter(inv => inv.supplierId === account.supplierId);
-                
+
                 accountInvoices.forEach(invoice => {
                     const dueDate = new Date(invoice.dueDate);
                     const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
                     const balanceAmount = invoice.balanceAmount;
-                    
+
                     let category;
                     if (daysOverdue <= 0) {
                         category = agingReport.current;
@@ -567,7 +559,7 @@ router.get("/aging-report", function (req, res) {
                     } else {
                         category = agingReport.over90;
                     }
-                    
+
                     category.total += balanceAmount;
                     category.count++;
                     category.items.push({
@@ -580,7 +572,7 @@ router.get("/aging-report", function (req, res) {
                     });
                 });
             });
-            
+
             res.json(agingReport);
         });
     });

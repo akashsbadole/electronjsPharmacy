@@ -3,7 +3,6 @@
  */
 
 // Global variables
-let templates = [];
 let currentTemplateId = null;
 
 // Initialize page
@@ -40,10 +39,10 @@ function loadTemplates() {
         url: './api/communication-templates/all',
         method: 'GET',
         success: function (data) {
-            templates = data.templates || [];
+            window.templates = data.templates || [];
             populateTemplatesTable();
         },
-        error: function (xhr, status, error) {
+        error: function (_, __, error) {
             console.error('Error loading templates:', error);
             showNotification('Error loading templates', 'error');
         }
@@ -57,12 +56,12 @@ function populateTemplatesTable() {
     const tbody = $('#templates-table-body');
     tbody.empty();
 
-    if (templates.length === 0) {
+    if (!window.templates || window.templates.length === 0) {
         tbody.append('<tr><td colspan="7" class="text-center">No templates found</td></tr>');
         return;
     }
 
-    templates.forEach(function (template) {
+    window.templates.forEach(function (template) {
         const statusClass = getStatusClass(template.approvalStatus);
         const statusText = formatApprovalStatus(template.approvalStatus);
 
@@ -107,7 +106,7 @@ function showTemplateModal(templateId = null) {
 
     if (templateId) {
         // Load template data for editing
-        const template = templates.find(t => t._id === templateId);
+        const template = window.templates.find(t => t._id === templateId);
         if (template) {
             $('#template-name').val(template.name);
             $('#template-type').val(template.type);
@@ -189,7 +188,7 @@ function saveTemplate() {
                 showNotification(`Error ${currentTemplateId ? 'updating' : 'creating'} template`, 'error');
             }
         },
-        error: function (xhr, status, error) {
+        error: function (_, __, error) {
             console.error(`Error ${currentTemplateId ? 'updating' : 'creating'} template:`, error);
             showNotification(`Error ${currentTemplateId ? 'updating' : 'creating'} template`, 'error');
         }
@@ -200,7 +199,7 @@ function saveTemplate() {
  * View template
  */
 function viewTemplate(templateId) {
-    const template = templates.find(t => t._id === templateId);
+    const template = window.templates.find(t => t._id === templateId);
     if (!template) return;
 
     let contentHtml = '';
@@ -267,7 +266,7 @@ function approveTemplate(templateId) {
                 showNotification('Error approving template', 'error');
             }
         },
-        error: function (xhr, status, error) {
+        error: function (_, __, error) {
             console.error('Error approving template:', error);
             showNotification('Error approving template', 'error');
         }
@@ -293,7 +292,7 @@ function deleteTemplate(templateId) {
                 showNotification('Error deleting template', 'error');
             }
         },
-        error: function (xhr, status, error) {
+        error: function (_, __, error) {
             console.error('Error deleting template:', error);
             showNotification('Error deleting template', 'error');
         }
@@ -319,10 +318,10 @@ function filterTemplates() {
             language: language
         },
         success: function (data) {
-            templates = data.templates || [];
+            window.templates = data.templates || [];
             populateTemplatesTable();
         },
-        error: function (xhr, status, error) {
+        error: function (_, __, error) {
             console.error('Error filtering templates:', error);
             showNotification('Error filtering templates', 'error');
         }
@@ -333,7 +332,7 @@ function filterTemplates() {
  * Filter templates by search
  */
 function filterTemplatesBySearch(searchTerm) {
-    const filteredTemplates = templates.filter(template => {
+    const filteredTemplates = window.templates.filter(template => {
         return template.name.toLowerCase().includes(searchTerm) ||
             template.category.toLowerCase().includes(searchTerm) ||
             (template.content.text && template.content.text.toLowerCase().includes(searchTerm)) ||

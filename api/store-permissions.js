@@ -2,18 +2,9 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Datastore = require("@seald-io/nedb");
-const path = require("path");
 const validator = require("validator");
-
-const appName = process.env.APPNAME;
-const appData = process.env.APPDATA;
-const dbPath = path.join(
-    appData,
-    appName,
-    "server",
-    "databases",
-    "store-permissions.db",
-);
+const dbUtils = require('./db-utils');
+const dbPath = dbUtils.getDatabasePath('store-permissions.db');
 
 router.use(bodyParser.json());
 
@@ -153,7 +144,7 @@ router.post("/update", function (req, res) {
         "databases",
         "users.db",
     );
-    
+
     const storesDBPath = path.join(
         appData,
         appName,
@@ -161,12 +152,12 @@ router.post("/update", function (req, res) {
         "databases",
         "stores.db",
     );
-    
+
     const usersDB = new Datastore({
         filename: usersDBPath,
         autoload: true,
     });
-    
+
     const storesDB = new Datastore({
         filename: storesDBPath,
         autoload: true,
@@ -198,8 +189,8 @@ router.post("/update", function (req, res) {
                 canApproveTransfers: req.body.canApproveTransfers === true || req.body.canApproveTransfers === "true",
                 canViewReports: req.body.canViewReports === true || req.body.canViewReports === "true",
                 canManageSettings: req.body.canManageSettings === true || req.body.canManageSettings === "true",
-                isActive: req.body.isActive !== undefined ? 
-                    (req.body.isActive === true || req.body.isActive === "true") : 
+                isActive: req.body.isActive !== undefined ?
+                    (req.body.isActive === true || req.body.isActive === "true") :
                     true,
                 updatedBy: req.body.updatedBy ? validator.escape(req.body.updatedBy) : "system",
                 updatedAt: new Date()
@@ -226,7 +217,7 @@ router.post("/update", function (req, res) {
                 // Create new record
                 permissionData._id = Math.floor(Date.now() / 1000);
                 permissionData.createdAt = new Date();
-                
+
                 storePermissionsDB.insert(permissionData, function (err, newPermission) {
                     if (err) {
                         console.error(err);
@@ -270,14 +261,14 @@ router.delete("/user/:userId/store/:storeId", function (req, res) {
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (numRemoved === 0) {
                 return res.status(404).json({
                     error: "Not Found",
                     message: "Permission not found for this user-store combination.",
                 });
             }
-            
+
             res.json({ message: "User store permissions removed successfully." });
         }
     );
@@ -298,13 +289,13 @@ router.get("/user/:userId/store/:storeId/check/:permission", function (req, res)
     const userId = parseInt(req.params.userId);
     const storeId = parseInt(req.params.storeId);
     const permission = validator.escape(req.params.permission);
-    
+
     const validPermissions = [
-        'canViewInventory', 'canManageInventory', 'canViewTransactions', 
+        'canViewInventory', 'canManageInventory', 'canViewTransactions',
         'canProcessTransactions', 'canManageTransfers', 'canApproveTransfers',
         'canViewReports', 'canManageSettings'
     ];
-    
+
     if (!validPermissions.includes(permission)) {
         return res.status(400).json({
             error: "Bad Request",
@@ -326,13 +317,13 @@ router.get("/user/:userId/store/:storeId/check/:permission", function (req, res)
                     message: "An unexpected error occurred.",
                 });
             }
-            
+
             if (!permissionRecord) {
                 return res.json({ hasPermission: false });
             }
-            
-            res.json({ 
-                hasPermission: permissionRecord[permission] === true 
+
+            res.json({
+                hasPermission: permissionRecord[permission] === true
             });
         }
     );
@@ -373,7 +364,7 @@ router.post("/grant-default-permissions", function (req, res) {
         "databases",
         "stores.db",
     );
-    
+
     const storesDB = new Datastore({
         filename: storesDBPath,
         autoload: true,
@@ -392,7 +383,7 @@ router.post("/grant-default-permissions", function (req, res) {
         let errorCount = 0;
 
         // Create permission records for each store
-        stores.forEach(function(store) {
+        stores.forEach(function (store) {
             storePermissionsDB.findOne(
                 {
                     userId: userId,
@@ -420,9 +411,9 @@ router.post("/grant-default-permissions", function (req, res) {
                                 console.error(err);
                                 errorCount++;
                             }
-                            
+
                             processedCount++;
-                            
+
                             // Check if all stores have been processed
                             if (processedCount === stores.length) {
                                 res.json({
@@ -435,7 +426,7 @@ router.post("/grant-default-permissions", function (req, res) {
                         });
                     } else {
                         processedCount++;
-                        
+
                         // Check if all stores have been processed
                         if (processedCount === stores.length) {
                             res.json({
@@ -465,7 +456,7 @@ router.get("/store/:storeId/users", function (req, res) {
     }
 
     const storeId = parseInt(req.params.storeId);
-    
+
     storePermissionsDB.find(
         {
             storeId: storeId,
@@ -488,13 +479,13 @@ router.get("/store/:storeId/users", function (req, res) {
                 "databases",
                 "users.db",
             );
-            
+
             const usersDB = new Datastore({
                 filename: usersDBPath,
                 autoload: true,
             });
 
-            const userIds = permissions.map(function(permission) {
+            const userIds = permissions.map(function (permission) {
                 return permission.userId;
             });
 
@@ -508,11 +499,11 @@ router.get("/store/:storeId/users", function (req, res) {
                 }
 
                 // Combine user data with permissions
-                const result = permissions.map(function(permission) {
-                    const user = users.find(function(u) {
+                const result = permissions.map(function (permission) {
+                    const user = users.find(function (u) {
                         return u._id === permission.userId;
                     });
-                    
+
                     return {
                         userId: permission.userId,
                         username: user ? user.username : "Unknown",
